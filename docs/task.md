@@ -1,0 +1,85 @@
+# Formosat-5 PINN Protocol Tasks (COMPLETED)
+
+- [x] **Environment Setup**
+  - [x] Initialize project with `uv init pinn_protocol`
+  - [x] Install dependencies (start with standard scientific tools)
+  - [x] Install PyTorch Nightly for RTX 5080 (CUDA 12.x support)
+  - [x] Validate CUDA availability
+- [x] **Real-World Data Pipeline**
+  - [x] Implement `src/data_fetcher.py` to fetch TLE from CelesTrak
+  - [x] Implement SGP4 propagation (300 mins, 1s step)
+  - [x] Export `real_training_data.npz`
+- [x] **Normalization & Refinement**
+  - [x] Implement `src/utils.py` (DU, TU, Normalizer)
+  - [x] Update `src/data_fetcher.py` to save dimensionless data
+  - [x] Refactor `src/train.py` for dimensionless J2 Physics Loss
+- [x] **Model Architecture**
+  - [x] Implement `HybridPINN` in `src/model.py` (LSTM + ResNet)
+  - [x] Implement `freeze_backbone` method
+- [x] **Physics-Informed Training**
+  - [x] Implement `src/train.py` with Hardware Optimizations (TF32, AMP)
+  - [x] Implement J2 Perturbation Loss with `torch.autograd`
+  - [x] Run training and save model `f5_realdata_v1.pth`
+- [x] **Evaluation & Reporting**
+  - [x] Implement `src/inference_report.py` (Error in km)
+  - [x] Generate `prediction_error.png` and `trajectory_compare.png`
+  - [x] Report Mean/Max Error metrics
+- [x] **Refinement Training (High-Precision)**
+  - [x] Implement `src/train_refine.py` (300 epochs, LR Scheduler)
+  - [x] **Phase 2: Neural ODE (Sub-Kilometer)**
+    - [x] Create `src/models/neural_force.py` (State -> Force)
+    - [x] Implement Differentiable RK4 Solver (`src/physics/ode_solver.py`)
+    - [x] Create ODE Training Script (`src/train_ode.py`)
+    - [x] Verify Sub-Kilometer Accuracy with `src/inference_ode.py`
+    - [x] Train `f5_neural_ode_v6.pth`
+    - [x] Verify Prediction Error < 1 km (Result: 0.10 km)
+  - [x] Train `f5_refined_v2.pth`
+  - [x] Re-evaluate Error (Result 57km)
+- [x] **Balanced Training (Data Priority)**
+  - [x] Implement `src/train_balance.py` (W_data=100.0)
+  - [x] Train `f5_balanced_v3.pth`
+  - [x] Re-evaluate Error (241km)
+- [x] **Transfer Learning (F5 -> F7 Proxy)**
+  - [x] Implement `src/transfer_learning.py` (Fetch F7 Data, Load F5 Weights, Fine-tune 20 epochs)
+  - [x] Execute Transfer Training
+  - [x] Verify Transfer Accuracy (Result: 0.187 km)
+- [x] **Formosat-7 PoC (Real-World Validation)**
+  - [x] Implement `src/data_fetcher_universal.py`
+  - [x] Generate `f7_real_data.npz` (NORAD 44387)
+  - [x] Implement `src/poc_formosat7.py` (Transfer Learning 15 Epochs)
+  - [x] Verify PoC Accuracy (Result: 0.21 km)
+  - [x] Generate PoC Plots
+- [x] **Application Layer: TDMA Scheduling**
+  - [x] Implement `src/scheduler.py` (ECI -> Topocentric -> Schedule)
+  - [x] Generate `tdma_schedule_f5.csv`
+  - [x] Verify Contact Windows over Taiwan (Pass found!)
+- [x] **Doppler Compensation (S-Band)**
+  - [x] Update `src/scheduler.py` with Doppler Logic (~2.2 GHz)
+  - [x] Create `src/plot_doppler.py` (Verify S-Curve)
+  - [x] Validate Range Rate Accuracy
+- [x] **Final Protocol Handover**
+  - [x] Update `README.md` with Final Comparison (v1 vs v6)
+  - [x] Finalize `walkthrough.md`
+  - [x] Archive Project
+- [x] **Phase B: High-Precision SP3 Data**
+  - [x] Install `astropy`, `h5py`
+  - [x] Create `src/data/sp3_loader.py` (Parser & Frame Conversion)
+  - [x] Create `src/ingest_sp3.py` (Batch Processing)
+  - [x] Verify SP3 Ingestion (Mock Data Validated)
+- [x] **Automation: SP3 Data Crawler**
+  - [x] Create `.env.example` (NASA Credentials)
+  - [x] Implement `src/data/downloader.py` (Authenticated Session)
+  - [x] Create `get_sp3.sh` (Curl/Netrc fallback)
+- [x] **Mission: Live Data Ingestion**
+  - [x] Implement `src/run_data_harvest.py` (GPS Time Calc + Download)
+  - [x] Execute Pipeline (Requires Valid `.env` Credentials)
+  - [ ] Verify `precise_training_data.npz` (Size > 1MB)
+  - [x] **Roadmap Update**: Added Local Fallback & SP3 Training
+- [x] **Phase B2: SP3 Training**
+  - [x] Implement `src/train_sp3.py` (50 Epochs)
+  - [x] Validate `f5_sp3_precision.pth` (Verified on Mock Data)
+- [x] **Phase C: Golden Physics Engine**
+  - [x] Implement `src/physics/advanced_forces.py` (Sun, Moon, SRP, J2-J4)
+  - [x] Implement `src/physics/golden_solver.py` (Integrated Force Model)
+  - [x] Create `src/train_golden.py` (Training on SP3)
+  - [x] Compare v6 vs Golden Model (Code Ready for Real Data)

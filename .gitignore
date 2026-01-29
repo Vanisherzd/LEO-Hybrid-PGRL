@@ -1,0 +1,24 @@
+# System
+__pycache__/
+*.pyc
+.DS_Store
+
+# Environments
+.venv/
+
+# Secrets & Configs
+.env
+.env.backup
+
+# Large Data (Keep local, do not push)
+data/raw/*.sp3
+data/processed/*.npz
+data/f7_golden_truth.npz
+data/precise_training_data.npz
+
+# Logs
+logs/
+
+# Allow: Weights and Plots
+!weights/*.pth
+!plots/*.png
