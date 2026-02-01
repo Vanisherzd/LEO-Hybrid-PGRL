@@ -40,7 +40,7 @@ class SimpleLogCallback(BaseCallback):
         df.to_csv(self.log_file, index=False)
         print(f"Training history saved to {self.log_file}")
 
-def train_rl_agent():
+def train_rl_agent(total_timesteps=50000):
     print("--- Phase I: RL Agent Training (Autonomous MAC) ---")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
@@ -63,7 +63,6 @@ def train_rl_agent():
     )
     
     # 3. Training
-    total_timesteps = 50000 
     callback = SimpleLogCallback()
     print(f"Training PPO agent for {total_timesteps} steps...")
     model.learn(total_timesteps=total_timesteps, progress_bar=True, callback=callback)

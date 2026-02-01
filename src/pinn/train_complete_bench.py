@@ -33,7 +33,7 @@ class NormalizedNN(nn.Module):
         out_norm = self.base(x_norm)
         return out_norm * self.scale_a
 
-def train_one_model(model_name, ModelClass, data_t, data_states, start_epoch, device, force=False):
+def train_one_model(model_name, ModelClass, data_t, data_states, start_epoch, device, force=False, epochs=BENCH_EPOCHS):
     weight_path = os.path.join(WEIGHTS_DIR, f"benchmark_{model_name.lower()}.pth")
     if os.path.exists(weight_path) and not force:
         print(f"--- {model_name} weights exist. Skipping... ---")
@@ -53,13 +53,13 @@ def train_one_model(model_name, ModelClass, data_t, data_states, start_epoch, de
     dynamics = GoldenDynamics(wrapped_net, ephemeris).to(device)
     
     optimizer = optim.AdamW(dynamics.parameters(), lr=LR, weight_decay=1e-5)
-    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=BENCH_EPOCHS, eta_min=1e-5)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-5)
     
     CHUNK_SIZE = 60
     num_chunks = 5 # Speed priority for benchmark
     
     dynamics.train()
-    for epoch in range(BENCH_EPOCHS):
+    for epoch in range(epochs):
         total_loss = 0
         optimizer.zero_grad()
         

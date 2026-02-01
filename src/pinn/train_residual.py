@@ -32,7 +32,7 @@ def fetch_tle(norad_id):
         return ("1 42920U 17049A   24029.54477817  .00004500  00000-0  17596-3 0  9990",
                 "2 42920  98.2435 112.5921 0001222  95.2341 264.9123 14.50023412341234")
 
-def train_residual():
+def train_residual(adam_epochs=200, lbfgs_epochs=20):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f"Training Residual Model on {device}")
     
@@ -81,8 +81,8 @@ def train_residual():
     optimizer_adam = optim.AdamW(model.parameters(), lr=1e-3)
     criterion = nn.MSELoss()
     
-    print(f"--- Stage 1: Adam Initialization (200 Epochs) ---")
-    for epoch in range(200):
+    print(f"--- Stage 1: Adam Initialization ({adam_epochs} Epochs) ---")
+    for epoch in range(adam_epochs):
         optimizer_adam.zero_grad()
         output = model(x_train)
         loss = criterion(output, y_train)
@@ -91,15 +91,14 @@ def train_residual():
         
         if (epoch + 1) % 50 == 0:
             rms_km = torch.sqrt(loss).item() * normalizer.DU
-            print(f"Adam Epoch {epoch+1}/200 | Loss: {loss.item():.8f} | RMS: {rms_km:.4f} km")
+            print(f"Adam Epoch {epoch+1}/{adam_epochs} | Loss: {loss.item():.8f} | RMS: {rms_km:.4f} km")
 
     # Stage 2: L-BFGS for high-precision refinement
     optimizer_lbfgs = optim.LBFGS(model.parameters(), lr=1.0, max_iter=100, history_size=20, line_search_fn="strong_wolfe")
     
     print(f"--- Stage 2: L-BFGS Refinement ---")
     
-    epochs = 20
-    for epoch in range(epochs):
+    for epoch in range(lbfgs_epochs):
         def closure():
             optimizer_lbfgs.zero_grad()
             output = model(x_train)
@@ -112,7 +111,7 @@ def train_residual():
             final_loss = criterion(model(x_train), y_train)
             rms_km = torch.sqrt(final_loss).item() * normalizer.DU
         
-        print(f"L-BFGS Epoch {epoch+1}/{epochs} | Loss: {final_loss.item():.10f} | RMS Error: {rms_km:.4f} km")
+        print(f"L-BFGS Epoch {epoch+1}/{lbfgs_epochs} | Loss: {final_loss.item():.10f} | RMS Error: {rms_km:.4f} km")
         if rms_km < 0.1: # 100m target
                 print("Target precision reached.")
                 break
