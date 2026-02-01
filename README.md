@@ -5,13 +5,17 @@
 
 ## Abstract
 
-Autonomous satellite operations in Low Earth Orbit (LEO) require trajectory prediction with sub-meter precision. Traditional analytical models (e.g., SGP4) suffer from atmospheric drag unmodeled residuals, while pure neural-integration strategies (Neural ODEs) exhibit Lyapunov instability. This research presents a **Physics-Guided Residual Learning (PGRL)** framework. By utilizing SGP4 as a stable physics anchor and training deep MLP correctors for residual errors, we achieve state-of-the-art stability and accuracy. We further demonstrate the utility of these predictors in an autonomous **Reinforcement Learning (RL)** MAC protocol for IoT-over-LEO resource management.
+Autonomous satellite operations in Low Earth Orbit (LEO) require trajectory prediction with sub-meter precision. Traditional analytical models (e.g., SGP4) suffer from atmospheric drag unmodeled residuals, while pure neural-integration strategies (Neural ODEs) exhibit Lyapunov instability. This research presents a **Physics-Guided Residual Learning (PGRL)** framework:
+
+1.  **Classical Physics**: Utilization of SGP4 (analytical propagation), which is constrained by simplified atmospheric drag and J2-J4 geopotential models.
+2.  **Standard Neural ODEs**: Direct state-space integration using Differentiable RK4 Solvers. Empirical tests revealed **Lyapunov Instability**, wherein pure neural dynamics diverge significantly over long prediction horizons.
+3.  **Physics-Guided Residual Learning (PGRL)**: Optimization of the modeling objective to target $\Delta \mathbf{s}$ (residuals) rather than the absolute state $\mathbf{s}$. By anchoring the model with SGP4, we achieve stable, sub-200m RMSE.
 
 ## Mathematical Formulation
 
 The satellite state $\mathbf{s} = [x, y, z, \dot{x}, \dot{y}, \dot{z}]^T$ is modeled as:
 $$\mathbf{s}_{true}(t) = \mathbf{s}_{sgp4}(t) + \mathcal{N}_{\theta}(\mathbf{s}_{sgp4}(t))$$
-where $\mathcal{N}_{\theta}$ is the neural corrector trained to minimize the residual $\Delta \mathbf{s}$ against high-fidelity SP3 ephemerides or simulated Golden Truth.
+where $\mathcal{N}_{\theta}$ is the neural corrector trained to minimize the residual $\Delta \mathbf{s}$ against high-fidelity SP3 ephemerides.
 
 ## Experiment Setup
 

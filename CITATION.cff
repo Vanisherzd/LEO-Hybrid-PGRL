@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Maintainer"
+    given-names: "Vanisherzd"
+title: "Hybrid Physics-Guided Residual Learning for LEO Orbit Prediction"
+version: 1.0.0
+date-released: 2026-02-02
+url: "https://github.com/Vanisherzd/LEO-Hybrid-PGRL"
+abstract: "A Hybrid Physics-Guided Residual Learning framework for high-precision LEO satellite orbit prediction and resource management."
+keywords:
+  - "Neural ODE"
+  - "Satellite"
+  - "Orbit Prediction"
+  - "Machine Learning"
+  - "Physics-Guided Learning"
+  - "PPO"
