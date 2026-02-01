@@ -9,7 +9,7 @@ from src.models.variants import OrbitalLSTM, OrbitalGRU, OrbitalAttention
 from src.models.neural_force import OrbitalForceNet
 from src.physics.golden_solver import GoldenDynamics, rk4_step_golden
 from src.physics.advanced_forces import CelestialEphemeris
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 
 # --- Configuration ---
 DATA_PATH = os.path.join("data", "precise_training_data.npz")

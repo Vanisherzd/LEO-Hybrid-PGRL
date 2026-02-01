@@ -2,7 +2,7 @@ import os
 import glob
 import numpy as np
 from src.data.sp3_loader import SP3Loader
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 
 RAW_DIR = os.path.join("raw_data", "sp3")
 OUTPUT_FILE = os.path.join("data", "precise_training_data.npz")

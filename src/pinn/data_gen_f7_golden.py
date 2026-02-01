@@ -13,7 +13,7 @@ from src.physics.advanced_forces import (
     MU_SUN, MU_MOON, R_EARTH
 )
 from src.physics.golden_solver import GoldenDynamics, rk4_step_golden
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 import requests
 
 # --- Configuration ---

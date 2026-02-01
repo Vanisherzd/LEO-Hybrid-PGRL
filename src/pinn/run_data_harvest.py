@@ -2,7 +2,7 @@ import os
 import datetime
 import requests
 from src.data.downloader import EarthdataDownloader, decompress
-from src.ingest_sp3 import ingest
+from src.pinn.ingest_sp3 import ingest
 import math
 
 RAW_DIR = os.path.join("raw_data", "sp3")

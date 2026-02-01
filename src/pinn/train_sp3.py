@@ -4,7 +4,7 @@ import torch.optim as optim
 import numpy as np
 import os
 from src.models.neural_force import OrbitalForceNet
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 from src.physics.ode_solver import integrate_trajectory
 
 # --- Configuration ---

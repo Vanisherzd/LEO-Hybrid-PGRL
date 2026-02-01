@@ -9,8 +9,8 @@ import json
 from src.models.variants import OrbitalLSTM, OrbitalGRU, OrbitalAttention
 from src.physics.golden_solver import GoldenDynamics, rk4_step_golden
 from src.physics.advanced_forces import CelestialEphemeris
-from src.utils import Normalizer
-from src.utils_metrics import compute_ric, compute_metrics # Use the fix file
+from src.pinn.utils import Normalizer
+from src.pinn.utils_metrics import compute_ric, compute_metrics # Use the fix file
 
 # --- Configuration ---
 DATA_PATH = os.path.join("data", "precise_training_data.npz")

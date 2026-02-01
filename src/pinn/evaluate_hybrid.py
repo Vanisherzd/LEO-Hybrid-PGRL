@@ -11,7 +11,7 @@ from src.models.residual_net import SGP4ErrorCorrector
 from src.models.neural_force import OrbitalForceNet
 from src.physics.golden_solver import GoldenDynamics, rk4_step_golden
 from src.physics.advanced_forces import CelestialEphemeris
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 import requests
 
 # --- Configuration ---

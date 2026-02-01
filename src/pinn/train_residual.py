@@ -7,7 +7,7 @@ import datetime
 from sgp4.api import Satrec, WGS72
 from sgp4.api import jday
 from src.models.residual_net import SGP4ErrorCorrector
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 import requests
 
 # --- Configuration ---

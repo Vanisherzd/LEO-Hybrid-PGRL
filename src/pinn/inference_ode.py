@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 from src.models.neural_force import OrbitalForceNet
 from src.physics.ode_solver import integrate_trajectory
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 
 def generate_ode_report():
     # 1. Load Data

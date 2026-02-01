@@ -62,22 +62,34 @@ Validate the F5 -> F7 transfer learning performance.
 
 ```bash
 # Generate Truth -> Fine-tune -> Evaluate
-uv run python -m src.data_gen_f7_golden
-uv run python -m src.train_hybrid_transfer
-uv run python -m src.evaluate_f7_transfer
+uv run python -m src.pinn.data_gen_f7_golden
+uv run python -m src.pinn.train_hybrid_transfer
+uv run python -m src.pinn.evaluate_f7_transfer
 ```
 
-### 3. Generate TDMA Schedule
+### 3. Run the Autonomous MAC Demo (RL)
 
 ```bash
-uv run python -m src.scheduler
+# Generate Scientific Paper Plots
+uv run python -m src.rl.paper_plots
 ```
+
+---
+
+## 📁 Repository Structure
+
+- **`src/pinn/`**: Physics-Guided Neural Network core (Orbit Prediction).
+- **`src/rl/`**: Reinforcement Learning module (Autonomous MAC).
+- **`src/models/`**: Shared Neural Architectures.
+- **`src/physics/`**: High-fidelity space force models.
+- **`models/`**: Trained weights and RL policies.
+- **`plots/`**: Scientific visualization suite.
 
 ---
 
 ## 📂 Documentation
 
-- [Project Walkthrough](docs/walkthrough.md): Comprehensive visuals of RIC error, RIC distribution, and Doppler S-curves.
+- [Project Walkthrough](docs/walkthrough.md): Comprehensive visuals including RIC errors, Doppler S-curves, and **RL Pareto Frontiers**.
 - [Technical Report](docs/FINAL_REPORT.md): Detailed analysis of Lyapunov instability in Neural ODEs.
 
 ---

@@ -86,7 +86,7 @@ def propagate_orbit(line1, line2, duration_minutes=300, dt=1.0):
     return np.array(times), np.array(states), start_time
 
 if __name__ == "__main__":
-    from src.utils import Normalizer
+    from src.pinn.utils import Normalizer
     
     NORAD_ID = 42920 # Formosat-5
     

@@ -3,7 +3,7 @@ import os
 import datetime
 from sgp4.api import Satrec, WGS72
 from sgp4.api import jday
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 import requests
 
 DATA_PATH = os.path.join("data", "precise_training_data.npz")

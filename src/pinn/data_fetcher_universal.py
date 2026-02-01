@@ -4,7 +4,7 @@ import sys
 from sgp4.api import Satrec, WGS72
 from sgp4.conveniences import sat_epoch_datetime
 import datetime
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 
 def fetch_tle(norad_id):
     url = f"https://celestrak.org/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=tle"

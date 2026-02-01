@@ -5,7 +5,7 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import os
-from src.model import HybridPINN
+from src.pinn.model import HybridPINN
 
 # --- Hardware Optimization ---
 torch.set_float32_matmul_precision('high') # For RTX 3000/4000/5000 (Ampere/Blackwell TF32)
@@ -17,8 +17,8 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 import os
-from src.model import HybridPINN
-from src.utils import J2 # Dimensionless J2
+from src.pinn.model import HybridPINN
+from src.pinn.utils import J2 # Dimensionless J2
 
 # --- Hardware Optimization ---
 torch.set_float32_matmul_precision('high') 

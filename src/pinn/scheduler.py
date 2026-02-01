@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import datetime
 import os
-from src.utils import Normalizer
+from src.pinn.utils import Normalizer
 from src.models.neural_force import OrbitalForceNet
 from src.physics.ode_solver import integrate_trajectory
 from sgp4.api import jday

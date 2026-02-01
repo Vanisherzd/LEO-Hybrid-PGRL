@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-from src.model import HybridPINN
-from src.utils import Normalizer
+from src.pinn.model import HybridPINN
+from src.pinn.utils import Normalizer
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
