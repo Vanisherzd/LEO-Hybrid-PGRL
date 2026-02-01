@@ -62,9 +62,3 @@ Generates the 5 definitive figures from verified logs and weights.
 ```bash
 uv run python src/generate_figures.py
 ```
-
----
-
-**Citation**:
-_Formosat-7 Mission Hybrid AI-Physics Integration Performance Report (2026)._
-**Author**: Antigravity (Advanced Agentic Coding Group)
