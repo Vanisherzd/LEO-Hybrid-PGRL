@@ -1,68 +1,74 @@
-# Hybrid Physics-Guided Residual Learning (PGRL) for Autonomous LEO Operations
+# 🛰️ PINN Protocol: Hybrid PGRL for Autonomous LEO Operations
 
 [![Project Status: Research Grade](https://img.shields.io/badge/Status-Research_Grade-blue.svg)](https://github.com/Vanisherzd/LEO-Hybrid-PGRL)
-[![Reproducibility: Verified](https://img.shields.io/badge/Reproducibility-Verified-green.svg)](docs/CONTRIBUTING.md)
+[![Stability: State-of-the-Art](https://img.shields.io/badge/Stability-35m_RMSE-green.svg)](docs/FINAL_REPORT.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ## 🌌 Overview
 
-Autonomous satellite operations in Low Earth Orbit (LEO) demand trajectory prediction with unprecedented precision. Conventional analytical models (SGP4) suffer from unmodeled residuals (e.g., atmospheric drag), while pure data-driven approaches (Neural ODEs) exhibit **Lyapunov Instability**, leading to exponential divergence.
+Autonomous satellite operations in Low Earth Orbit (LEO) demand trajectory prediction with sub-100m precision. While conventional analytical models (SGP4) are globally stable, they suffer from unmodeled residuals (e.g., atmospheric drag). Conversely, pure data-driven approaches (Neural ODEs) exhibit **Lyapunov Instability**, leading to exponential divergence.
 
-This repository implements a **Hybrid PGRL** framework that anchors high-fidelity neural correctors to stable analytical physics. By modeling residuals ($\Delta \mathbf{s}$) instead of absolute states ($\mathbf{s}$), we achieve meter-level precision over multi-orbital integration windows.
+The **PINN Protocol** implements a **Hybrid Physics-Guided Residual Learning (PGRL)** framework. By anchoring a high-capacity neural corrector to a stable SGP4 baseline, we achieve **meter-level precision** over multi-orbital integration windows.
 
 ---
 
-## 🔬 Core Methodology
+## 🔬 Core Methodology: Hybrid PGRL
 
-The framework follows a dual-stage integration strategy:
+The framework follows a **Residual Correction** strategy instead of direct state prediction:
 
-1. **Global Anchor**: SGP4 provides a stable, gravitationally consistent baseline $\mathbf{s}_{sgp4}(t)$.
-2. **Neural Corrector**: A deep MLP $\mathcal{N}_{\theta}$ predicts the instantaneous residual discrepancy induced by non-conservative forces (SRP, Drag).
-3. **Synthesis**: The true state is estimated as:
-   $$\mathbf{s}_{true}(t) = \mathbf{s}_{sgp4}(t) + \mathcal{N}_{\theta}(\mathbf{s}_{sgp4}(t), \mu, \dots)$$
+1.  **Global Anchor**: SGP4 provides a gravitationally consistent, bounded baseline $\mathbf{s}_{sgp4}(t)$.
+2.  **Neural Residual Learner**: A 3-layer MLP $\mathcal{N}_{\theta}$ (GeLU, [256, 256, 256]) is trained to predict the instantaneous position error $\Delta \mathbf{r}$ induced by non-conservative forces (Atmospheric Drag, SRP).
+3.  **Synthesis**: The final estimated state is:
+    $$\mathbf{s}_{hybrid}(t) = \mathbf{s}_{sgp4}(t) + \mathbf{s}_{corrector}(t)$$
+
+This approach "domesticates" the neural network, preventing the quadratic error accumulation typical of unconstrained integrators.
 
 ---
 
 ## 📊 Scientific Benchmarks
 
-Integrated performance over a continuous **120-minute window** (Formosat-5 Characteristics):
+Integrated performance over a continuous **120-minute window** (Formosat-5 & Formosat-7 baseline):
 
-| Model Architecture        | Local Force MSE          | Global Trajectory RMSE | Stability Profile        |
-| :------------------------ | :----------------------- | :--------------------- | :----------------------- |
-| **SGP4 (Baseline)**       | N/A                      | 1.14 km                | Globally Stable          |
-| **Pure Neural ODE (MLP)** | **$1.2 \times 10^{-6}$** | **$> 100$ km**         | **Divergent** (Lyapunov) |
-| **Hybrid PGRL (Ours)**    | $4.5 \times 10^{-5}$     | **35 meters**          | **State-of-the-Art**     |
+| Model Architecture        | F5 RMSE (120m)  | F7 RMSE (100m) | Stability Profile    |
+| :------------------------ | :-------------- | :------------- | :------------------- |
+| **SGP4 (Baseline)**       | 1.14 km         | 73.0 m         | Globally Stable      |
+| **Pure Neural ODE (MLP)** | **> 100 km**    | **Divergent**  | Catastrophic         |
+| **Hybrid PGRL (Ours)**    | **35.4 meters** | **3.8 meters** | **State-of-the-Art** |
 
-> [!IMPORTANT]
-> **The MLP Paradox**: While pure AI models show superior _local_ force learning (lowest MSE), they lack the Hamiltonian structure required for integration stability. Our Hybrid approach "domesticates" this neural flexibility via physics anchoring.
+### The 95% Performance Leap
+
+On the drag-intensive Formosat-7 (F7) scenario, the Hybrid model achieves a **95% reduction in error** compared to SGP4, proving that AI can actively refine classical orbitography rather than simply replacing it.
 
 ---
 
-## 🛠️ Operational Pipeline
+## 📁 Repository Structure
 
-### 1. Reproduce Full Study
+- **`src/pinn/`**: Core PGRL implementation, including high-precision L-BFGS training loops.
+- **`src/physics/`**: High-fidelity Golden Truth solvers (J2-J4, Atmospheric Drag, SRP).
+- **`src/rl/`**: Autonomous MAC protocols optimized for the stable predictor.
+- **`plots/`**: Definitive scientific figures (RIC Breakdown, Global Head-to-Head).
+- **`weights/`**: Pre-trained high-precision correctors.
 
-Executes the E2E suite: Data Ingestion -> Benchmark Training -> Hybrid Fine-tuning -> RL Policy Optimization.
+---
+
+## 🛠️ Usage
+
+### ⚙️ Reproduction
+
+Execute the full academic suite (Data Synthesis -> Benchmark -> Refinement -> RL):
 
 ```bash
 uv run python src/reproduce_study.py --mode paper
 ```
 
-### 2. Scientific Visualization
+### 📈 Scientific Validation
 
-Generates definitive Figs 1-5 using empirical integration and high-fidelity styling.
+Generate definitive Figs A-C using the unified validation pipeline:
 
 ```bash
-uv run python src/generate_figures.py
+uv run python src/final_validation.py
 ```
-
-## 📁 Project Anatomy
-
-- **`src/pinn/`**: PGRL implementation and residual training loops.
-- **`src/rl/`**: Autonomous MAC protocols using the stable predictor.
-- **`src/physics/`**: High-fidelity Golden Truth solvers (J2-J4, SRP).
-- **`plots/`**: Standardized Fig1-Fig5 outputs.
 
 ---
 
-**Technical Report**: [Empirical Analysis of Lyapunov Instability](docs/FINAL_REPORT.md)
+**Detailed Technical Report**: [Analysis of Lyapunov Instability and RIC Convergence](docs/FINAL_REPORT.md)
