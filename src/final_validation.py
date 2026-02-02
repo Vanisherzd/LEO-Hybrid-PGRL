@@ -113,7 +113,7 @@ def run_validation():
     # Hybrid Model
     hybrid_path = os.path.join(WEIGHTS_DIR, "hybrid_f5.pth")
     if os.path.exists(hybrid_path):
-        h_net = SGP4ErrorCorrector(hidden_dim=512).to(device)
+        h_net = SGP4ErrorCorrector(hidden_dim=256).to(device)
         h_net.load_state_dict(torch.load(hybrid_path, weights_only=True))
         h_net.eval()
         models["Hybrid"] = h_net
@@ -154,13 +154,14 @@ def run_validation():
         
         # 2. Hybrid PGRL (Corrections applied to the Aligned Anchor)
         if "Hybrid" in models:
-            s_raw_vec = np.concatenate([r_raw, v_raw]) # NN was trained on RAW inputs
+            s_raw_vec = np.concatenate([r_raw, v_raw]) 
             x_norm = torch.tensor(normalizer.normalize_state(s_raw_vec.reshape(1, 6)), dtype=torch.float32).to(device)
             with torch.no_grad():
-                dr_norm = models["Hybrid"](x_norm).cpu().numpy()[0]
+                dr_scaled = models["Hybrid"](x_norm).cpu().numpy()[0]
             
-            # Prediction: Aligned Anchor + Neural Correction
-            r_hyb = r_s_aligned + (dr_norm * normalizer.DU)
+            # Prediction: Aligned Anchor + Neural Correction (Denormalized)
+            # RES_SCALE = 5000.0 (Synchronized with F7)
+            r_hyb = r_s_aligned + (dr_scaled / 5000.0)
             
             # Ensure relative zero at t=0 if there's any residual NN bias
             if i == 0:
@@ -169,7 +170,13 @@ def run_validation():
                 print(f"Alignment Sync - Hybrid Init Error (pre-bias): {np.linalg.norm(h_init_error):.6f} km")
             
             r_hyb_final = r_hyb - h_init_error
-            results["Hybrid"].append(np.linalg.norm(r_hyb_final - states_true[i, 0:3]))
+            err_hyb = np.linalg.norm(r_hyb_final - states_true[i, 0:3])
+            
+            # Sanity check for NaNs/Inf (The "Downward Spike" Fix)
+            if np.isnan(err_hyb) or np.isinf(err_hyb):
+                 err_hyb = 10000.0 # Cap error if divergent
+                 
+            results["Hybrid"].append(err_hyb)
             ric_hybrid.append(compute_ric_error(states_true[i, 0:3], states_true[i, 3:6], r_hyb_final))
             
         # Neural ODEs (Independent Integration)
@@ -177,7 +184,14 @@ def run_validation():
             if i > 0:
                 with torch.no_grad():
                     ode_states[name] = rk4_step_golden(models[name], torch.tensor(t_raw[i-1]).to(device), ode_states[name], dt)
-            err = np.linalg.norm(ode_states[name].cpu().numpy()[0, 0:3] - states_true[i, 0:3])
+            
+            p_pos = ode_states[name].cpu().numpy()[0, 0:3]
+            err = np.linalg.norm(p_pos - states_true[i, 0:3])
+            
+            # Fix "Downward Spike" (capping exploding errors)
+            if np.isnan(err) or np.isinf(err) or np.linalg.norm(p_pos) < 100.0:
+                 err = 10000.0
+            
             results[name].append(err)
             
     # 4. Visualization

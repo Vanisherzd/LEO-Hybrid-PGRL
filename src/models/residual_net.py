@@ -7,7 +7,7 @@ class SGP4ErrorCorrector(nn.Module):
     Inputs: Normalized State (r, v) from SGP4.
     Outputs: Position Correction (delta_x, delta_y, delta_z).
     """
-    def __init__(self, input_dim=6, output_dim=3, hidden_dim=512):
+    def __init__(self, input_dim=6, output_dim=3, hidden_dim=256):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(input_dim, hidden_dim),

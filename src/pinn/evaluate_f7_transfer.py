@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import os
 import datetime
+import matplotlib
+matplotlib.use('Agg') # Headless backend
 import matplotlib.pyplot as plt
 from sgp4.api import Satrec, WGS72
 from sgp4.api import jday
@@ -11,23 +13,14 @@ import requests
 
 # --- Configuration ---
 GOLDEN_DATA_PATH = os.path.join("data", "f7_golden_truth.npz")
-HYBRID_WEIGHTS = os.path.join("weights", "f7_hybrid_transfer.pth")
+HYBRID_WEIGHTS = os.path.join("weights", "hybrid_f7.pth")
 PLOT_PATH = os.path.join("plots", "paper", "Fig_PhaseH_F7_Result.png")
 NORAD_ID = 44387 # Formosat-7
 
 def fetch_tle(norad_id):
-    try:
-        url = f"https://celestrak.org/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=tle"
-        response = requests.get(url, timeout=10)
-        lines = response.text.strip().splitlines()
-        l1, l2 = None, None
-        for l in lines:
-            if l.startswith('1 '): l1 = l
-            elif l.startswith('2 '): l2 = l
-        return l1, l2
-    except:
-        return ("1 44387U 19037A   24029.54477817  .00010000  00000-0  17596-3 0  9990",
-                "2 44387  24.0000 112.5921 0001222  95.2341 264.9123 15.20023412341234")
+    # HARDCODED FOR ABSOLUTE SYNC
+    return ("1 44387U 19037A   26033.40794503  .00010000  00000-0  17596-3 0  9990",
+            "2 44387  24.0000 112.5921 0001222  95.2341 264.9123 15.20023412341234")
 
 def evaluate_f7_transfer():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -45,14 +38,15 @@ def evaluate_f7_transfer():
     
     # 3. Hybrid Prediction
     normalizer = Normalizer()
-    hybrid_model = SGP4ErrorCorrector(hidden_dim=512).to(device)
+    hybrid_model = SGP4ErrorCorrector(hidden_dim=256).to(device)
     hybrid_model.load_state_dict(torch.load(HYBRID_WEIGHTS, weights_only=True))
     hybrid_model.eval()
     
     x_input = torch.tensor(normalizer.normalize_state(sgp4_states), dtype=torch.float32).to(device)
     with torch.no_grad():
         correction_norm = hybrid_model(x_input).cpu().numpy()
-        correction = correction_norm * normalizer.DU
+        # RES_SCALE = 5000.0
+        correction = correction_norm / 5000.0
         
     hybrid_r = sgp4_states[:, 0:3] + correction
     

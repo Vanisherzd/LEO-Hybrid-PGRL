@@ -59,8 +59,13 @@ def train_residual(adam_epochs=200, lbfgs_epochs=20):
     # Target: Residual in Position (km) relative to ALIGNED SGP4
     target_res = states_sp3[:, 0:3] - sgp4_states_aligned[:, 0:3]
     
-    # Normalizing residuals by DU (Earth Radius) for gradient stability
-    target_res_norm = target_res / normalizer.DU
+    # RESIDUAL SCALING: Amplify residuals to O(1) for optimizer stability
+    # If residual is ~1km, target is 1.0. If 1m, target is 0.001.
+    # User Request: "Ensure the Normalizer amplifies these residuals"
+    # We will scale by a factor of 100.0 (so 10m = 0.001 -> 1.0) 
+    # RES_SCALE = 5000.0 (Synchronized with F7 for sub-300m target)
+    RES_SCALE = 5000.0
+    target_res_norm = target_res * RES_SCALE
     
     print(f"Residual Stats - Mean: {np.mean(np.abs(target_res)):.2f} km, Max: {np.max(np.abs(target_res)):.2f} km")
     print(f"Normalized Target Stats - Mean: {np.mean(np.abs(target_res_norm)):.4f}")
@@ -70,7 +75,7 @@ def train_residual(adam_epochs=200, lbfgs_epochs=20):
     y_train = torch.tensor(target_res_norm, dtype=torch.float32).to(device)
     
     # 3. Model & Optimizer (Adam then L-BFGS)
-    model = SGP4ErrorCorrector(hidden_dim=512).to(device)
+    model = SGP4ErrorCorrector(hidden_dim=256).to(device)
     
     # Stage 1: Adam for stable initialization
     optimizer_adam = optim.AdamW(model.parameters(), lr=1e-3)
@@ -85,29 +90,29 @@ def train_residual(adam_epochs=200, lbfgs_epochs=20):
         optimizer_adam.step()
         
         if (epoch + 1) % 50 == 0:
-            rms_km = torch.sqrt(loss).item() * normalizer.DU
-            print(f"Adam Epoch {epoch+1}/{adam_epochs} | Loss: {loss.item():.8f} | RMS: {rms_km:.4f} km")
+            rms_km = torch.sqrt(loss).item() / RES_SCALE
+            print(f"Adam Epoch {epoch+1}/{adam_epochs} | Loss: {loss.item():.8f} | RMS: {rms_km:.6f} km")
 
     # Stage 2: L-BFGS for high-precision refinement
-    optimizer_lbfgs = optim.LBFGS(model.parameters(), lr=1.0, max_iter=100, history_size=20, line_search_fn="strong_wolfe")
+    optimizer_lbfgs = optim.LBFGS(model.parameters(), lr=1.0, max_iter=100, history_size=50, line_search_fn="strong_wolfe")
     
     print(f"--- Stage 2: L-BFGS Refinement ---")
     
+    def closure():
+        optimizer_lbfgs.zero_grad()
+        output = model(x_train)
+        loss = criterion(output, y_train)
+        loss.backward()
+        return loss
+
     for epoch in range(lbfgs_epochs):
-        def closure():
-            optimizer_lbfgs.zero_grad()
-            output = model(x_train)
-            loss = criterion(output, y_train)
-            loss.backward()
-            return loss
-        
         optimizer_lbfgs.step(closure)
         with torch.no_grad():
             final_loss = criterion(model(x_train), y_train)
-            rms_km = torch.sqrt(final_loss).item() * normalizer.DU
+            rms_km = torch.sqrt(final_loss).item() / RES_SCALE
         
-        print(f"L-BFGS Epoch {epoch+1}/{lbfgs_epochs} | Loss: {final_loss.item():.10f} | RMS Error: {rms_km:.4f} km")
-        if rms_km < 0.1: # 100m target
+        print(f"L-BFGS Epoch {epoch+1}/{lbfgs_epochs} | Loss: {final_loss.item():.10f} | RMS Error: {rms_km:.6f} km")
+        if rms_km < 0.0001: # 10cm target
                 print("Target precision reached.")
                 break
                 

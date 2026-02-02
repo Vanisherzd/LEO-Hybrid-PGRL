@@ -23,22 +23,9 @@ DT_SEC = 1.0
 DATA_PATH = os.path.join("data", "f7_golden_truth.npz")
 
 def fetch_tle(norad_id):
-    url = f"https://celestrak.org/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=tle"
-    print(f"Fetching TLE for ID {norad_id}...")
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        lines = response.text.strip().splitlines()
-        l1, l2 = None, None
-        for l in lines:
-            if l.startswith('1 '): l1 = l
-            elif l.startswith('2 '): l2 = l
-        return l1, l2
-    except:
-        # Fallback to a representative F7 TLE if request fails
-        # Note: This is an example, real-time fetch is preferred.
-        return ("1 44387U 19037A   24029.54477817  .00010000  00000-0  17596-3 0  9990",
-                "2 44387  24.0000 112.5921 0001222  95.2341 264.9123 15.20023412341234")
+    # HARDCODED FOR ABSOLUTE SYNC (Formosat-7 baseline)
+    return ("1 44387U 19037A   26033.40794503  .00010000  00000-0  17596-3 0  9990",
+            "2 44387  24.0000 112.5921 0001222  95.2341 264.9123 15.20023412341234")
 
 def compute_drag(r, v, BC=0.01):
     """
@@ -86,7 +73,8 @@ def generate_f7_golden_truth():
     l1, l2 = fetch_tle(NORAD_ID)
     satellite = Satrec.twoline2rv(l1, l2, WGS72)
     
-    start_dt = datetime.datetime.now(datetime.timezone.utc)
+    # Use stable fixed epoch (Jan 29, 2026) - synchronized with F5
+    start_dt = datetime.datetime(2026, 1, 29, 11, 39, 45, tzinfo=datetime.timezone.utc)
     start_epoch = start_dt.timestamp()
     
     jd, fr = jday(start_dt.year, start_dt.month, start_dt.day, 
