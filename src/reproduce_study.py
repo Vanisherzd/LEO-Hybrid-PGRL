@@ -52,12 +52,13 @@ def run_full_pipeline(epochs_bench=50, adam_hybrid=200, lbfgs_hybrid=20, steps_r
     for name, cls in models_to_test:
         print(f"\n[Bench] Starting {name} training...")
         start_time = time.time()
-        train_one_model(name, cls, t_bench, states_bench, start_epoch, device, force=True, epochs=epochs_bench)
+        final_rmse = train_one_model(name, cls, t_bench, states_bench, start_epoch, device, force=True, epochs=epochs_bench)
         end_time = time.time()
         
         bench_results.append({
             "model": name,
             "train_time_s": end_time - start_time,
+            "final_rmse": float(final_rmse),
             "status": "Success"
         })
     

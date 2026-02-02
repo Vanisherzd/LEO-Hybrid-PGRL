@@ -104,6 +104,7 @@ def train_one_model(model_name, ModelClass, data_t, data_states, start_epoch, de
     # Save
     torch.save(dynamics.state_dict(), weight_path)
     print(f"Saved {model_name} to {weight_path}")
+    return np.sqrt(avg_loss) if 'avg_loss' in locals() else 0.0
 
 def run_bench():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
