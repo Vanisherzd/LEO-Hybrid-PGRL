@@ -16,21 +16,9 @@ WEIGHTS_PATH = os.path.join("weights", "hybrid_residual.pth")
 NORAD_ID = 42920
 
 def fetch_tle(norad_id):
-    url = f"https://celestrak.org/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=tle"
-    print(f"Fetching TLE for ID {norad_id}...")
-    try:
-        response = requests.get(url, timeout=10)
-        response.raise_for_status()
-        lines = response.text.strip().splitlines()
-        l1, l2 = None, None
-        for l in lines:
-            if l.startswith('1 '): l1 = l
-            elif l.startswith('2 '): l2 = l
-        return l1, l2
-    except:
-        # Fallback to a valid F5 TLE if request fails
-        return ("1 42920U 17049A   24029.54477817  .00004500  00000-0  17596-3 0  9990",
-                "2 42920  98.2435 112.5921 0001222  95.2341 264.9123 14.50023412341234")
+    # HARDCODED FOR ABSOLUTE SYNC
+    return ("1 42920U 17049A   26033.40794503  .00010884  00000-0  34483-3 0  9998",
+            "2 42920  98.2443  18.5369 0001859  38.7495 321.3653 14.50153835359281")
 
 def train_residual(adam_epochs=200, lbfgs_epochs=20):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -58,11 +46,18 @@ def train_residual(adam_epochs=200, lbfgs_epochs=20):
         sgp4_states.append(list(r) + list(v))
     
     sgp4_states = np.array(sgp4_states)
+    
+    # 2.5 Align SGP4 to SP3 at t=0
+    # This prevents the NN from trying to learn geometric frame rotation (TEME vs ECI)
+    # and focuses it on physical drift.
+    sgp4_bias = sgp4_states[0, 0:3] - states_sp3[0, 0:3]
+    sgp4_states_aligned = sgp4_states.copy()
+    sgp4_states_aligned[:, 0:3] -= sgp4_bias
+    
     normalizer = Normalizer()
     
-    # Target: Residual in Position (km)
-    # y = R_sp3 - R_sgp4
-    target_res = states_sp3[:, 0:3] - sgp4_states[:, 0:3]
+    # Target: Residual in Position (km) relative to ALIGNED SGP4
+    target_res = states_sp3[:, 0:3] - sgp4_states_aligned[:, 0:3]
     
     # Normalizing residuals by DU (Earth Radius) for gradient stability
     target_res_norm = target_res / normalizer.DU

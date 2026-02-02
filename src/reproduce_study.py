@@ -97,8 +97,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.mode == "quick":
-        # Fast validation run
-        run_full_pipeline(epochs_bench=2, adam_hybrid=10, lbfgs_hybrid=2, steps_rl=2048)
+        # Fast validation run but enough for Hybrid stability
+        run_full_pipeline(epochs_bench=5, adam_hybrid=100, lbfgs_hybrid=20, steps_rl=2048)
     else:
         # Full scientific run
         run_full_pipeline(epochs_bench=100, adam_hybrid=500, lbfgs_hybrid=50, steps_rl=100000)

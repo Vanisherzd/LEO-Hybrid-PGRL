@@ -117,9 +117,9 @@ def run_bench():
     
     models = [
         ("MLP", OrbitalForceNet, True), 
-        ("LSTM", OrbitalLSTM, False),
-        ("GRU", OrbitalGRU, False),
-        ("Attn", OrbitalAttention, False) 
+        ("LSTM", OrbitalLSTM, True),
+        ("GRU", OrbitalGRU, True),
+        ("Attn", OrbitalAttention, True) 
     ]
     
     for name, cls, force in models:

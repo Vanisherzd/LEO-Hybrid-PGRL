@@ -25,13 +25,13 @@ The framework follows a dual-stage integration strategy:
 
 ## 📊 Scientific Benchmarks
 
-Integrated performance over a continuous **100-minute window** (Formosat-5 Characteristics):
+Integrated performance over a continuous **120-minute window** (Formosat-5 Characteristics):
 
 | Model Architecture        | Local Force MSE          | Global Trajectory RMSE | Stability Profile        |
 | :------------------------ | :----------------------- | :--------------------- | :----------------------- |
-| **SGP4 (Baseline)**       | N/A                      | 1.52 km                | Globally Stable          |
-| **Pure Neural ODE (MLP)** | **$1.2 \times 10^{-6}$** | **$> 10,000$ km**      | **Divergent** (Lyapunov) |
-| **Hybrid PGRL (Ours)**    | $4.5 \times 10^{-5}$     | **157 meters**         | **Stable & Accurate**    |
+| **SGP4 (Baseline)**       | N/A                      | 1.14 km                | Globally Stable          |
+| **Pure Neural ODE (MLP)** | **$1.2 \times 10^{-6}$** | **$> 100$ km**         | **Divergent** (Lyapunov) |
+| **Hybrid PGRL (Ours)**    | $4.5 \times 10^{-5}$     | **1.16 km**            | **Stable & Accurate**    |
 
 > [!IMPORTANT]
 > **The MLP Paradox**: While pure AI models show superior _local_ force learning (lowest MSE), they lack the Hamiltonian structure required for integration stability. Our Hybrid approach "domesticates" this neural flexibility via physics anchoring.

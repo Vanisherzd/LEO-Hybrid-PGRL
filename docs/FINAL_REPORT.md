@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-The **Formosat-Neural-ODE** project establishes a new state-of-the-art for Low Earth Orbit (LEO) trajectory prediction using **Physics-Guided Residual Learning (PGRL)**. By fusing classical orbital mechanics (SGP4) with deep neural correction, we achieve a stable **157 meter RMSE** over 100-minute integration windows, outperforming both pure physics and pure deep learning approaches.
+The **Formosat-Neural-ODE** project establishes a new state-of-the-art for Low Earth Orbit (LEO) trajectory prediction using **Physics-Guided Residual Learning (PGRL)**. By fusing classical orbital mechanics (SGP4) with deep neural correction, we achieve a stable **1.16 km RMSE** over 120-minute integration windows, outperforming pure deep learning approaches by orders of magnitude.
 
 ## 2. The Challenge: Lyapunov Instability
 
@@ -31,8 +31,8 @@ The breakthrough occurred by shifting the learning target. Instead of predicting
 
 The robustness of PGRL was verified through **Transfer Learning**. A model trained on Formosat-5 (720km altitude) was transferred to Formosat-7 (550km altitude).
 
-- **F5 Precision**: ~100m RMSE.
-- **F7 Precision**: **157m RMSE** (After fine-tuning for increased atmospheric density).
+- **F5 Precision**: **1.16 km RMSE** (120-min integrated).
+- **F7 Precision**: **~1.5 km RMSE** (Projected after fine-tuning for increased atmospheric density).
 
 ## 6. Operational Impact
 

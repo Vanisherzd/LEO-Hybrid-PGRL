@@ -10,26 +10,17 @@ DATA_PATH = os.path.join("data", "precise_training_data.npz")
 NORAD_ID = 42920
 
 def fetch_tle(norad_id):
-    try:
-        url = f"https://celestrak.org/NORAD/elements/gp.php?CATNR={norad_id}&FORMAT=tle"
-        response = requests.get(url, timeout=10)
-        lines = response.text.strip().splitlines()
-        l1, l2 = None, None
-        for l in lines:
-            if l.startswith('1 '): l1 = l
-            elif l.startswith('2 '): l2 = l
-        return l1, l2
-    except:
-        return ("1 42920U 17049A   24029.54477817  .00004500  00000-0  17596-3 0  9990",
-                "2 42920  98.2435 112.5921 0001222  95.2341 264.9123 14.50023412341234")
+    # HARDCODED FOR ABSOLUTE SYNC
+    return ("1 42920U 17049A   26033.40794503  .00010884  00000-0  34483-3 0  9998",
+            "2 42920  98.2443  18.5369 0001859  38.7495 321.3653 14.50153835359281")
 
 def synthesize_high_fidelity_data():
     print("--- Synthesizing High-Fidelity Hybrid Benchmark Data ---")
     l1, l2 = fetch_tle(NORAD_ID)
     satellite = Satrec.twoline2rv(l1, l2, WGS72)
     
-    # Use modern epoch (Now)
-    start_dt = datetime.datetime.now(datetime.timezone.utc)
+    # Use stable fixed epoch (Jan 29, 2026)
+    start_dt = datetime.datetime(2026, 1, 29, 11, 39, 45, tzinfo=datetime.timezone.utc)
     start_epoch = start_dt.timestamp()
     
     t_raw = np.arange(0, 6000, 10) # 100 minutes, 10s steps (600 points)
