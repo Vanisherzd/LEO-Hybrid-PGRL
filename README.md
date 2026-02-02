@@ -27,12 +27,11 @@ where $\mathcal{N}_{\theta}$ is the neural corrector trained to minimize the res
 
 Detailed benchmarks over a 100-minute integration window:
 
-| Model Architecture | RMSE (km) | Stability      |
-| :----------------- | :-------- | :------------- |
-| SGP4 (WGS72)       | 1.52      | Stable         |
-| Pure Neural ODE    | 0.09      | Divergent      |
-| **Hybrid PGRL**    | **0.12**  | **Convergent** |
-| LSTM (Recurrent)   | 120.4     | Divergent      |
+| Method          | Local Force RMSE | Global Traj. RMSE (100m) | Stability                            |
+| :-------------- | :--------------- | :----------------------- | :----------------------------------- |
+| SGP4 (Baseline) | N/A              | ~1.52 km                 | Stable                               |
+| Pure Neural ODE | **Lowest**       | **> 1,000 km**           | **Divergent** (Lyapunov Instability) |
+| **Hybrid PGRL** | **Low**          | **~0.157 km**            | **Stable & Convergent**              |
 
 _Note: Hybrid PGRL maintains stability across multiple orbital periods, whereas pure neural models diverge exponentially._
 

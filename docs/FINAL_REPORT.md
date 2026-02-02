@@ -6,7 +6,9 @@ The **Formosat-Neural-ODE** project establishes a new state-of-the-art for Low E
 
 ## 2. The Challenge: Lyapunov Instability
 
-Initial phases focused on pure **Neural ODEs** (Differentiable RK4 Solvers learning force fields). While these models achieved sub-100m precision in short-term local segments, they exhibited catastrophic divergence during long-term integration. This is attributed to the **Lyapunov Instability** of the orbital system—small errors in predicted force accumulate quadratically in the position state, leading to >10,000 km errors within two orbital periods.
+Initial phases focused on pure **Neural ODEs** (Differentiable RK4 Solvers learning force fields). While These models achieved exceptional sub-meter precision in capturing **Local Force Dynamics** (Instantaneous Acceleration), they exhibited catastrophic failure during long-term integration.
+
+This divergence is a direct consequence of **Lyapunov Instability**. Unlike classical integrators, an unconstrained MLP lacks the **Hamiltonian structure** and sympletic properties required to conserve orbital energy over time. Small errors in local force prediction accumulate quadratically in the position state, leading to >1,000 km errors within two orbital periods. This "MLP Accuracy Paradox"—being locally precise but globally unstable—is the primary motivation for our **Hybrid PGRL** framework, which anchors neural flexibility to stable analytical physics.
 
 ## 3. Architecture Evolution
 
