@@ -1,0 +1,38 @@
+# Pretraining Configuration for LEO Satellite PINN
+
+# Model
+model:
+  orbital_elem_dim: 7
+  hidden_dim: 256
+  num_layers: 6
+  fourier_features: 128
+  use_fourier: true
+  omega0: 30.0
+
+# Training
+training:
+  epochs: 100
+  batch_size: 256
+  num_samples: 20000
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  early_stop_threshold_m: 5.0  # Stop when val RMSE < 5m
+
+# Loss
+loss:
+  w_data: 1.0
+  w_physics: 0.1
+  w_energy: 0.01
+  w_angmom: 0.01
+  position_weight: 1.0
+  velocity_weight: 0.1
+  use_adaptive: true
+
+# Satellite
+satellite:
+  altitude_km: 400
+  inclination_deg: 53.0
+  eccentricity: 0.001
+
+# Output
+output_dir: outputs/pretrain

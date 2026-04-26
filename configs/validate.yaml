@@ -1,0 +1,31 @@
+# Validation Configuration
+
+# Model
+model:
+  orbital_elem_dim: 7
+  hidden_dim: 256
+  num_layers: 6
+  fourier_features: 128
+
+# Validation
+validation:
+  num_samples: 1000
+  device: auto  # auto-detect
+
+# Satellite
+satellite:
+  altitude_km: 400
+  inclination_deg: 53.0
+
+# GPS Error Budget (reference)
+gps:
+  satellite_clock: 1.5     # m
+  ephemeris: 2.1           # m
+  ionospheric: 2.0         # m
+  tropospheric: 0.7        # m
+  multipath: 1.2           # m
+  receiver_noise: 0.5      # m
+
+# Paths
+checkpoint_path: outputs/pretrain/best_model.pt
+output_dir: outputs/validation

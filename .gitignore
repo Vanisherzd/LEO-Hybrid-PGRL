@@ -1,0 +1,41 @@
+# Virtual environments & dependency caches
+.venv/
+.deps/
+.eggs/
+*.egg-info/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.so
+
+# Test / coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data and model weights
+outputs/
+data/tle/*.npz
+data/tle/*.txt
+!data/tle/.gitkeep
+models/*.pt
+models/*.pth
+*.ckpt
+
+# Notebooks
+notebooks/
+*.ipynb
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# UV lockfile (pinned env, not needed in repo)
+uv.lock
+
+# Large dataarchives
+*.zip
+*.tar.gz
