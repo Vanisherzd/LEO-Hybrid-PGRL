@@ -42,3 +42,4 @@ uv.lock
 payload_results_realizations/hwil_usrp/*.npy
 payload_results_realizations/hwil_usrp/*.json
 .hermes.md
+payload_results_realizations/live_usrp/
