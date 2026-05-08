@@ -41,3 +41,4 @@ uv.lock
 # Store in Git LFS: git lfs track "*.npy" "*.h5" "*.pb"
 payload_results_realizations/hwil_usrp/*.npy
 payload_results_realizations/hwil_usrp/*.json
+.hermes.md
