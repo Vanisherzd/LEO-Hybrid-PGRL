@@ -425,7 +425,7 @@ def main() -> int:
                              color=colors, edgecolor='white', linewidth=0.8)
     axes[1, 1].axhline(16.0, color='#e74c3c', linestyle='--', linewidth=1.5,
                         label='Timing lock threshold (16 ms)')
-    axes[1, 1].set_title("Timing Jitter $\sigma_t$ (ms)", fontweight='bold')
+    axes[1, 1].set_title(r"Timing Jitter $\sigma_t$ (ms)", fontweight='bold')
     axes[1, 1].set_ylim(0, min(150, max(r['sigma_t_ms'] for r in results) * 1.15))
     axes[1, 1].set_xticklabels(names, fontsize=7, rotation=30, ha='right')
     axes[1, 1].legend(fontsize=7)

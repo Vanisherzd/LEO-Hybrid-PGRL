@@ -163,9 +163,9 @@ class GRPOAgent:
         # Move model to device
         self.pinn = self.pinn.to(self.device)
 
-# Value critic for baseline — must match PINN orbital_elem_dim (6)
- self.critic = ValueCritic(orbital_elem_dim=6).to(self.device)
- self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.config.learning_rate)
+        # Value critic for baseline — must match PINN orbital_elem_dim (6)
+        self.critic = ValueCritic(orbital_elem_dim=6).to(self.device)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=self.config.learning_rate)
 
         # GRPO optimizer for PINN
         self.optimizer = torch.optim.Adam(self.pinn.parameters(), lr=self.config.learning_rate)

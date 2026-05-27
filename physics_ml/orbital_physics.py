@@ -162,15 +162,11 @@ def kep2eci(kep: OrbitalElements, t: float) -> Tuple[np.ndarray, np.ndarray]:
 
 
 
-    # Velocity in orbital frame
-    # Velocity in orbital frame (perifocal / vis-viva)
-    v_mag = math.sqrt(MU_EARTH * (2 / r - 1 / a))
-    if abs(math.sin(nu)) < 1e-10:
-        vx_orb = 0.0
-        vy_orb = v_mag
-    else:
-        vx_orb = v_mag * e * math.sin(nu) / max(1 - e * math.cos(E), 1e-10)
-        vy_orb = math.sqrt(max(v_mag**2 - vx_orb**2, 0.0))
+    # Velocity in the perifocal frame.
+    p = a * (1 - e**2)
+    v_factor = math.sqrt(MU_EARTH / p)
+    vx_orb = -v_factor * math.sin(nu)
+    vy_orb = v_factor * (e + math.cos(nu))
 
 
     cos_O, sin_O = math.cos(Omega), math.sin(Omega)
@@ -687,7 +683,7 @@ class SGP4Propagator:
 
         tle["epoch_day"] = float(line1[20:32])
 
-        tle["bstar"] = float(line1[53:61]) * 1e-5
+        tle["bstar"] = _parse_tle_exponential(line1[53:61])
 
         tle["inclination"] = math.radians(float(line2[8:16]))
 
@@ -701,7 +697,7 @@ class SGP4Propagator:
 
         tle["mean_motion"] = float(line2[52:63])  # rev/day
 
-        tle["orbit_num"] = int(line1[63:68])
+        tle["orbit_num"] = int(line2[63:68])
 
 
 
@@ -789,11 +785,23 @@ class SGP4Propagator:
 
 
 
+def _parse_tle_exponential(value: str) -> float:
+    """Parse compact TLE exponential notation, e.g. ' 20472-4'."""
+    stripped = value.strip()
+    if not stripped:
+        return 0.0
+    if "e" in stripped.lower() or "." in stripped:
+        return float(stripped)
+    mantissa = stripped[:-2]
+    exponent = stripped[-2:]
+    return float(f"{mantissa[0]}.{mantissa[1:]}e{exponent}") if mantissa else 0.0
+
+
 def _tle_checksum(line: str) -> int:
 
     """Compute TLE line checksum (mod-10 sum of all digits, then mod 10)."""
 
-    return sum(ord(c) for c in line[:68]) % 10
+    return sum(int(c) if c.isdigit() else 1 if c == "-" else 0 for c in line[:68]) % 10
 
 
 
@@ -825,13 +833,13 @@ def generate_synthetic_tle(
     # 18:" ", 19-20:yr(2), 21-32:day(12), 33:" ", 34-43:1st_deriv(10),
     # 44:" ", 45-52:bstar(10), 53:" ", 54:eph(1), 55-57:elem_num(3), 58-68:" "
     yr = now.year % 100
-    intl = f"{yr:02d}001A "          # 8 chars
+    intl = f"{yr:02d}001A  "         # 8 chars
     day_str = f"{ep:.8f}"            # 12 chars: ddd.dddddddd
-    l1 = (f"1 99999U {intl} "        # cols 01-18 (18 chars)
-          f"{yr:02d}{day_str} "      # cols 19-35 (17 chars: yr=2 + day=12 + space=1)
-          f" .00000000 "             # cols 36-45 (10 chars)
-          f" .00000000 "             # cols 46-55 (10 chars)
-          f" 0 999 ")                # cols 56-62 (7 chars)
+    l1 = (f"1 99999U {intl} "        # cols 01-18
+          f"{yr:02d}{day_str}  "
+          f".00000000  "
+          f"00000-0  "
+          f"00000-0 0  999")
     l1_base = l1.ljust(68)[:68]      # ensure exactly 68
 
     # ── Line 2 (exactly 68 chars before checksum) ───────────────────────────
@@ -847,7 +855,7 @@ def generate_synthetic_tle(
           f"{ecc7} "                 # cols 27-34 (8 chars)
           f"{omega_deg:8.4f} "       # cols 35-43 (9 chars)
           f"{M0_deg:8.4f} "          # cols 44-52 (9 chars)
-          f"{n11} 999")              # cols 53-69 (13 chars: n=11 + space=1 + rev=4)
+          f"{n11}{999:5d}")          # cols 53-68 (mean motion + rev number)
     l2_base = l2.ljust(68)[:68]      # ensure exactly 68
 
     return l1_base + str(_tle_checksum(l1_base)), l2_base + str(_tle_checksum(l2_base))
