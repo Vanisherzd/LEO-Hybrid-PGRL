@@ -1,0 +1,26 @@
+{
+  "comment": "Example LR1121 TX config generated from PGRLOutput",
+  "center_frequency_hz": 915000000,
+  "tx_power_dbm": 14,
+  "payload_len": 16,
+  "spreading_factor": 12,
+  "coding_rate": 4,
+  "guard_time_s": 0.548,
+  "tx_time_s": 120.0,
+  "doppler_precomp_ratio": 1.0,
+  "lrfhss_mode": true,
+  "num_hops": 84,
+  "hop_length_ms": 6,
+  "header_disabled": false,
+  "invert_iq": false,
+  "metadata": {
+    "pass_start_s": 0.0,
+    "pass_peak_s": 120.0,
+    "pass_end_s": 240.0,
+    "doppler_hz": 1250.0,
+    "doppler_rate_hz_s": 35.0,
+    "timing_sigma_s": 0.016,
+    "doppler_sigma_hz": 300.0,
+    "link_score": 0.92
+  }
+}
