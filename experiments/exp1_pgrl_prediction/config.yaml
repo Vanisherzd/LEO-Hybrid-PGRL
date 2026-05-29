@@ -1,0 +1,28 @@
+experiment: exp1_pgrl_prediction
+description: >
+  PGRL predictor accuracy vs SGP4-only baseline.
+  Metrics: timing RMSE, Doppler RMSE, Doppler rate RMSE, NLL, coverage probability.
+satellite_set:
+  tle_source: data/tle/
+  num_satellites: 20
+  inclinations: [53, 72, 98]
+evaluation:
+  horizon_hours: 6
+  prediction_interval_s: 60
+  num_test_passes: 100
+baselines:
+  - name: sgp4_only
+    description: Vanilla SGP4/SDP4 propagator, no residual correction
+  - name: pgrl_bayesian
+    description: SGP4-anchored Bayesian residual corrector with Gaussian NLL loss
+model:
+  architecture: TrajectoryPINN
+  hidden_dim: 256
+  num_layers: 6
+  fourier_features: 128
+  uncertainty_mode: bayesian
+  loss: gaussian_nll
+output:
+  results_json: experiments/exp1_pgrl_prediction/results.json
+  figures_dir: experiments/exp1_pgrl_prediction/figures
+  paper_figure: experiments/exp1_pgrl_prediction/figures/fig2_pgrl_doppler_uncertainty.png

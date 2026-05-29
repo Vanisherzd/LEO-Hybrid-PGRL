@@ -13,16 +13,16 @@ def evm_percent(received_symbols: np.ndarray, reference_symbols: np.ndarray) -> 
     """Compute EVM % = 100 × RMS(error) / RMS(reference).
 
     Args:
-        received_symbols:  Received constellation points (complex)
-        reference_symbols:  Ideal constellation points (complex)
+        received_symbols:  Received constellation points (complex), shape (N,)
+        reference_symbols:  Ideal constellation points (complex), shape (N,)
 
     Returns:
         EVM [%]
     """
-    error  = (received_symbols - reference_symbols).astype(np.float64)
-    ref    = reference_symbols.astype(np.float64)
-    rms_err = np.sqrt(np.mean(np.sum(error**2, axis=1)))
-    rms_ref = np.sqrt(np.mean(np.sum(ref**2, axis=1)))
+    error  = received_symbols - reference_symbols
+    ref    = reference_symbols
+    rms_err = np.sqrt(np.mean(np.abs(error) ** 2))
+    rms_ref = np.sqrt(np.mean(np.abs(ref) ** 2))
     if rms_ref == 0:
         return float("inf")
     return float(100.0 * rms_err / rms_ref)

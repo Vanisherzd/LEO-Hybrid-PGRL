@@ -1,0 +1,36 @@
+{
+  "experiment": "exp2_guard_band_energy",
+  "validation_type": "simulation",
+  "baselines": [
+    "fixed_guard_30ms",
+    "sgp4_only",
+    "pgrl_mean_only",
+    "pgrl_uncertainty"
+  ],
+  "metrics": {
+    "guard_mean_s": {
+      "fixed_guard_30ms": 0.03,
+      "sgp4_only": 0.5,
+      "pgrl_mean_only": 0.5,
+      "pgrl_uncertainty": 0.5481
+    },
+    "guard_overhead_percent": {
+      "fixed_guard_30ms": 0.01,
+      "sgp4_only": 0.21,
+      "pgrl_mean_only": 0.21,
+      "pgrl_uncertainty": 0.23
+    },
+    "missed_opportunity_rate": {
+      "fixed_guard_30ms": 0.0,
+      "sgp4_only": 0.7335,
+      "pgrl_mean_only": 0.0174,
+      "pgrl_uncertainty": 0.0
+    },
+    "energy_per_opportunity_j": {
+      "fixed_guard_30ms": 0.07955,
+      "sgp4_only": 0.09506,
+      "pgrl_mean_only": 0.09506,
+      "pgrl_uncertainty": 0.09665
+    }
+  }
+}

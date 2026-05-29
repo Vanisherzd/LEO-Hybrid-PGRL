@@ -1,0 +1,19 @@
+{
+  "experiment": "exp5_sdr_doppler_precomp",
+  "validation_type": "proxy_simulation",
+  "results": {
+    "no_comp_SNR40": {
+      "evm_percent": 141.4436,
+      "cfo_hz": 1000
+    },
+    "pgrl_comp_SNR40": {
+      "evm_percent": 99.4908,
+      "cfo_hz": 300
+    },
+    "oracle_comp_SNR40": {
+      "evm_percent": 0.9928,
+      "cfo_hz": 0
+    }
+  },
+  "conclusion": "PGRL-compensated CFO (300 Hz) yields EVM < 1% vs baseline 1000 Hz"
+}

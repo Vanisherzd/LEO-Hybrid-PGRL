@@ -1,0 +1,30 @@
+experiment: exp2_guard_band_energy
+description: >
+  Uncertainty-aware guard-band: guard overhead, missed opportunity probability,
+  receiver-on time, energy per successful opportunity.
+energy_model:
+  rx_current_ma: 12.0
+  tx_current_ma: 28.0
+  voltage_v: 3.3
+  tx_power_dbm: 14
+satellite_scenario:
+  altitude_km: 400
+  pass_duration_s: 240
+baselines:
+  - name: fixed_guard_30ms
+    guard_s: 0.030
+    description: Conservative fixed 30 ms guard
+  - name: sgp4_only
+    use_uncertainty: false
+    description: SGP4 mean prediction, no uncertainty band
+  - name: pgrl_mean_only
+    use_uncertainty: false
+    description: PGRL mean prediction only
+  - name: pgrl_uncertainty_aware
+    use_uncertainty: true
+    k_sigma: 3.0
+    description: PGRL k-sigma uncertainty band (proposed)
+output:
+  results_json: experiments/exp2_guard_band_energy/results.json
+  figures_dir: experiments/exp2_guard_band_energy/figures
+  paper_figure: experiments/exp2_guard_band_energy/figures/fig3_guard_energy_tradeoff.png

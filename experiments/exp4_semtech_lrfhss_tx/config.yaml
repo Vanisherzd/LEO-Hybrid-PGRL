@@ -1,0 +1,25 @@
+experiment: exp4_semtech_lrfhss_tx
+description: >
+  Semtech LR1121/LR11xx TX bring-up using SWDM001 firmware.
+  Metrics: residual CFO, occupied bandwidth, spectral centroid offset,
+  packet detection probability.  Requires hardware — dry-run available without hardware.
+hardware:
+  status: planned   # Set to 'acquired' once LR1121 board is in hand
+  semtech_demo: SWDM001
+  chip: LR1121
+  host_interface: usb
+  attenuator_db: 30
+validation_sequence:
+  - label: baseline_tx
+    description: SWDM001 default TX, no PGRL compensation
+  - label: pgrl_compensated_tx
+    description: TX frequency pre-compensated using PGRL prediction from config JSON
+output:
+  results_json: experiments/exp4_semtech_lrfhss_tx/results.json
+  figures_dir: experiments/exp4_semtech_lrfhss_tx/figures
+  paper_figure: experiments/exp4_semtech_lrfhss_tx/figures/fig5_semtech_waterfall.png
+  logs_dir: experiments/exp4_semtech_lrfhss_tx/logs
+dry_run:
+  enabled: true
+  script: semtech_validation/run_lrfhss_tx.sh
+  modes: [baseline, compensated, compare]

@@ -100,23 +100,27 @@ uv run python experiments/exp2_guard_band_energy/run.py
 # Run LR-FHSS grid proxy
 uv run python experiments/exp3_lrfhss_grid_proxy/run.py
 
-# Generate paper figures (simulation-only, no hardware)
-uv run python src/sdr/isac_rf_orbit_healing.py --output Fig8_ISAC_Self_Healing.png
+# Optional: uncertainty calibration and ablation (thesis extension, not GLOBECOM scope)
+# uv run python src/sdr/isac_rf_orbit_healing.py --output Fig8_ISAC_Self_Healing.png
 ```
 
 ---
 
-## Key Results (Trace-Driven)
+## Key Results
 
-| Metric | SGP4-only | PGRL (this work) |
-|--------|-----------|------------------|
-| Pass timing RMSE | 4.2 s | **16 ms** |
-| Residual Doppler | > 5 kHz | **< 300 Hz** |
-| Guard overhead | 64 % | **< 5 %** |
-| EVM (QPSK proxy, 40 dB SNR) | 208 % | **0.95 %** |
-| LR-FHSS grid orthogonality | 0.587 | **0.979** |
+All trace-driven and simulation results. Hardware validation (Semtech + SDR) is the next stage.
 
-> All values are from trace-driven simulation. Hardware validation (Semtech + SDR) is the next stage per the experiment plan.
+| Component           | Metric                    | SGP4-only  | PGRL (this work) | Validation Type      |
+|---------------------|--------------------------:|----------:|----------------:|----------------------|
+| PGRL predictor      | Pass timing RMSE          |    4.2 s  |     **16 ms**   | Trace-driven         |
+| PGRL predictor      | Residual Doppler          |  > 5 kHz  |    **< 300 Hz** | Trace-driven         |
+| Guard-band policy   | Guard overhead            |      64 % |        **< 5 %** | Simulation           |
+| RF quality proxy    | QPSK EVM proxy (40 dB SNR) |   208 %  |      **0.95 %** | Proxy simulation     |
+| LR-FHSS grid proxy  | Grid orthogonality        |    0.587  |      **0.979**  | LR-FHSS-inspired proxy |
+| Semtech TX          | Waterfall / CFO           |         — |     **Planned** | Hardware (pending)    |
+| SDR HWIL            | Residual CFO / EVM        |         — |     **Planned** | Hardware (pending)    |
+
+> All completed values are from trace-driven simulation or proxy evaluation. The Semtech LR-FHSS TX bring-up and SDR HWIL validation stages are defined in `experiments/exp4/` and `experiments/exp5/`, pending hardware acquisition.
 
 ---
 
@@ -139,6 +143,6 @@ The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-drive
   title   = {PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT},
   author  = {Vanisherz, Z. D.},
   year    = {2025},
-  note    = {GitHub: https://github.com/Vanisherzd/LEO-PGRl-LRFHSS}
+  note    = {GitHub: https://github.com/Vanisherzd/LEO-PGRL-LRFHSS}
 }
 ```

@@ -18,16 +18,13 @@
   \IEEEauthorblockN{Z. D. Vanisherz}
   \IEEEauthorblockA{Independent Researcher\\
     Vanisherz@proton.me}
-  \and
-  \IEEEauthorblockN{Hermes Agent}
-  \IEEEauthorblockA{Nous Research}
 }
 
 \maketitle
 
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
-This paper proposes a Physics-Guided Residual Learning (PGRL)-assisted uncertainty-aware uplink-control framework for Direct-to-Satellite (D2S) IoT using LR-FHSS. An SGP4/SDP4 orbital backbone provides deterministic Doppler baselines; a Bayesian residual corrector learns timing and frequency corrections with Gaussian negative log-likelihood (NLL) loss, yielding calibrated 1-sigma uncertainty bounds. These predictions drive adaptive guard-band scheduling, transmission timing selection, and Doppler pre-compensation for the LR-FHSS physical layer. Trace-driven evaluation on multiple LEO orbital configurations shows that PGRL reduces guard overhead by up to 60\% versus fixed guard-band schemes and achieves residual Doppler below 300 Hz. We further validate the framework using a Semtech LR1121 / LR11xx LR-FHSS transmitter and a USRP B210 software-defined radio (SDR) hardware-in-the-loop (HWIL) testbed under LEO-like Doppler, carrier frequency offset (CFO), and additive noise impairments. Results demonstrate that PGRL-compensated transmissions achieve EVM below 3\% at 40 dB SNR and residual CFO below 50 Hz, compared with over 200 Hz for uncompensated baselines. The proposed framework establishes a traceable path from orbital prediction to standards-aligned physical-layer control without requiring continuous ground-station ephemeris updates.
+This paper proposes a Physics-Guided Residual Learning (PGRL)-assisted uncertainty-aware uplink-control framework for Direct-to-Satellite (D2S) IoT using LR-FHSS. An SGP4/SDP4 orbital backbone provides deterministic Doppler baselines; a Bayesian residual corrector learns timing and frequency corrections with Gaussian negative log-likelihood (NLL) loss, yielding calibrated 1-sigma uncertainty bounds. These predictions drive adaptive guard-band scheduling, transmission timing selection, and Doppler pre-compensation for the LR-FHSS physical layer. Trace-driven evaluation on multiple LEO orbital configurations shows that PGRL reduces guard overhead by up to 60\% versus fixed guard-band schemes and achieves residual Doppler below 300 Hz. We further define a Semtech LR1121/LR11xx LR-FHSS transmission validation path and an SDR-based IQ-level D2S-like measurement testbed for CFO estimation, EVM-proxy analysis, and waterfall visualization under LEO-like impairments. Hardware-level residual CFO, EVM proxy, and LR-FHSS waterfall characterization are left to the planned Semtech-SDR measurement stage. The proposed framework establishes a traceable path from orbital prediction to standards-aligned physical-layer control without requiring continuous ground-station ephemeris updates.
 \end{abstract}
 
 \begin{IEEEkeywords}

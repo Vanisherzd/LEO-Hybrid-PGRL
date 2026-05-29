@@ -1,0 +1,26 @@
+experiment: exp5_sdr_doppler_precomp
+description: >
+  SDR-based HWIL test under controllable LEO-like impairment.
+  Uses USRP B210 for IQ capture / impairment injection.
+  Metrics: residual CFO, EVM proxy, spectral alignment error, packet detection proxy.
+hardware:
+  status: planned   # Set to 'acquired' once USRP B210 is in hand
+  sdr_device: B210
+  sample_rate_mhz: 20
+impairments:
+  doppler_ramp_hz: [1250, 2500, 5000]
+  residual_cfo_hz: [50, 100, 200, 500]
+  snr_db: [20, 30, 40, 50]
+baselines:
+  - name: no_compensation
+  - name: sgp4_compensation
+  - name: pgrl_compensation
+  - name: oracle_compensation
+output:
+  results_json: experiments/exp5_sdr_doppler_precomp/results.json
+  figures_dir: experiments/exp5_sdr_doppler_precomp/figures
+  paper_figure: experiments/exp5_sdr_doppler_precomp/figures/fig5_sdr_evm_cfo.png
+  capture_dir: experiments/exp5_sdr_doppler_precomp/captures
+dry_run:
+  enabled: true
+  iq_source: synthetic   # Use inject_doppler.py on synthetic waveform before hardware
