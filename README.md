@@ -26,7 +26,7 @@ The current release includes:
 ## Repository Structure
 
 ```
-leo-pinn/                    # Project root
+LEO-Hybrid-PGRL/              # Project root
 ├── controller/               # PGRL → uplink-control interface
 │   ├── pgrl_output_schema.py    # PGRLOutput dataclass
 │   ├── guard_band_policy.py     # adaptive_guard_time()
@@ -51,16 +51,18 @@ leo-pinn/                    # Project root
 │   ├── capture_iq.py             # IQ capture script
 │   └── plot_waterfall.py         # Waterfall visualization
 ├── experiments/             # Reproducible experiment folders
-│   ├── exp1_pgrl_prediction/    # Prediction accuracy
+│   ├── exp1_pgrl_prediction/     # Prediction accuracy + ablation
 │   ├── exp2_guard_band_energy/   # Guard overhead / energy tradeoff
 │   ├── exp3_lrfhss_grid_proxy/   # LR-FHSS grid proxy evaluation
 │   ├── exp4_semtech_lrfhss_tx/   # Semtech hardware bring-up
 │   └── exp5_sdr_doppler_precomp/ # SDR HWIL Doppler pre-comp
 ├── paper/                    # GLOBECOM submission
 │   ├── globecom_main.tex         # IEEEtran skeleton
+│   ├── tables/main_results.tex   # Auto-generated tables
 │   └── refs.bib
 ├── docs/
 │   ├── globecom_scope.md         # GLOBECOM paper scope
+│   ├── hardware_claim_checklist.md
 │   ├── thesis_extension.md       # Deferred modules roadmap
 │   └── MAC_DEPLOYMENT_GUIDE.md   # MacBook + USRP B210 setup
 ├── hardware/usrp_scripts/    # USRP SDR scripts (legacy/HWIL)
@@ -123,7 +125,7 @@ All trace-driven and simulation results. Hardware validation (Semtech + SDR) is 
 | Semtech TX          | Waterfall / CFO           |         — |     **Planned** | Hardware (pending)    |
 | SDR HWIL            | Residual CFO / EVM        |         — |     **Planned** | Hardware (pending)    |
 
-> All completed values are from trace-driven simulation or proxy evaluation. The Semtech LR-FHSS TX bring-up and SDR HWIL validation stages are defined in `experiments/exp4/` and `experiments/exp5/`, pending hardware acquisition.
+> All completed values are from trace-driven simulation or proxy evaluation. The Semtech LR-FHSS TX bring-up (`experiments/exp4_semtech_lrfhss_tx/`) and SDR HWIL validation stage (`experiments/exp5_sdr_doppler_precomp/`) are defined in their respective folders, pending hardware acquisition.
 
 ---
 
