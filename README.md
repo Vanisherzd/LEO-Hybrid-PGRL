@@ -91,17 +91,20 @@ leo-pinn/                    # Project root
 # Install dependencies
 uv sync
 
-# Run PGRL prediction evaluation
+# Run PGRL prediction evaluation (trace-driven)
 uv run python physics_ml/evaluate_prediction.py
 
-# Run guard-band energy experiment
-uv run python experiments/exp2_guard_band_energy/run.py
+# Run guard-band energy experiment (simulation)
+uv run bash experiments/exp2_guard_band_energy/run.sh
 
-# Run LR-FHSS grid proxy
-uv run python experiments/exp3_lrfhss_grid_proxy/run.py
+# Run LR-FHSS grid proxy (proxy simulation)
+uv run bash experiments/exp3_lrfhss_grid_proxy/run.sh
 
-# Optional: uncertainty calibration and ablation (thesis extension, not GLOBECOM scope)
-# uv run python src/sdr/isac_rf_orbit_healing.py --output Fig8_ISAC_Self_Healing.png
+# Generate Semtech LR-FHSS TX config from PGRL output (dry-run, no hardware required)
+python semtech_validation/tx_config_from_pgrl.py --output-json /tmp/pgrl_tx_config.json
+
+# SDR HWIL synthetic IQ pipeline (dry-run, no hardware required)
+uv run bash experiments/exp5_sdr_doppler_precomp/run.sh dry-run
 ```
 
 ---
@@ -139,10 +142,11 @@ The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-drive
 ## Citation
 
 ```bibtex
-@article{vanisherz2025leopgrllrfhss,
-  title   = {PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT},
-  author  = {Vanisherz, Z. D.},
-  year    = {2025},
-  note    = {GitHub: https://github.com/Vanisherzd/LEO-PGRL-LRFHSS}
+@misc{lai2026leopgrllrfhss,
+  title   = {{PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT}},
+  author  = {Lai, Zhen-Dong},
+  year    = {2026},
+  howpublished = {\url{https://github.com/Vanisherzd/LEO-Hybrid-PGRL}},
+  note    = {Research prototype; GLOBECOM submission pending hardware validation}
 }
 ```

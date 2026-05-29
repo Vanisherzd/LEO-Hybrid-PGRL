@@ -1,6 +1,21 @@
 {
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:48:16Z",
+    "validation_type": "simulation",
+    "script": "experiments/exp2_guard_band_energy/run.sh",
+    "config": "experiments/exp2_guard_band_energy/config.yaml",
+    "dataset": "Synthesized from energy_model.py (no external TLE required)",
+    "train_test_split": "Monte Carlo simulation, 200 iterations, seed=42",
+    "baseline_definition": {
+      "fixed_guard_30ms": "Fixed 30 ms guard (ITU minimum)",
+      "sgp4_only": "3-sigma SGP4 timing uncertainty (\u03c3=1.5 s)",
+      "pgrl_mean_only": "PGRL mean + 3-sigma (\u03c3=0.2 s, mean-only)",
+      "pgrl_uncertainty": "PGRL 3-sigma with calibrated \u03c3=0.016 s"
+    },
+    "limitations": "Energy model uses simplified RX/TX currents; actual IoT device power consumption varies by duty cycle and radio state machine."
+  },
   "experiment": "exp2_guard_band_energy",
-  "validation_type": "simulation",
   "baselines": [
     "fixed_guard_30ms",
     "sgp4_only",
@@ -32,5 +47,6 @@
       "pgrl_mean_only": 0.09506,
       "pgrl_uncertainty": 0.09665
     }
-  }
+  },
+  "validation_type": "simulation"
 }

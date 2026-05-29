@@ -1,6 +1,21 @@
 {
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:48:16Z",
+    "validation_type": "lrfhss_inspired_proxy",
+    "script": "experiments/exp3_lrfhss_grid_proxy/run.sh",
+    "config": "experiments/exp3_lrfhss_grid_proxy/config.yaml",
+    "dataset": "Synthetic LEO Doppler model; no external TLE",
+    "train_test_split": "Monte Carlo simulation, seed=42; 7 residual-Doppler values \u00d7 4 baselines",
+    "baseline_definition": {
+      "no_comp": "No pre-compensation; residual = full Doppler",
+      "sgp4_comp": "SGP4-based Doppler compensation; residual \u03c3 \u2248 2500 Hz",
+      "pgrl_comp": "PGRL-based compensation; residual \u03c3 \u2248 300 Hz (calibrated)",
+      "oracle_comp": "Perfect Doppler knowledge; residual \u2248 10 Hz (floor)"
+    },
+    "limitations": "Grid orthogonality is an inspired proxy, NOT LR-FHSS PER. Collision probability is analytical; no actual LR-FHSS decoder is simulated."
+  },
   "experiment": "exp3_lrfhss_grid_proxy",
-  "validation_type": "lrfhss_inspired_proxy",
   "residual_doppler_hz": [
     0,
     50,
@@ -139,5 +154,6 @@
   "summary": {
     "pgrl_orthogonality_at_300hz": 0.705,
     "sgp4_orthogonality_at_300hz": 0.978
-  }
+  },
+  "validation_type": "lrfhss_inspired_proxy"
 }

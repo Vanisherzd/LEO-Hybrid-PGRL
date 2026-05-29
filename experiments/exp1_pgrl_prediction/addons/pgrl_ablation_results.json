@@ -1,0 +1,13 @@
+{
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:50:04Z",
+    "validation_type": "simulation",
+    "script": "experiments/exp1_pgrl_prediction/addons/pgrl_ablation.sh",
+    "dataset": "Simulated 200 passes; baseline values from literature SGP4 RMS errors",
+    "train_test_split": "200 runs, seed=42",
+    "baseline_definition": [],
+    "limitations": "Ablation baselines use literature-derived values; real PGRL requires hybrid_f5.pth from training machine."
+  },
+  "validation_type": "simulation"
+}

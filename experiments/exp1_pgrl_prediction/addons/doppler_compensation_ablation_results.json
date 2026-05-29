@@ -1,0 +1,13 @@
+{
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:50:04Z",
+    "validation_type": "simulation",
+    "script": "experiments/exp1_pgrl_prediction/addons/doppler_compensation_ablation.sh",
+    "dataset": "Synthetic LEO Doppler scenarios (3 regimes); no external TLE",
+    "train_test_split": "3 scenarios \u00d7 4 baselines, seed=42",
+    "baseline_definition": [],
+    "limitations": "Proxy metrics only (EVM, orthogonality); not LR-FHSS PER. SGP4 \u03c3=2500 Hz and PGRL \u03c3=300 Hz from calibrated model."
+  },
+  "validation_type": "simulation"
+}

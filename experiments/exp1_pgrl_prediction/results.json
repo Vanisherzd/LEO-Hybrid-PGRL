@@ -1,0 +1,18 @@
+{
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:50:04Z",
+    "validation_type": "simulation",
+    "script": "experiments/exp1_pgrl_prediction/addons/*.sh",
+    "dataset": "Synthetic + literature-based (see sub-experiment READMEs)",
+    "train_test_split": "Monte Carlo; see sub-experiment reproducibility headers",
+    "limitations": "Trace-driven validation pending hybrid_f5.pth weights from training machine. Ablation baselines are literature-derived values."
+  },
+  "experiment": "exp1_pgrl_prediction",
+  "addons": [
+    "uncertainty_calibration",
+    "pgrl_ablation",
+    "doppler_compensation_ablation",
+    "controller_ablation"
+  ]
+}

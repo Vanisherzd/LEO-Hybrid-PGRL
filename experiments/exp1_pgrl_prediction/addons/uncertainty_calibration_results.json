@@ -1,0 +1,13 @@
+{
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:50:04Z",
+    "validation_type": "simulation",
+    "script": "experiments/exp1_pgrl_prediction/addons/uncertainty_calibration.sh",
+    "dataset": "Synthetic Gaussian model (seed=42, 5000 samples)",
+    "train_test_split": "5000 MC samples, seed=42",
+    "baseline_definition": [],
+    "limitations": "Synthetic Gaussian error model; real PGRL error distribution may differ from lognormal approximation."
+  },
+  "validation_type": "simulation"
+}

@@ -1,6 +1,20 @@
 {
+  "_reproducibility": {
+    "commit": "e98c23a9",
+    "generated_at": "2026-05-29T16:48:16Z",
+    "validation_type": "proxy_simulation",
+    "script": "experiments/exp5_sdr_doppler_precomp/run.sh",
+    "config": "experiments/exp5_sdr_doppler_precomp/config.yaml",
+    "dataset": "Synthetic QPSK constellation via evm_proxy.py; no external IQ capture",
+    "train_test_split": "1000 symbols, SNR=40 dB, seed=42",
+    "baseline_definition": {
+      "no_comp_SNR40": "No CFO pre-compensation; CFO = 1000 Hz",
+      "pgrl_comp_SNR40": "PGRL pre-compensation; CFO \u2248 300 Hz",
+      "oracle_comp_SNR40": "Oracle (zero CFO)"
+    },
+    "limitations": "QPSK EVM proxy does NOT represent LR-FHSS packet error rate. SNR=40 dB is benign; performance degrades at realistic link budgets. Hardware validation pending."
+  },
   "experiment": "exp5_sdr_doppler_precomp",
-  "validation_type": "proxy_simulation",
   "results": {
     "no_comp_SNR40": {
       "evm_percent": 141.4436,
@@ -15,5 +29,6 @@
       "cfo_hz": 0
     }
   },
-  "conclusion": "PGRL-compensated CFO (300 Hz) yields EVM < 1% vs baseline 1000 Hz"
+  "conclusion": "PGRL-compensated CFO (300 Hz) yields EVM < 1% vs baseline 1000 Hz",
+  "validation_type": "proxy_simulation"
 }
