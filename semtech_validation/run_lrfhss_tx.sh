@@ -10,28 +10,35 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 mode="${1:-baseline}"
 
 case "$mode" in
+  -h|--help|help)
+    echo "Usage: $0 [baseline|compensated|compare]"
+    echo ""
+    echo "baseline      Print baseline SWDM001 TX placeholder"
+    echo "compensated   Generate PGRL-compensated LR1121/LR11xx TX config"
+    echo "compare       Run baseline then compensated dry-run"
+    exit 0
+    ;;
+
   baseline)
     echo "[TX] Baseline LR-FHSS TX (no PGRL compensation)"
-    echo "  → Replace with actual SWDM001 binary + invocation"
+    echo "  → TODO: Replace with actual SWDM001 binary + board-specific invocation"
+    echo "  → Current script is a dry-run wrapper only; it does NOT transmit yet."
     ;;
 
   compensated)
-    echo "[TX] PGRL-compensated LR-FHSS TX"
-    python -c "
-import sys, json
-sys.path.insert(0, '${PROJECT_ROOT}'
-from semtech_validation.tx_config_from_pgrl import load_example, make_semtech_tx_config
-cfg = make_semtech_tx_config(load_example(), base_freq_hz=915_000_000)
-print(json.dumps(cfg, indent=2))
-"
-    echo "  → Apply config to SWDM001, then capture with sdr_hwil/capture_iq.py"
+    echo "[TX] PGRL-compensated LR-FHSS TX config"
+    cd "$PROJECT_ROOT"
+    uv run python semtech_validation/tx_config_from_pgrl.py
+    echo "  → Apply semtech_validation/lr1121_tx_config_example.json to SWDM001 / LR1121 firmware."
+    echo "  → Current script generates config only; it does NOT transmit yet."
     ;;
 
   compare)
-    echo "[TX] Compare baseline vs PGRL-compensated TX"
+    echo "[TX] Compare baseline vs PGRL-compensated TX dry-run"
     "$0" baseline
     "$0" compensated
-    echo "Compare with: python sdr_hwil/estimate_cfo.py <baseline.cfile> <compensated.cfile>"
+    echo "Compare later with hardware captures:"
+    echo "  uv run python hardware/usrp_scripts/analyze_capture.py <capture.fc32> --sample-rate 1000000 --output-json <out.json> --plot <out.png>"
     ;;
 
   *)
