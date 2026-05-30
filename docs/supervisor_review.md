@@ -3,7 +3,7 @@
 > **Project:** PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT
 > **Target:** IEEE GLOBECOM 2026
 > **Status:** Trace-driven evaluation complete; hardware measurement planned
-> **Commit:** `8ea7fb0` (https://github.com/Vanisherzd/LEO-Hybrid-PGRL)
+> **Commit:** `6ee154e` (https://github.com/Vanisherzd/LEO-Hybrid-PGRL/tree/globecom-prehw-2026-05)
 
 ---
 
@@ -23,15 +23,11 @@ Use **Physics-Guided Residual Learning (PGRL)** — a Bayesian neural network an
 
 ## Contributions
 
-1. **PGRL Orbital Predictor:** SGP4-anchored Bayesian residual corrector. Achieves 16 ms timing RMSE (>99.6% improvement vs SGP4) and <300 Hz residual Doppler (>95.5% improvement). NLL decreases from 3.01 to 0.17, confirming calibrated uncertainty (ECE <0.3%).
+1. **PGRL Orbital Predictor:** SGP4/SDP4-anchored Bayesian residual learner. Produces calibrated one-sigma uncertainty estimates alongside pass timing, Doppler residual, and Doppler-rate. Achieves 16 ms timing RMSE (>99.6% improvement vs SGP4) and <300 Hz residual Doppler (>95.5% improvement).
 
-2. **Uncertainty-Aware Guard-Band Policy:** Adaptive guard scheduling that reduces guard overhead from 64% (ITU-fixed) to <5% while maintaining missed-opportunity probability <5×10⁻⁴.
+2. **Uncertainty-Aware LR-FHSS Uplink Controller:** Converts PGRL outputs into adaptive guard-time, transmission-time selection, and Doppler pre-compensation — without continuous ground-station feedback.
 
-3. **Doppler Pre-Compensation:** Carrier pre-tuning before transmission using predicted Doppler and Doppler-rate, reducing residual error from >5 kHz (SGP4-only) to ~300 Hz.
-
-4. **Uplink Controller Integration:** Guard-band scheduling, TX timing selection (multi-attribute utility maximization), and Doppler pre-compensation unified in the PGRLOutput schema.
-
-5. **Reproducible Validation Pipeline:** Trace-driven evaluation and SDR/Semtech-ready hardware path — see `experiments/summary_table.py` and `paper/tables/main_results.tex` for auto-generated tables.
+3. **Reproducible Evaluation Pipeline:** Trace-driven evaluation with explicit validation-type labeling (trace-driven / simulation / proxy / planned hardware), together with a Semtech LR1121/LR11xx and SDR-ready hardware validation path for future IQ-level measurement.
 
 ---
 
@@ -44,10 +40,11 @@ Use **Physics-Guided Residual Learning (PGRL)** — a Bayesian neural network an
 | Guard-band policy | Guard overhead | 2.41% | 0.23% | Simulation |
 | Guard-band policy | Missed-opp. rate | 0.0005 | 0.0005 | Simulation |
 | Doppler pre-comp | Residual Doppler | 2728 Hz | 334 Hz | Simulation |
-| Doppler pre-comp | QPSK EVM (SNR=40 dB) | 141.4% | 99.5% | Proxy simulation |
+| Doppler pre-comp | QPSK EVM (SNR=40 dB) | >208% | 67% | Proxy simulation |
+| Doppler pre-comp | Oracle EVM (upper bound) | 0.95% | — | Upper bound |
 | LR-FHSS grid proxy | Grid orthogonality | 0.978 | 0.706 | LR-FHSS-inspired proxy |
 
-> **Note on EVM:** PGRL-compensated EVM of 99.5% reflects ~300 Hz residual CFO at SNR=40 dB. This is substantially better than SGP4-only (141%) but a gap to oracle (0.99%) remains. Hardware-level CFO tracking is required for robust production LR-FHSS systems.
+> **Note on EVM:** The QPSK EVM is an RF-quality proxy under controlled SNR=40 dB, not a standard LR-FHSS PER. PGRL compensation (67%) substantially reduces impairment relative to SGP4-only (>208%) but remains far from the oracle upper bound (0.95%). Production LR-FHSS systems require additional hardware CFO tracking beyond PGRL pre-compensation.
 
 ---
 
