@@ -54,7 +54,7 @@ This paper's primary contributions are:
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/fig1_architecture.pdf}
-    \caption{System architecture: TLE source $\rightarrow$ SGP4 propagator $\rightarrow$ PGRL Bayesian corrector $\rightarrow$ uplink controller (guard-band, TX timing, Doppler pre-comp) $\rightarrow$ Semtech LR1121 TX / USRP B210 (planned hardware path).}
+    \caption{System architecture: TLE source $\rightarrow$ SGP4 propagator $\rightarrow$ PGRL Bayesian corrector $\rightarrow$ uplink controller (guard-band, TX timing, Doppler pre-comp) $\rightarrow$ Semtech LR1121 TX / USRP B210 IQ-level measurement path.}
     \label{fig:architecture}
 \end{figure}
 
@@ -185,7 +185,7 @@ The \texttt{compensated\_tx\_frequency} function adjusts the nominal carrier fre
 \begin{equation}
 f_{\text{TX}} = f_c - \hat{f}_d - \frac{\hat{f}_d'}{2}\,T_{\text{burst}}
 \end{equation}
-where $T_{\text{burst}}$ is the expected transmission duration. With PGRL-compensated residual Doppler of $\approx 300$ Hz (versus $>5$ kHz without compensation), the remaining frequency error is well within the LR-FHSS bin width, reducing PER from saturation (no sync) to link-budget-limited performance.
+where $T_{\text{burst}}$ is the expected transmission duration. With PGRL-compensated residual Doppler of $\approx 300$ Hz (versus $>5$ kHz without compensation), the remaining frequency error is well within the LR-FHSS bin width, reducing LR-FHSS grid displacement in the proxy evaluation. PER is not reported because standard-compliant LR-FHSS decoding is outside the scope of this work.
 
 \subsection{TX Timing Selection}
 The \texttt{select\_tx\_time} function scores candidate transmission windows using a weighted utility:
@@ -234,10 +234,10 @@ To keep claims auditable, every result in this paper carries an explicit validat
 \label{sec:hardware}
 
 \subsection{Semtech LR1121 TX Path}
-The Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} produces a standards-compliant LR-FHSS transmission. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into a TX configuration JSON specifying center frequency, TX power, hopping grid parameters, guard time, and Doppler pre-compensation flags. The dry-run mode validates the config generation without hardware; real TX capture with the attenuator loopback cable (30~dB) enables direct signal quality measurement.
+The Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} produces a standards-compliant LR-FHSS transmission. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into a TX configuration JSON specifying center frequency, TX power, hopping grid parameters, guard time, and Doppler pre-compensation flags. The dry-run mode validates the config generation without hardware; live TX capture over the SDR receive path enables IQ-level signal-quality assessment.
 
 \subsection{SDR IQ Testbed}
-A USRP B210 connected via coax (30~dB attenuator) to the Semtech TX forms a deterministic impairment testbed. The SDR captures IQ samples at 1~MHz bandwidth, which are processed by the CFO estimator (phase-derivative method), EVM proxy (QPSK constellation), and waterfall visualizer. The SDR pipeline runs in synthetic-IQ mode for dry-run validation of all signal processing blocks before live capture.
+A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection; calibrated conducted measurements with attenuator-controlled coupling are left for future RF characterization. The SDR captures IQ samples at 1~MHz bandwidth, which are processed by the CFO estimator (phase-derivative method), EVM proxy (QPSK constellation), and waterfall visualizer. The SDR pipeline also runs in synthetic-IQ mode for dry-run validation of all signal processing blocks.
 
 \begin{figure}[t]
     \centering
