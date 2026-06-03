@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-06-03T14:56:11.377741Z",
+  "capture_dir": "hardware/captures",
+  "n_captures": 4,
+  "captures": [
+    {
+      "path": "hardware/captures/lr1121_lrfhss_868_baseline.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/lr1121_lrfhss_868_baseline_analysis.json",
+      "plots": [
+        "hardware/captures/lr1121_lrfhss_868_baseline_waterfall.png"
+      ],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    },
+    {
+      "path": "hardware/captures/lr1121_lrfhss_868_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/lr1121_lrfhss_868_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/lr1121_lrfhss_868_txrx_waterfall.png"
+      ],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    },
+    {
+      "path": "hardware/captures/lr1121_lrfhss_baseline.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/lr1121_lrfhss_baseline_analysis.json",
+      "plots": [
+        "hardware/captures/lr1121_lrfhss_baseline_waterfall.png"
+      ],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    },
+    {
+      "path": "hardware/captures/usrp_noise.fc32",
+      "size_bytes": 16000000,
+      "sample_count": 2000000,
+      "analysis_json": "hardware/captures/usrp_noise_analysis.json",
+      "plots": [
+        "hardware/captures/usrp_noise_waterfall.png"
+      ],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    }
+  ]
+}
