@@ -20,9 +20,20 @@
 \title{PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT}
 
 \author{
-  \IEEEauthorblockN{Z. D. Vanisherz}
-  \IEEEauthorblockA{Independent Researcher\\
-    Vanisherz@proton.me}
+\IEEEauthorblockN{
+Zhen-Dong Lai\IEEEauthorrefmark{1},
+Second Author\IEEEauthorrefmark{1},
+Third Author\IEEEauthorrefmark{1},
+and Fourth Author\IEEEauthorrefmark{2}
+}
+\IEEEauthorblockA{\IEEEauthorrefmark{1}
+Department of Computer Science, National Tsing Hua University, Hsinchu, Taiwan\\
+Email: zdlai@gapp.nthu.edu.tw
+}
+\IEEEauthorblockA{\IEEEauthorrefmark{2}
+Affiliation of Fourth Author\\
+Email: fourth.author@example.com
+}
 }
 
 \maketitle
@@ -210,6 +221,13 @@ The PGRL evaluation uses a \emph{temporal split}: all training passes chronologi
     \label{fig:grid}
 \end{figure}
 
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figures/fig5_sdr_synthetic_pipeline.pdf}
+    \caption{Synthetic-IQ SDR dry-run used to validate signal-processing blocks; live IQ-level hardware signal detection is reported separately in Fig.~\ref{fig:hw_lrfhss}. (a) EVM vs SNR for oracle, PGRL-compensated, and SGP4-only paths. (b) QPSK constellation at SNR$=40$ dB with $\sim$300~Hz residual CFO (PGRL-compensated case). (c) CFO estimation convergence on synthetic IQ.}
+    \label{fig:sdr}
+\end{figure}
+
 \subsection{Trace-Driven Results}
 \input{tables/main_results}
 
@@ -239,20 +257,13 @@ Having established the trace-driven and proxy-simulation results above, we now d
 The Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} produces a standards-compliant LR-FHSS transmission. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into a TX configuration JSON specifying center frequency, TX power, hopping grid parameters, guard time, and Doppler pre-compensation flags. The dry-run mode validates the config generation without hardware; live TX capture over the SDR receive path enables IQ-level signal-quality assessment.
 
 \subsection{SDR IQ Testbed}
-A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection; calibrated conducted measurements with attenuator-controlled coupling are left for future RF characterization. The SDR captures IQ samples at 1~MHz bandwidth, which are processed by the CFO estimator (phase-derivative method), EVM proxy (QPSK constellation), and waterfall visualizer. The SDR pipeline also runs in synthetic-IQ mode for dry-run validation of all signal processing blocks.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/fig5_sdr_synthetic_pipeline.pdf}
-    \caption{IQ-level SDR pipeline (synthetic-IQ dry-run, \emph{not} standard LR-FHSS PER). (a) EVM vs SNR for oracle, PGRL-compensated, and SGP4-only paths. (b) QPSK constellation at SNR$=40$ dB with $\sim$300~Hz residual CFO (PGRL-compensated case). (c) CFO estimation convergence on synthetic IQ. This dry-run validates the signal-processing blocks; live hardware results are reported in Sec.~\ref{sec:hw-results}.}
-    \label{fig:sdr}
-\end{figure}
+A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection; calibrated conducted measurements with attenuator-controlled coupling are left for future RF characterization. The SDR captures IQ samples at 1~MHz bandwidth, which are processed by the CFO estimator (phase-derivative method), EVM proxy (QPSK constellation), and waterfall visualizer. The SDR pipeline also runs in synthetic-IQ mode for dry-run validation of all signal-processing blocks (Fig.~\ref{fig:sdr}).
 
 \subsection{Preliminary IQ-Level Signal Detection}
 \label{sec:hw-results}
 Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet interval) and a USRP B210 receiver (TX/RX antenna, 1~Msps, 45~dB gain, 10~s capture), the pipeline was run with a transmitter-on/off differential protocol. A capture is labeled \emph{signal-detected} only when the LR-FHSS-aware detector finds sparse-hop time-frequency occupancy significantly above the per-bin noise floor (DC/LO spike excluded), corroborated by UART transmit logs and a TX-OFF reference. In three TX ON/OFF trials at 868~MHz, TX-ON consistently exceeded TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB, with all three reaching \emph{signal-detected} (Fig.~\ref{fig:hw_lrfhss}). This constitutes IQ-level RF signal detection only.
 
-\begin{figure}[t]
+\begin{figure}[!t]
     \centering
     \begin{subfigure}{0.49\linewidth}
         \includegraphics[width=\linewidth]{figures/hardware/fig_hw_lrfhss_onoff_comparison.png}
@@ -263,7 +274,7 @@ Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet
         \includegraphics[width=\linewidth]{figures/hardware/fig_hw_lrfhss_repeatability.png}
         \caption{ON/OFF delta, three trials.}
         \label{fig:hw_lrfhss_b}
-    \end{subfigure}
+    \end{subfigure}%
     \caption{Preliminary IQ-level LR1121 LR-FHSS signal detection with a USRP B210 at 868~MHz. TX-ON/OFF controls show consistent sparse-hop RF evidence across three trials, with ON/OFF max-hold occupancy deltas of 8.88, 11.87, and 9.82~dB. IQ-level signal detection only; no standard-compliant LR-FHSS decoding or PER.}
     \label{fig:hw_lrfhss}
 \end{figure}

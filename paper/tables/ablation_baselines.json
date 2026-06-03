@@ -1,7 +1,7 @@
 {
   "metadata": {
-    "commit": "19928e66",
-    "generated_at": "2026-06-03T14:56:11Z",
+    "commit": "42915dd9",
+    "generated_at": "2026-06-03T18:21:19Z",
     "validation_type": "literature-derived / simulation (no hardware)",
     "description": "Reviewer-facing method comparison. Reuses constants from summary_table.py; no new numbers. '--' = not evaluated / not applicable. Hardware rows excluded (bring-up only, no LR-FHSS signal detected)."
   },

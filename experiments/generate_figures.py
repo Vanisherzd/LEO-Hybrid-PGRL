@@ -269,7 +269,7 @@ def fig5_sdr_synthetic():
     axes[2].legend(fontsize=7)
     axes[2].set_ylim(0, 3000)
 
-    fig.suptitle("Fig. 5. SDR Synthetic IQ Pipeline (Dry-Run) — Hardware Validation Pending",
+    fig.suptitle("Fig. 5. SDR Synthetic IQ Pipeline (Dry-Run)",
                  fontsize=9, fontweight="bold", y=1.04)
     fig.tight_layout()
     fig.savefig(os.path.join(OUT_DIR, "fig5_sdr_synthetic_pipeline.pdf"),

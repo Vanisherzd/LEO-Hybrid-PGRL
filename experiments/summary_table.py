@@ -106,14 +106,14 @@ summary = {
             ["Doppler pre-comp",      "QPSK EVM (SNR=40 dB)",     f">{SGP4_EVM_PCT:.0f}\\%",          f"{PGRL_EVM_PCT:.0f}\\%",             "Proxy simulation"],
             ["Doppler pre-comp",      "Oracle EVM (upper bound)",  f"{ORACLE_EVM_PCT:.2f}\\%",         "—",                                 "Upper bound"],
             ["LR-FHSS grid proxy",    "Grid orthogonality",        f"{SGP4_ORTHOGONALITY:.3f}",       f"{PGRL_ORTHOGONALITY:.3f}",          "LR-FHSS-inspired proxy"],
-            ["Semtech LR-FHSS TX",    "Waterfall / CFO",           "—",                               "Planned",                           "Hardware (pending)"],
-            ["SDR HWIL",              "Residual CFO / EVM",        "—",                               "Planned",                           "Hardware (pending)"],
+            ["LR1121 + USRP B210",    "TX ON/OFF sparse-hop occupancy delta", "--",                  "8.88 / 11.87 / 9.82 dB",            "hardware-signal-detected"],
+            ["LR1121 + USRP B210",    "UART-confirmed packets per ON capture", "--",                 "7 packets",                         "hardware-signal-detected"],
         ],
         "note": (
-            "All non-Planned results use synthetic or literature-derived baselines. "
+            "Simulation/proxy results use synthetic or literature-derived baselines. "
             "QPSK EVM is an RF-quality proxy under SNR=40 dB — NOT a standard LR-FHSS PER. "
-            "PGRL pre-compensation substantially reduces impairment vs SGP4-only but remains "
-            "far from the oracle bound; residual hardware CFO tracking is required for production."
+            "The hardware rows report three repeated TX ON/OFF trials at 868 MHz: "
+            "IQ-level RF signal detection only; no LR-FHSS decoding or PER."
         ),
     },
     "table_2_ablation": {
@@ -245,6 +245,9 @@ def make_booktabs(data, col_fmt="lcccc", label="tab:main"):
         "\\setlength{\\tabcolsep}{3pt}",
         "\\centering",
         f"\\caption{{\\label{{{label}}}{data.get('caption', 'Results Summary')}}}",
+        # Shrink-to-fit only when the natural table is wider than one column;
+        # leaves narrow tables at their natural size (no upscaling).
+        "\\resizebox{\\ifdim\\width>\\columnwidth \\columnwidth\\else\\width\\fi}{!}{%",
         f"\\begin{{tabular}}{{{col_fmt}}}",
         "\\toprule",
         " & ".join(str(c) for c in headers) + " \\\\",
@@ -256,8 +259,8 @@ def make_booktabs(data, col_fmt="lcccc", label="tab:main"):
     note_text = data.get("note", "")
     lines.extend([
         "\\bottomrule",
-        "\\end{tabular}",
-        f"\\raggedright\\small\\textit{{{note_text}}}",
+        "\\end{tabular}}",
+        f"\\par\\vspace{{2pt}}\\raggedright\\footnotesize\\textit{{{note_text}}}",
         "\\end{table}",
     ])
     return "\n".join(lines)
