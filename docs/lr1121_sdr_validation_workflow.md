@@ -91,19 +91,63 @@ which makes intermittent LR-FHSS hops easier to spot than a single FFT frame.
 ## 4. Sweep workflow
 
 When a single capture shows nothing, sweep frequency and antenna port to find
-where (if anywhere) RF energy appears:
+where (if anywhere) RF energy appears.
+
+### 4.1 Automated sweep (preferred)
+
+`scripts/run_lr1121_sdr_sweep_auto.py` orchestrates the whole loop hands-free:
+for each (frequency, antenna) it starts the USRP capture, waits
+`--reset-delay-s`, auto-resets the NUCLEO so the post-reset LR-FHSS ping lands
+inside the capture window, optionally logs UART, runs signal detection, and
+writes `sweep_summary.csv` / `sweep_summary.json` — continuing on per-cell
+failure.
+
+```bash
+uv run python scripts/run_lr1121_sdr_sweep_auto.py \
+    --serial 8000304 --freqs "868e6,915e6,923e6" --antennas "RX2,TX/RX" \
+    --rate 1e6 --gain 45 --duration 10 \
+    --reset-method stlink --uart /dev/tty.usbmodem1303 --uart-baud 115200
+```
+
+**Reset / prerequisites.** If `stlink` reset does not work (st-flash/st-info are
+**not** installed on this Mac, or no probe is attached), either:
+
+- use `--reset-method manual` (you press the NUCLEO reset button when
+  prompted), or
+- flash continuous-TX firmware so no reset is needed at all — see
+  [docs/swdm001_auto_tx_mode.md](swdm001_auto_tx_mode.md) (Mode B), then run
+  with `--reset-method none`.
+
+Prerequisites for the optional paths:
+`brew install stlink` (for `--reset-method stlink`) and
+`uv add pyserial` (for `--uart` logging and `--reset-method serial-dtr`). Note
+that `serial-dtr` is best-effort and may not reset every NUCLEO board.
+
+**Safe defaults.** Use `--rate 1e6 --gain 45 --duration 10`. `2e6 / 30s` caused
+a UHD overflow on this Mac.
+
+**Honesty rule.** A `Packet sent!` UART line verifies firmware TX-command
+completion, **not** RF capture. The signal detector is the authority for RF
+waveform detection: the validation label stays at hardware-bringup / pending
+(`firmware_running` / `iq_capture_done`) unless
+`validation_status == "signal_detected"`.
+
+### 4.2 Manual shell sweep (fallback)
+
+The original shell sweep still works and is useful for one-off manual runs (the
+automated Python sweep in 4.1 is preferred):
 
 ```bash
 bash scripts/run_lr1121_sdr_sweep.sh \
     --serial 8000304 \
     --freqs "868e6,915e6,923e6" \
     --antennas "RX2,TX/RX" \
-    --rate 2e6 \
+    --rate 1e6 \
     --gain 45 \
-    --duration 30
+    --duration 10
 ```
 
-This produces `sweep_summary.json` and `sweep_summary.csv`, one row per
+Both sweeps produce `sweep_summary.json` and `sweep_summary.csv`, one row per
 (frequency, antenna) combination, each carrying the canonical analyzer fields so
 you can see at a glance which configuration (if any) reaches
 `validation_status == "signal_detected"`.

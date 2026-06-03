@@ -61,4 +61,6 @@ hardware/captures/**/*.fc32
 hardware/captures/**/*.dat
 hardware/captures/**/*.png
 hardware/captures/**/*.json
+hardware/captures/**/*.csv
+hardware/captures/**/*.log
 semtech_validation/lr1121_tx_config_example.json
