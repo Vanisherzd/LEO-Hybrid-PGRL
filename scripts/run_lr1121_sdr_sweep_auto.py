@@ -9,11 +9,22 @@ stays in hardware-bringup / pending.
 
 Build constraints: stdlib only, plus optional lazily-imported pyserial.
 
+Two modes:
+  --mode normal  (default): one capture per (freq, antenna), as before.
+  --mode on-off : for each (freq, antenna) take a TX-ON capture, then prompt
+                  the operator to power off the LR1121 and take a TX-OFF
+                  reference capture, then run compare_tx_on_off.py to produce
+                  an on/off delta. This is corroborating evidence only; the
+                  analyzer JSON remains the sole authority for signal_detected.
+
 Typical use:
     uv run python scripts/run_lr1121_sdr_sweep_auto.py \
         --serial 8000304 --freqs "868e6,915e6,923e6" --antennas "RX2,TX/RX" \
         --rate 1e6 --gain 45 --duration 10 \
         --reset-method stlink --uart /dev/tty.usbmodem1303 --uart-baud 115200
+
+    uv run python scripts/run_lr1121_sdr_sweep_auto.py \
+        --serial 8000304 --freqs "923e6" --antennas "RX2" --mode on-off
 """
 
 from __future__ import annotations
@@ -36,6 +47,7 @@ REPO_ROOT = os.path.dirname(SCRIPT_DIR)
 CAPTURE_BIN = os.path.join(REPO_ROOT, "hardware", "usrp_scripts", "rx_capture_to_file_cpp")
 ANALYZE_PY = os.path.join(REPO_ROOT, "hardware", "usrp_scripts", "analyze_capture.py")
 QUICK_MAXHOLD_PY = os.path.join(REPO_ROOT, "hardware", "usrp_scripts", "quick_maxhold.py")
+COMPARE_PY = os.path.join(REPO_ROOT, "hardware", "usrp_scripts", "compare_tx_on_off.py")
 
 # Markers in capture stdout/stderr that indicate a UHD overflow / metadata error.
 OVERFLOW_MARKERS = (
@@ -63,6 +75,9 @@ CSV_HEADER = [
     "uart_packet_sent_count",
     "uart_seen_init",
     "note",
+    # --- on/off differential mode (appended; empty/false in normal mode) ---
+    "on_off_delta_db",
+    "tx_on_stronger_than_off",
 ]
 
 
@@ -113,6 +128,14 @@ def python_runner() -> list:
     if shutil.which("uv"):
         return ["uv", "run", "python"]
     return [sys.executable]
+
+
+def prompt_operator(message: str) -> None:
+    """Blocking prompt for a manual operator action. Robust to no stdin."""
+    try:
+        input(f"[AUTO-SWEEP] {message}")
+    except EOFError:
+        warn("No interactive stdin available for operator prompt; continuing")
 
 
 # --------------------------------------------------------------------------- #
@@ -302,8 +325,13 @@ def detect_overflow(text: str) -> bool:
     return False
 
 
-def run_analyzer(args, fc32_path: str, base: str) -> tuple:
-    """Run analyze_capture.py. Return (analysis_dict_or_None, ok_bool)."""
+def run_analyzer(args, fc32_path: str, base: str, uart_packet_count=None) -> tuple:
+    """Run analyze_capture.py in LR-FHSS mode. Return (analysis_dict_or_None, ok_bool).
+
+    uart_packet_count: if not None, forwarded as --uart-packet-sent-count so the
+    analyzer applies the UART corroboration gate (b). Pass None when no UART log
+    was collected so the gate is skipped rather than failed.
+    """
     analysis_json = base + "_analysis.json"
     waterfall_png = base + "_waterfall.png"
     maxhold_png = base + "_maxhold.png"
@@ -317,7 +345,10 @@ def run_analyzer(args, fc32_path: str, base: str) -> tuple:
         "--plot", waterfall_png,
         "--maxhold-plot", maxhold_png,
         "--signal-threshold-db", str(args.signal_threshold_db),
+        "--lr-fhss-mode",
     ]
+    if uart_packet_count is not None:
+        cmd += ["--uart-packet-sent-count", str(int(uart_packet_count))]
     try:
         proc = subprocess.run(
             cmd,
@@ -375,6 +406,64 @@ def run_quick_maxhold(args, fc32_path: str, base: str) -> None:
         warn(f"quick_maxhold.py failed (non-fatal): {exc}")
 
 
+def run_compare_on_off(args, on_fc32: str, off_fc32: str, base: str) -> tuple:
+    """Run compare_tx_on_off.py for an ON/OFF pair.
+
+    Returns (on_off_delta_db_or_None, tx_on_stronger_or_None, ok_bool). Parses
+    the produced comparison.json with json.load (never grep). All failures are
+    non-fatal: they return (None, None, False) so the sweep continues.
+    """
+    out_json = base + "_comparison.json"
+    out_png = base + "_comparison.png"
+    sample_rate = to_int_hz(str(args.rate))
+
+    if not os.path.isfile(COMPARE_PY):
+        warn(f"compare_tx_on_off.py not found at {COMPARE_PY}; skipping comparison")
+        return None, None, False
+
+    cmd = python_runner() + [
+        COMPARE_PY,
+        "--tx-on", on_fc32,
+        "--tx-off", off_fc32,
+        "--sample-rate", str(sample_rate),
+        "--out-json", out_json,
+        "--out-plot", out_png,
+    ]
+    try:
+        proc = subprocess.run(
+            cmd,
+            cwd=REPO_ROOT,
+            timeout=300,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except Exception as exc:  # noqa: BLE001
+        warn(f"compare_tx_on_off.py failed to run: {exc}")
+        return None, None, False
+
+    if proc.returncode != 0:
+        warn(
+            "compare_tx_on_off.py exited "
+            f"{proc.returncode}: {proc.stderr.decode('utf-8', 'replace')[:400]}"
+        )
+        return None, None, False
+
+    if not os.path.isfile(out_json):
+        warn(f"compare_tx_on_off.py produced no JSON at {out_json}")
+        return None, None, False
+
+    try:
+        with open(out_json, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception as exc:  # noqa: BLE001
+        warn(f"Could not read comparison JSON {out_json}: {exc}")
+        return None, None, False
+
+    delta = data.get("on_off_delta_db")
+    stronger = data.get("tx_on_stronger_than_off")
+    return delta, bool(stronger) if stronger is not None else None, True
+
+
 def empty_row(args, freq: str, antenna: str, capture_file: str) -> dict:
     """A row template with all numeric/analysis fields blank."""
     return {
@@ -396,7 +485,110 @@ def empty_row(args, freq: str, antenna: str, capture_file: str) -> dict:
         "uart_packet_sent_count": 0,
         "uart_seen_init": False,
         "note": "",
+        # on/off differential fields (blank/false unless on-off mode populates).
+        "on_off_delta_db": "",
+        "tx_on_stronger_than_off": False,
     }
+
+
+def _do_capture(args, freq: str, antenna: str, fc32_path: str, serial_mod,
+                do_reset_actions: bool, uart_active: bool):
+    """Run a single capture subprocess (start, optional reset, wait, classify).
+
+    Returns (capture_status, note, actual_duration, file_ok, returncode,
+    uart_logger_or_None). Does NOT analyze. Shared by normal and on-off modes
+    so all the existing capture_status classification is preserved verbatim.
+
+    do_reset_actions: when False (e.g. a TX-OFF reference), the reset is NOT
+    issued -- we want the transmitter to stay off.
+    uart_active: whether to spin up the background UART logger for this capture.
+    """
+    base = os.path.splitext(fc32_path)[0]
+
+    # UART logging thread (reads for duration + 2s).
+    uart_logger = None
+    if uart_active and args.uart and serial_mod is not None:
+        uart_log_path = base + "_uart.log"
+        uart_logger = UartLogger(
+            serial_mod,
+            args.uart,
+            args.uart_baud,
+            uart_log_path,
+            read_seconds=float(args.duration) + 2.0,
+        )
+        uart_logger.start()
+
+    cmd = build_capture_cmd(args, freq, antenna, fc32_path)
+    log(f"starting capture: freq={freq} antenna={antenna} -> {os.path.basename(fc32_path)}")
+    start_wall = time.time()
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=REPO_ROOT,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except Exception as exc:  # noqa: BLE001
+        warn(f"Failed to launch capture binary: {exc}")
+        if uart_logger is not None:
+            uart_logger.join(timeout=float(args.duration) + 5.0)
+        return "capture_failed", f"popen_failed: {exc}", "", False, None, uart_logger
+
+    # Wait reset-delay so the capture is streaming before we reset.
+    time.sleep(float(args.reset_delay_s))
+
+    # Trigger reset (stlink / serial-dtr) while capture runs -- only when asked.
+    if do_reset_actions:
+        do_reset(args.reset_method, args.uart, serial_mod)
+
+    wait_timeout = float(args.duration) * 2 + 15
+    timed_out = False
+    try:
+        stdout_b, stderr_b = proc.communicate(timeout=wait_timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        proc.kill()
+        try:
+            stdout_b, stderr_b = proc.communicate(timeout=10)
+        except Exception:  # noqa: BLE001
+            stdout_b, stderr_b = b"", b""
+    actual_duration = round(time.time() - start_wall, 3)
+
+    stdout_txt = stdout_b.decode("utf-8", "replace") if stdout_b else ""
+    stderr_txt = stderr_b.decode("utf-8", "replace") if stderr_b else ""
+    combined = stdout_txt + "\n" + stderr_txt
+
+    if uart_logger is not None:
+        uart_logger.join(timeout=float(args.duration) + 5.0)
+
+    file_ok = os.path.isfile(fc32_path) and os.path.getsize(fc32_path) > 0
+
+    is_exception = "EXCEPTION:" in combined
+    is_timeout_msg = "Timeout while streaming" in combined
+    is_overflow = detect_overflow(combined)
+
+    if timed_out and not file_ok:
+        return "capture_failed", "wait_timeout_killed_no_file", actual_duration, False, proc.returncode, uart_logger
+
+    if not file_ok:
+        if is_exception:
+            note = "capture_exception_no_file"
+        elif is_timeout_msg:
+            note = "stream_timeout_no_file"
+        elif proc.returncode not in (0, None):
+            note = f"nonzero_exit_{proc.returncode}_no_file"
+        else:
+            note = "output_file_missing_or_empty"
+        return "capture_failed", note, actual_duration, False, proc.returncode, uart_logger
+
+    if is_overflow:
+        status = "overflow"
+    elif proc.returncode not in (0, None):
+        status = "overflow"
+    else:
+        status = "ok"
+
+    return status, "", actual_duration, True, proc.returncode, uart_logger
 
 
 def process_capture(args, freq: str, antenna: str, serial_mod) -> dict:
@@ -420,122 +612,37 @@ def process_capture(args, freq: str, antenna: str, serial_mod) -> dict:
         except EOFError:
             warn("No interactive stdin for manual reset; continuing")
 
-    # UART logging thread (reads for duration + 2s).
-    uart_logger = None
     uart_log_rel = ""
-    if args.uart:
-        if serial_mod is None:
-            warn(
-                "pyserial not installed; run `uv add pyserial`; "
-                "skipping UART logging"
-            )
-        else:
-            uart_log_path = base + "_uart.log"
-            uart_log_rel = os.path.basename(uart_log_path)
-            uart_logger = UartLogger(
-                serial_mod,
-                args.uart,
-                args.uart_baud,
-                uart_log_path,
-                read_seconds=float(args.duration) + 2.0,
-            )
-            uart_logger.start()
-
-    # 1. Start capture (non-blocking).
-    cmd = build_capture_cmd(args, freq, antenna, fc32_path)
-    log(f"starting capture: freq={freq} antenna={antenna} -> {os.path.basename(fc32_path)}")
-    start_wall = time.time()
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=REPO_ROOT,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+    if args.uart and serial_mod is None:
+        warn(
+            "pyserial not installed; run `uv add pyserial`; "
+            "skipping UART logging"
         )
-    except Exception as exc:  # noqa: BLE001
-        warn(f"Failed to launch capture binary: {exc}")
-        row["capture_status"] = "capture_failed"
-        row["note"] = f"popen_failed: {exc}"
-        if uart_logger is not None:
-            uart_logger.join(timeout=float(args.duration) + 5.0)
-            row["uart_log"] = uart_log_rel
-            row["uart_packet_sent_count"] = uart_logger.packet_sent_count
-            row["uart_seen_init"] = uart_logger.seen_init
-        return row
 
-    # 2. Wait reset-delay so the capture is streaming before we reset.
-    time.sleep(float(args.reset_delay_s))
+    status, note, actual_duration, file_ok, returncode, uart_logger = _do_capture(
+        args, freq, antenna, fc32_path, serial_mod,
+        do_reset_actions=True, uart_active=True,
+    )
+    row["capture_status"] = status
+    row["note"] = note
+    row["actual_duration_s"] = actual_duration
 
-    # 3. Trigger reset (stlink / serial-dtr) while capture runs.
-    do_reset(args.reset_method, args.uart, serial_mod)
-
-    # 4. Wait for capture to exit (generous timeout).
-    wait_timeout = float(args.duration) * 2 + 15
-    timed_out = False
-    try:
-        stdout_b, stderr_b = proc.communicate(timeout=wait_timeout)
-    except subprocess.TimeoutExpired:
-        timed_out = True
-        proc.kill()
-        try:
-            stdout_b, stderr_b = proc.communicate(timeout=10)
-        except Exception:  # noqa: BLE001
-            stdout_b, stderr_b = b"", b""
-    actual_duration = time.time() - start_wall
-    row["actual_duration_s"] = round(actual_duration, 3)
-
-    stdout_txt = stdout_b.decode("utf-8", "replace") if stdout_b else ""
-    stderr_txt = stderr_b.decode("utf-8", "replace") if stderr_b else ""
-    combined = stdout_txt + "\n" + stderr_txt
-
-    # Join UART thread now that capture is done.
     if uart_logger is not None:
-        uart_logger.join(timeout=float(args.duration) + 5.0)
+        uart_log_rel = os.path.basename(base + "_uart.log")
         row["uart_log"] = uart_log_rel
         row["uart_packet_sent_count"] = uart_logger.packet_sent_count
         row["uart_seen_init"] = uart_logger.seen_init
 
-    # Determine usable file.
-    file_ok = os.path.isfile(fc32_path) and os.path.getsize(fc32_path) > 0
-
-    is_exception = "EXCEPTION:" in combined
-    is_timeout_msg = "Timeout while streaming" in combined
-    is_overflow = detect_overflow(combined)
-
-    # 5. Classify capture_status.
-    if timed_out and not file_ok:
-        row["capture_status"] = "capture_failed"
-        row["note"] = "wait_timeout_killed_no_file"
-        return row
-
     if not file_ok:
-        row["capture_status"] = "capture_failed"
-        if is_exception:
-            row["note"] = "capture_exception_no_file"
-        elif is_timeout_msg:
-            row["note"] = "stream_timeout_no_file"
-        elif proc.returncode not in (0, None):
-            row["note"] = f"nonzero_exit_{proc.returncode}_no_file"
-        else:
-            row["note"] = "output_file_missing_or_empty"
         return row
 
-    # We have a usable file. Decide ok vs overflow (overflow still analyzes).
-    if is_overflow:
-        row["capture_status"] = "overflow"
-    elif proc.returncode not in (0, None):
-        # Nonzero exit but a usable partial file exists -> treat like overflow
-        # (partial data); still analyze.
-        row["capture_status"] = "overflow"
-    else:
-        row["capture_status"] = "ok"
-
-    # 6. Analyze.
-    analysis, ok = run_analyzer(args, fc32_path, base)
+    # Analyze. Forward UART count only when a UART log was collected (gate b);
+    # otherwise None so the analyzer skips the gate rather than failing it.
+    uart_count = row["uart_packet_sent_count"] if args.uart else None
+    analysis, ok = run_analyzer(args, fc32_path, base, uart_packet_count=uart_count)
     run_quick_maxhold(args, fc32_path, base)
 
     if not ok or analysis is None:
-        # File existed but analysis failed.
         if row["capture_status"] == "overflow":
             row["note"] = "overflow_then_analysis_failed"
         else:
@@ -552,12 +659,141 @@ def process_capture(args, freq: str, antenna: str, serial_mod) -> dict:
     row["maxhold_excess_db"] = analysis.get("maxhold_excess_db", "")
     row["peak_frequency_offset_hz"] = analysis.get("peak_frequency_offset_hz", "")
 
-    # 7. Note logic.
+    # Note logic.
     if row["uart_packet_sent_count"] and row["validation_status"] == "noise_floor_only":
         row["note"] = "firmware_tx_reported_but_no_rf_detected"
     elif not row["note"]:
         vs = row["validation_status"] or "unknown"
         row["note"] = f"{row['capture_status']}; {vs}"
+
+    return row
+
+
+def process_capture_on_off(args, freq: str, antenna: str, serial_mod,
+                           more_pairs_remain: bool) -> dict:
+    """TX ON/OFF differential capture for one (freq, antenna).
+
+    Captures a TX-ON file (with reset so the LR1121 transmits), analyzes it as
+    the authoritative row, then prompts the operator to power the TX off, takes
+    a TX-OFF reference, and runs compare_tx_on_off.py for the on/off delta. The
+    delta is corroboration only; signal_detected stays analyzer-driven.
+    """
+    ant_tag = sanitize_antenna(antenna)
+    freq_tag = sanitize_freq(freq)
+    on_name = f"cap_{freq_tag}_{ant_tag}_on"
+    off_name = f"cap_{freq_tag}_{ant_tag}_off"
+    pair_name = f"cap_{freq_tag}_{ant_tag}"
+
+    on_fc32 = os.path.join(args.outdir, on_name + ".fc32")
+    off_fc32 = os.path.join(args.outdir, off_name + ".fc32")
+    on_base = os.path.join(args.outdir, on_name)
+    off_base = os.path.join(args.outdir, off_name)
+    pair_base = os.path.join(args.outdir, pair_name)
+
+    row = empty_row(args, freq, antenna, os.path.basename(on_fc32))
+
+    if args.uart and serial_mod is None:
+        warn(
+            "pyserial not installed; run `uv add pyserial`; "
+            "skipping UART logging"
+        )
+
+    # ----- Step 1: TX ON capture -----
+    log("=" * 60)
+    log(f"TX ON capture  (freq={freq} Hz, antenna={antenna})")
+    log("=" * 60)
+
+    # 'manual' reset is interactive and must precede the ON capture.
+    if args.reset_method == "manual":
+        prompt_operator(
+            f"Press Enter to reset NUCLEO then TX-ON capture "
+            f"({freq} Hz, {antenna})... "
+        )
+
+    status, note, actual_duration, file_ok, returncode, uart_logger = _do_capture(
+        args, freq, antenna, on_fc32, serial_mod,
+        do_reset_actions=True, uart_active=True,
+    )
+    row["capture_status"] = status
+    row["note"] = note
+    row["actual_duration_s"] = actual_duration
+
+    if uart_logger is not None:
+        row["uart_log"] = os.path.basename(on_base + "_uart.log")
+        row["uart_packet_sent_count"] = uart_logger.packet_sent_count
+        row["uart_seen_init"] = uart_logger.seen_init
+
+    on_analysis_ok = False
+    if file_ok:
+        uart_count = row["uart_packet_sent_count"] if args.uart else None
+        analysis, ok = run_analyzer(args, on_fc32, on_base, uart_packet_count=uart_count)
+        run_quick_maxhold(args, on_fc32, on_base)
+        if not ok or analysis is None:
+            if row["capture_status"] == "overflow":
+                row["note"] = "overflow_then_analysis_failed"
+            else:
+                row["capture_status"] = "analysis_failed"
+                row["note"] = "analysis_failed"
+        else:
+            on_analysis_ok = True
+            sig = analysis.get("signal_detected")
+            row["signal_detected"] = bool(sig) if sig is not None else False
+            row["validation_status"] = analysis.get("validation_status", "")
+            row["peak_to_median_db"] = analysis.get("peak_to_median_db", "")
+            row["burst_energy_excess_db"] = analysis.get("burst_energy_excess_db", "")
+            row["maxhold_excess_db"] = analysis.get("maxhold_excess_db", "")
+            row["peak_frequency_offset_hz"] = analysis.get("peak_frequency_offset_hz", "")
+            if row["uart_packet_sent_count"] and row["validation_status"] == "noise_floor_only":
+                row["note"] = "firmware_tx_reported_but_no_rf_detected"
+            elif not row["note"]:
+                vs = row["validation_status"] or "unknown"
+                row["note"] = f"{row['capture_status']}; {vs}"
+
+    # ----- Step 2: prompt operator to power TX off -----
+    prompt_operator(
+        "ACTION: power off / disconnect the LR1121 TX (or stop SWDM001 "
+        "firmware) for the OFF reference, then press Enter. "
+    )
+
+    # ----- Step 3: TX OFF reference capture -----
+    log(f"TX OFF reference capture  (freq={freq} Hz, antenna={antenna})")
+    off_status, off_note, _off_dur, off_file_ok, _off_rc, _off_uart = _do_capture(
+        args, freq, antenna, off_fc32, serial_mod,
+        do_reset_actions=False, uart_active=False,
+    )
+    if off_file_ok:
+        # Analyze the OFF reference into its own _analysis.json (best-effort).
+        run_analyzer(args, off_fc32, off_base)
+        run_quick_maxhold(args, off_fc32, off_base)
+    else:
+        warn(f"TX-OFF reference capture failed ({off_status}: {off_note})")
+
+    # ----- Step 4: compare ON vs OFF -----
+    if file_ok and off_file_ok:
+        delta, stronger, cmp_ok = run_compare_on_off(args, on_fc32, off_fc32, pair_base)
+        if cmp_ok:
+            row["on_off_delta_db"] = delta if delta is not None else ""
+            row["tx_on_stronger_than_off"] = bool(stronger) if stronger is not None else False
+            log(
+                f"on/off delta_db={row['on_off_delta_db']} "
+                f"tx_on_stronger_than_off={row['tx_on_stronger_than_off']}"
+            )
+        else:
+            row["on_off_delta_db"] = ""
+            row["tx_on_stronger_than_off"] = False
+            row["note"] = (row["note"] + "; " if row["note"] else "") + "on_off_compare_failed"
+    else:
+        row["on_off_delta_db"] = ""
+        row["tx_on_stronger_than_off"] = False
+        reason = "on_off_off_capture_failed" if not off_file_ok else "on_off_on_capture_failed"
+        row["note"] = (row["note"] + "; " if row["note"] else "") + reason
+
+    # ----- Step 5: prompt operator to power TX back on for the next pair -----
+    if more_pairs_remain:
+        prompt_operator(
+            "ACTION: power the LR1121 TX back on before the next frequency, "
+            "then press Enter. "
+        )
 
     return row
 
@@ -575,6 +811,7 @@ def write_csv(outdir: str, rows: list) -> str:
             # Booleans as lowercase strings for readability.
             out["signal_detected"] = "true" if row.get("signal_detected") else "false"
             out["uart_seen_init"] = "true" if row.get("uart_seen_init") else "false"
+            out["tx_on_stronger_than_off"] = "true" if row.get("tx_on_stronger_than_off") else "false"
             writer.writerow(out)
     return path
 
@@ -611,11 +848,14 @@ def write_json(outdir: str, args, rows: list) -> str:
                 "uart_packet_sent_count": r.get("uart_packet_sent_count", 0),
                 "uart_seen_init": bool(r.get("uart_seen_init")),
                 "note": r.get("note", ""),
+                "on_off_delta_db": _json_num(r.get("on_off_delta_db")),
+                "tx_on_stronger_than_off": bool(r.get("tx_on_stronger_than_off")),
             }
         )
     doc = {
         "serial": args.serial or "",
         "generated_at": utc_now_iso(),
+        "mode": args.mode,
         "reset_method": args.reset_method,
         "rate": to_int_hz(str(args.rate)),
         "gain": args.gain,
@@ -639,7 +879,9 @@ def parse_args(argv=None) -> argparse.Namespace:
             "Automated USRP B210 LR-FHSS sweep for LR1121 hardware bring-up. "
             "Captures IQ, optionally resets the NUCLEO so its TX burst lands in "
             "the capture window, logs UART, and runs the analyzers. Conservative: "
-            "signal_detected is set only when the analyzer JSON says so."
+            "signal_detected is set only when the analyzer JSON says so. With "
+            "--mode on-off, also takes a TX-off reference and reports an on/off "
+            "delta as corroborating evidence."
         ),
     )
     p.add_argument("--serial", default=None, help="USRP serial (passed as --args serial=...). Optional.")
@@ -649,6 +891,16 @@ def parse_args(argv=None) -> argparse.Namespace:
     p.add_argument("--gain", default="45", help="RX gain in dB (default 45).")
     p.add_argument("--duration", default="10", help="Capture duration in seconds (default 10).")
     p.add_argument("--channel", default="0", help="RX channel index (default 0).")
+    p.add_argument(
+        "--mode",
+        choices=["normal", "on-off"],
+        default="normal",
+        help=(
+            "normal: one capture per (freq, antenna). on-off: TX-ON capture + "
+            "operator-prompted TX-OFF reference + compare_tx_on_off.py delta "
+            "(corroboration only; analyzer remains the signal_detected authority)."
+        ),
+    )
     p.add_argument(
         "--reset-method",
         choices=["none", "stlink", "serial-dtr", "manual"],
@@ -714,28 +966,45 @@ def main(argv=None) -> int:
     if not os.path.isfile(CAPTURE_BIN):
         warn(f"capture binary not found at {CAPTURE_BIN}; all captures will fail")
 
+    if args.mode == "on-off" and not os.path.isfile(COMPARE_PY):
+        warn(
+            f"compare_tx_on_off.py not found at {COMPARE_PY}; "
+            "on/off deltas will be blank but the sweep will still run"
+        )
+
     log(f"output directory: {args.outdir}")
+    log(f"mode={args.mode}")
     log(f"freqs={freqs} antennas={antennas} rate={args.rate} gain={args.gain} duration={args.duration}")
     log(f"reset-method={args.reset_method} reset-delay-s={args.reset_delay_s} uart={args.uart or 'none'}")
 
+    # Pre-compute the (freq, antenna) pairs so on-off mode knows when to stop
+    # prompting for the next-pair power-on.
+    pairs = [(f, a) for f in freqs for a in antennas]
+
     rows = []
-    for freq in freqs:
-        for antenna in antennas:
-            # Wrap each capture so one failure does not stop the sweep.
-            try:
+    for idx, (freq, antenna) in enumerate(pairs):
+        more_pairs_remain = idx < len(pairs) - 1
+        # Wrap each capture so one failure does not stop the sweep.
+        try:
+            if args.mode == "on-off":
+                row = process_capture_on_off(
+                    args, freq, antenna, serial_mod, more_pairs_remain
+                )
+            else:
                 row = process_capture(args, freq, antenna, serial_mod)
-            except Exception as exc:  # noqa: BLE001
-                warn(f"unhandled exception during capture ({freq}, {antenna}): {exc}")
-                ant_tag = sanitize_antenna(antenna)
-                freq_tag = sanitize_freq(freq)
-                cap_file = f"cap_{freq_tag}_{ant_tag}.fc32"
-                row = empty_row(args, freq, antenna, cap_file)
-                row["note"] = f"unhandled_exception: {exc}"
-            rows.append(row)
-            log(
-                f"{freq} {antenna} -> {status_phrase(row)} "
-                f"[capture_status={row.get('capture_status')}]"
-            )
+        except Exception as exc:  # noqa: BLE001
+            warn(f"unhandled exception during capture ({freq}, {antenna}): {exc}")
+            ant_tag = sanitize_antenna(antenna)
+            freq_tag = sanitize_freq(freq)
+            suffix = "_on" if args.mode == "on-off" else ""
+            cap_file = f"cap_{freq_tag}_{ant_tag}{suffix}.fc32"
+            row = empty_row(args, freq, antenna, cap_file)
+            row["note"] = f"unhandled_exception: {exc}"
+        rows.append(row)
+        log(
+            f"{freq} {antenna} -> {status_phrase(row)} "
+            f"[capture_status={row.get('capture_status')}]"
+        )
 
     # ALWAYS write summaries, even if every capture failed.
     csv_path = write_csv(args.outdir, rows)
@@ -749,7 +1018,17 @@ def main(argv=None) -> int:
     log(f"captures: {n_total} total, {n_signal} signal_detected, {n_failed} failed/analysis_failed")
     log(f"summary CSV : {csv_path}")
     log(f"summary JSON: {json_path}")
-    if n_signal > 0:
+
+    # on/off corroboration: only an analyzer-confirmed signal that ALSO shows
+    # TX-on stronger than the TX-off reference earns "signal-detected" in on-off
+    # mode. The on/off delta never elevates a row on its own.
+    corroborated = any(
+        r.get("signal_detected") and r.get("tx_on_stronger_than_off")
+        for r in rows
+    )
+    if args.mode == "on-off" and corroborated:
+        log("HARDWARE STATUS: signal-detected")
+    elif n_signal > 0 and args.mode != "on-off":
         log("HARDWARE STATUS: signal-detected")
     else:
         log("HARDWARE STATUS: pending (hardware-bringup; no RF above noise floor)")
