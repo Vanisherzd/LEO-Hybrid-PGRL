@@ -43,12 +43,22 @@ payload_results_realizations/hwil_usrp/*.npy
 payload_results_realizations/hwil_usrp/*.json
 .hermes.md
 payload_results_realizations/live_usrp/
-*.aux *.bbl *.blg *.log *.out
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+paper/*.pdf
 
-# Hardware local artifacts
+# Hardware local artifacts (raw IQ + compiled tools never committed)
 hardware/usrp_scripts/rx_capture_to_file_cpp
 hardware/captures/*.fc32
 hardware/captures/*.dat
 hardware/captures/*.png
 hardware/captures/*.json
+hardware/captures/**/*.fc32
+hardware/captures/**/*.dat
+hardware/captures/**/*.png
+hardware/captures/**/*.json
 semtech_validation/lr1121_tx_config_example.json
