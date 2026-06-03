@@ -1,0 +1,20 @@
+{
+  "title": "LR1121 SDR ON/OFF Repeatability",
+  "caption_note": "IQ-level RF signal detection only; no LR-FHSS decoding/PER",
+  "x": [
+    "run1",
+    "run2",
+    "run3"
+  ],
+  "y_on_off_delta_db": [
+    8.88,
+    11.87,
+    9.82
+  ],
+  "runs": [
+    "auto_sweep_20260604_000358",
+    "auto_sweep_20260604_011203",
+    "auto_sweep_20260604_011519"
+  ],
+  "all_signal_detected": true
+}

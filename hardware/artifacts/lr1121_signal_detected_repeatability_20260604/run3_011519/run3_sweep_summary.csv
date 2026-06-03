@@ -1,0 +1,2 @@
+capture_file,frequency_hz,antenna,rate,gain,duration,actual_duration_s,capture_status,validation_status,signal_detected,peak_to_median_db,burst_energy_excess_db,maxhold_excess_db,peak_frequency_offset_hz,uart_log,uart_packet_sent_count,uart_seen_init,note,on_off_delta_db,tx_on_stronger_than_off
+cap_868000000_txrx_on.fc32,868000000,TX/RX,1000000,45,10,12.764,ok,signal_detected,true,5.68,0.29,12.64,139648.44,cap_868000000_txrx_on_uart.log,7,false,ok; signal_detected,9.82,true

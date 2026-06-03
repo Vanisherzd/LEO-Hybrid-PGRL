@@ -1,0 +1,37 @@
+# exp6_robustness — config skeleton
+# STATUS: PLANNED / NOT YET RUN. Parameters define the intended sweep only.
+experiment: exp6_robustness
+seed: 42
+
+cases:
+  tle_age_perturbation:
+    status: planned
+    description: >-
+      Re-evaluate PGRL with increasingly stale TLE sets relative to the
+      prediction epoch; measure accuracy and uncertainty calibration vs TLE age.
+    tle_age_days: [0, 1, 3, 7, 14]
+    metrics: [timing_rmse_s, doppler_rmse_hz, nll, ece_timing, ece_doppler]
+
+  beacon_loss_duration:
+    status: planned
+    description: >-
+      Predict over intervals with no beacon/ephemeris update; measure accuracy
+      and calibration vs gap length.
+    beacon_loss_s: [0, 30, 120, 300, 600]
+    metrics: [timing_rmse_s, doppler_rmse_hz, nll, ece_timing, ece_doppler]
+
+  satellite_held_out_split:
+    status: planned
+    description: >-
+      Train on a subset of satellites, evaluate on satellites unseen during
+      training; measure cross-satellite generalization.
+    held_out_satellites: []   # NORAD IDs to hold out (to be filled when run)
+    metrics: [timing_rmse_s, doppler_rmse_hz, nll, ece_timing, ece_doppler]
+
+  orbital_regime_shift:
+    status: planned
+    description: >-
+      Evaluate across orbital regimes differing from the training regime;
+      measure robustness to distribution shift in orbital dynamics.
+    regime: [low_leo, mid_leo, high_leo, polar, sun_synchronous]
+    metrics: [timing_rmse_s, doppler_rmse_hz, nll, ece_timing, ece_doppler]

@@ -1,0 +1,58 @@
+{
+  "_reproducibility": {
+    "commit": "19928e66",
+    "generated_at": "2026-06-03T14:54:05Z",
+    "validation_type": "planned",
+    "script": "experiments/exp6_robustness/run.sh",
+    "config": "experiments/exp6_robustness/config.yaml",
+    "dataset": "not evaluated",
+    "train_test_split": "see config.yaml (satellite-held-out / temporal splits planned)",
+    "seed": 42,
+    "limitations": "PLANNED ONLY. No experiment has been run; all numeric results are null / 'not evaluated'. Do not cite any value here as a measured result. Hardware is not involved in this experiment."
+  },
+  "experiment": "exp6_robustness",
+  "validation_type": "planned",
+  "results": {
+    "tle_age_perturbation": {
+      "status": "planned",
+      "tle_age_days": [0, 1, 3, 7, 14],
+      "timing_rmse_s": null,
+      "doppler_rmse_hz": null,
+      "nll": null,
+      "ece_timing": null,
+      "ece_doppler": null,
+      "note": "not evaluated"
+    },
+    "beacon_loss_duration": {
+      "status": "planned",
+      "beacon_loss_s": [0, 30, 120, 300, 600],
+      "timing_rmse_s": null,
+      "doppler_rmse_hz": null,
+      "nll": null,
+      "ece_timing": null,
+      "ece_doppler": null,
+      "note": "not evaluated"
+    },
+    "satellite_held_out_split": {
+      "status": "planned",
+      "held_out_satellites": [],
+      "timing_rmse_s": null,
+      "doppler_rmse_hz": null,
+      "nll": null,
+      "ece_timing": null,
+      "ece_doppler": null,
+      "note": "not evaluated"
+    },
+    "orbital_regime_shift": {
+      "status": "planned",
+      "regime": ["low_leo", "mid_leo", "high_leo", "polar", "sun_synchronous"],
+      "timing_rmse_s": null,
+      "doppler_rmse_hz": null,
+      "nll": null,
+      "ece_timing": null,
+      "ece_doppler": null,
+      "note": "not evaluated"
+    }
+  },
+  "conclusion": "not evaluated — robustness experiments are planned but not yet run"
+}

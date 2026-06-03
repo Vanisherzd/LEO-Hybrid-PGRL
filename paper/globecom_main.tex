@@ -62,13 +62,13 @@ This paper's primary contributions are:
 \label{sec:related}
 
 \subsection{LR-FHSS for Direct-to-Satellite IoT}
-LR-FHSS was introduced to LoRaWAN specifically to enable direct-to-satellite IoT connectivity, providing frequency diversity against Doppler uncertainty through a grid of narrow hopping bins~\\cite{semtech2023lrfhss}. Prior work has studied LR-FHSS DtS packet delivery and outage probability~\\cite{ullah2022lrfhss}, designed transceiver architectures for robust D2S synchronization under Doppler and co-channel interference~\\cite{jung2023lrfhss}, and evaluated miss-detection and packet-error probability with ASIC/FPGA testbeds~\\cite{maldonado2024lrfhss}. These works focus primarily on the \emph{receiver side}: synchronization, detection, and PER recovery. In contrast, this work studies how orbital-prediction uncertainty can drive \emph{terminal-side} uplink control decisions before transmission.
+LR-FHSS was introduced to LoRaWAN specifically to enable direct-to-satellite IoT connectivity, providing frequency diversity against Doppler uncertainty through a grid of narrow hopping bins~\cite{semtech2023lrfhss}. Prior work has studied LR-FHSS DtS packet delivery and outage probability~\cite{ullah2022lrfhss}, designed transceiver architectures for robust D2S synchronization under Doppler and co-channel interference~\cite{jung2023lrfhss}, and evaluated miss-detection and packet-error probability with ASIC/FPGA testbeds~\cite{maldonado2024lrfhss}. These works focus primarily on the \emph{receiver side}: synchronization, detection, and PER recovery. In contrast, this work studies how orbital-prediction uncertainty can drive \emph{terminal-side} uplink control decisions before transmission.
 
 \subsection{ML for LEO Orbit Prediction}
-Machine learning has been extensively applied to improve SGP4/SDP4 propagator accuracy. Hybrid analytical-ML approaches use SGP4 to initialize orbital state, then apply EKF or neural networks to correct residual errors during unobservable intervals~\\cite{kassas2022hybrid}. Physics-informed neural networks (PINNs) enforce conservation of energy and angular momentum as hard constraints while learning unmodeled perturbations~\\cite{pinn2024satellite}. Surveys confirm that ML-based orbit prediction targets trajectory accuracy as an end, not communication-oriented outputs~\\cite{li2024mlorbit}. This work differs by using SGP4-anchored residual learning not to minimize prediction error alone, but specifically to produce \emph{communication-oriented} timing, Doppler, and uncertainty outputs that directly drive LR-FHSS uplink control.
+Machine learning has been extensively applied to improve SGP4/SDP4 propagator accuracy. Hybrid analytical-ML approaches use SGP4 to initialize orbital state, then apply EKF or neural networks to correct residual errors during unobservable intervals~\cite{kassas2022hybrid}. Physics-informed neural networks (PINNs) enforce conservation of energy and angular momentum as hard constraints while learning unmodeled perturbations~\cite{pinn2024satellite}. Surveys confirm that ML-based orbit prediction targets trajectory accuracy as an end, not communication-oriented outputs~\cite{li2024mlorbit}. This work differs by using SGP4-anchored residual learning not to minimize prediction error alone, but specifically to produce \emph{communication-oriented} timing, Doppler, and uncertainty outputs that directly drive LR-FHSS uplink control.
 
 \subsection{Gap and Positioning}
-Table~\\ref{tab:related} summarizes the positioning of this work relative to prior art. Unlike prior LR-FHSS DtS studies, we do not target receiver design, packet delivery analysis, or gateway-side scalability. Unlike prior ML orbit prediction work, we do not target trajectory accuracy as the primary metric. Our contribution is the \emph{cross-layer connection}: converting SGP4-anchored Bayesian PGRL uncertainty into terminal-side LR-FHSS uplink control decisions.
+Table~\ref{tab:related} summarizes the positioning of this work relative to prior art. Unlike prior LR-FHSS DtS studies, we do not target receiver design, packet delivery analysis, or gateway-side scalability. Unlike prior ML orbit prediction work, we do not target trajectory accuracy as the primary metric. Our contribution is the \emph{cross-layer connection}: converting SGP4-anchored Bayesian PGRL uncertainty into terminal-side LR-FHSS uplink control decisions.
 
 \begin{table}[htbp]
 \small
@@ -78,10 +78,10 @@ Table~\\ref{tab:related} summarizes the positioning of this work relative to pri
 \toprule
 Category & Representative works & Focus & This work's difference \\
 \midrule
-LR-FHSS DtS analysis & Ullah et al.~\\cite{ullah2022lrfhss} & Packet delivery / outage & No prediction-driven uplink control \\
-LR-FHSS DtS transceiver & Jung et al.~\\cite{jung2023lrfhss} & Receiver sync / PER & Terminal pre-compensation design \\
-ML orbit prediction & PINN/surveys~\\cite{pinn2024satellite,li2024mlorbit} & Trajectory accuracy & Communication-oriented uncertainty outputs \\
-LEO energy / air-time & LR-FHSS measurement~\\cite{lrfhss2023energy} & Device current consumption & Used as baseline in energy model \\
+LR-FHSS DtS analysis & Ullah et al.~\cite{ullah2022lrfhss} & Packet delivery / outage & No prediction-driven uplink control \\
+LR-FHSS DtS transceiver & Jung et al.~\cite{jung2023lrfhss} & Receiver sync / PER & Terminal pre-compensation design \\
+ML orbit prediction & PINN/surveys~\cite{pinn2024satellite,li2024mlorbit} & Trajectory accuracy & Communication-oriented uncertainty outputs \\
+LEO energy / air-time & LR-FHSS measurement~\cite{lrfhss2023energy} & Device current consumption & Used as baseline in energy model \\
 \midrule
 \textbf{This work} & — & PGRL uncertainty $\rightarrow$ LR-FHSS uplink control & Cross-layer terminal design \\
 \bottomrule
@@ -104,6 +104,8 @@ f_{\mathrm{res}}(t) = f_D(t) - \hat{f}_D(t) + f_{\mathrm{osc}},
 \label{eq:residual_cfo}
 \end{equation}
 where $\hat{f}_D$ is the predicted Doppler and $f_{\mathrm{osc}}$ is the terminal oscillator offset. In our LR-FHSS-inspired proxy, the available bandwidth is discretized into $N_f$ hopping bins. The bin width is treated as an evaluation parameter rather than a complete standard-compliant receiver model. Successful reception requires that $|f_{\mathrm{res}}|$ after pre-compensation be small relative to the bin width.
+
+Residual Doppler is especially consequential for LR-FHSS uplink control because LR-FHSS deliberately spreads transmit energy over a grid of narrow hopping bins. When the residual CFO $|f_{\mathrm{res}}|$ is large relative to the bin width, the per-hop energy is displaced across bin boundaries, which erodes the per-bin orthogonality and the bin-localized energy concentration that a receiver relies on to detect and recombine hops. In other words, the hopping grid is the very structure that provides frequency diversity, and uncompensated residual Doppler smears energy off the intended grid positions. Tight pre-compensation that keeps $|f_{\mathrm{res}}|$ well inside one bin therefore directly protects the hopping-grid structure, which is why a calibrated, low-residual Doppler estimate (rather than orbital trajectory accuracy alone) is the quantity that matters for terminal-side uplink control. We make no claim here about resulting packet-error rate.
 
 \subsection{SGP4/SDP4 Orbital Propagation}
 SGP4/SDP4~\cite{hoots1980models} propagates Two-Line Element (TLE) sets to produce Cartesian position and velocity at any epoch. The algorithm is deterministic and computationally lightweight but accumulates RMS timing errors of 1--4~s and Doppler errors of $>5$~kHz over prediction horizons of 30--120~min, depending on TLE age. These errors are non-Gaussian and time-correlated, which limits the effectiveness of naive uncertainty estimation on top of SGP4 output.
@@ -215,6 +217,17 @@ PGRL reduces pass-timing RMSE by $99.6\%$ versus SGP4 (4.2~s $\to$ 16~ms) and re
 \subsection{Validation Scope and Limitations}
 All completed results are trace-driven or proxy-simulation. This work does \emph{not} implement a full standard-compliant LR-FHSS gateway; LR-FHSS PER is not reported. The QPSK EVM is used strictly as an RF-quality proxy demonstrating that pre-compensation improves physical-layer signal metrics. Semtech LR-FHSS TX and SDR IQ capture are defined in the experiment pipeline and ready for hardware execution; full hardware results are left to the measurement stage.
 
+\emph{Hardware status.} The USRP B210 capture path and the SWDM001 LR1121 firmware bring-up are operational, while visible LR-FHSS RF capture remains under RF-port/frequency validation. Hardware results are therefore reported as workflow validation; a capture is only labeled \emph{signal-detected} when an automated signal detector finds burst/hopping energy significantly above the noise floor (peak-to-median and burst-energy thresholds), excluding the DC/LO spike. To date no capture has reached the signal-detected label, so the maximum hardware claim in this paper is \emph{hardware-bringup}.
+
+To keep claims auditable, every result in this paper carries an explicit validation label, defined as follows:
+\begin{itemize}
+  \item \textbf{trace-driven}: evaluated against recorded TLE/ephemeris data; no hardware involved.
+  \item \textbf{simulation}: physics/communication simulation in software; no hardware involved.
+  \item \textbf{proxy-simulation}: a physical proxy metric (e.g., QPSK EVM) indicating RF-chain quality; not a standards-compliant PER and not hardware.
+  \item \textbf{hardware-bringup}: the capture/transmit workflow runs on real hardware (USRP B210 receive path, SWDM001 LR1121 firmware), but no LR-FHSS signal has yet been detected; this is workflow validation only, \emph{not} a validated measurement.
+  \item \textbf{hardware-signal-detected}: an automated detector has found burst/hopping energy significantly above the noise floor (peak-to-median and burst-energy thresholds, excluding the DC/LO spike). No result in this paper carries this label.
+\end{itemize}
+
 % ── Hardware Validation Plan ─────────────────────────────────────────────────
 \section{Hardware Validation Plan}
 \label{sec:hardware}
@@ -228,7 +241,7 @@ A USRP B210 connected via coax (30~dB attenuator) to the Semtech TX forms a dete
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/fig5_sdr_synthetic_pipeline.pdf}
-    \caption{SDR synthetic-IQ pipeline (dry-run). (a) EVM vs SNR for oracle, PGRL-compensated, and SGP4-only paths. (b) QPSK constellation at SNR$=40$ dB with $\sim$300~Hz residual CFO (PGRL-compensated case). (c) CFO estimation convergence on synthetic IQ. This figure will be replaced with hardware IQ capture once the Semtech LR-FHSS transmitter and USRP B210 receiver are connected.}
+    \caption{IQ-level SDR pipeline (preliminary hardware bring-up; synthetic-IQ dry-run shown here, \emph{not} standard LR-FHSS PER). (a) EVM vs SNR for oracle, PGRL-compensated, and SGP4-only paths. (b) QPSK constellation at SNR$=40$ dB with $\sim$300~Hz residual CFO (PGRL-compensated case). (c) CFO estimation convergence on synthetic IQ. This figure will be replaced with hardware IQ capture once the Semtech LR-FHSS transmitter and USRP B210 receiver pass RF-port/frequency validation and a signal is detected.}
     \label{fig:sdr}
 \end{figure}
 

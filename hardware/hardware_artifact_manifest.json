@@ -1,0 +1,497 @@
+{
+  "generated_at": "2026-06-03T17:21:42.590830Z",
+  "capture_dir": "hardware/captures",
+  "n_captures": 37,
+  "captures": [
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231631/cap_868000000_rx2.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231631/cap_868000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231631/cap_868000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_868000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_868000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231631/cap_868000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231631/cap_868000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231631/cap_868000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_868000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_868000000_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231631/cap_915000000_rx2.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231631/cap_915000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231631/cap_915000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_915000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_915000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231631/cap_915000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231631/cap_915000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231631/cap_915000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_915000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_915000000_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231631/cap_923000000_rx2.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231631/cap_923000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231631/cap_923000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_923000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_923000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231631/cap_923000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231631/cap_923000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231631/cap_923000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_923000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231631/cap_923000000_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231940/cap_868000000_rx2.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231940/cap_868000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231940/cap_868000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_868000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_868000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231940/cap_868000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231940/cap_868000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231940/cap_868000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_868000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_868000000_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231940/cap_915000000_rx2.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231940/cap_915000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231940/cap_915000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_915000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_915000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231940/cap_915000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231940/cap_915000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231940/cap_915000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_915000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_915000000_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231940/cap_923000000_rx2.fc32",
+      "size_bytes": 62143896,
+      "sample_count": 7767987,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231940/cap_923000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231940/cap_923000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_923000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_923000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_231940/cap_923000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_231940/cap_923000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_231940/cap_923000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_923000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_231940/cap_923000000_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_233830/cap_868000000_rx2.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_233830/cap_868000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_233830/cap_868000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_233830/cap_868000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_233830/cap_868000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_233830/cap_868000000_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_233830/cap_868000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_233830/cap_868000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_233830/cap_868000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_233830/cap_868000000_txrx_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate: peak/median=5.8 dB is below the 8.0 dB detection threshold. CFO/EVM proxy not meaningful and intentionally withheld (conservative)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_234108/cap_868000000_rx2.fc32",
+      "size_bytes": 120000000,
+      "sample_count": 15000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_234108/cap_868000000_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_234108/cap_868000000_rx2_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_234108/cap_868000000_rx2_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_234108/cap_868000000_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260603_234108/cap_868000000_txrx.fc32",
+      "size_bytes": 120000000,
+      "sample_count": 15000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260603_234108/cap_868000000_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260603_234108/cap_868000000_txrx_maxhold.png",
+        "hardware/captures/auto_sweep_20260603_234108/cap_868000000_txrx_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260603_234108/cap_868000000_txrx_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate: peak/median=5.9 dB is below the 8.0 dB detection threshold. CFO/EVM proxy not meaningful and intentionally withheld (conservative)."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_off.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_off_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_off_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_off_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_off_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold): lr_fhss_candidate_score=0.113 (threshold 0.50), hop_like=2, peak/median=1.8 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_on.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_on_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_on_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_on_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_000358/cap_868000000_txrx_on_waterfall.png"
+      ],
+      "validation_status": "signal_detected",
+      "signal_detected": true,
+      "note": "Signal detected (gates applied: score>=threshold, uart_packet_count>0): lr_fhss_candidate_score=0.753>=thr, hop_like=173, occ_freq=91, maxhold_peaks=16. CFO/EVM are RF-quality proxies only and are NOT the LR-FHSS metric (LR-FHSS is GMSK-like sparse hopping, not QPSK); lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_off.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_off_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_off_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_off_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_off_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold): lr_fhss_candidate_score=0.247 (threshold 0.50), hop_like=5, peak/median=1.8 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_on.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_on_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_on_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_on_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011013/cap_868000000_txrx_on_waterfall.png"
+      ],
+      "validation_status": "signal_detected",
+      "signal_detected": true,
+      "note": "Signal detected (gates applied: score>=threshold, uart_packet_count>0): lr_fhss_candidate_score=0.779>=thr, hop_like=271, occ_freq=120, maxhold_peaks=20. CFO/EVM are RF-quality proxies only and are NOT the LR-FHSS metric (LR-FHSS is GMSK-like sparse hopping, not QPSK); lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011110/cap_868000000_txrx_off.fc32",
+      "size_bytes": 57868288,
+      "sample_count": 7233536,
+      "analysis_json": null,
+      "plots": [],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "no analysis json"
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011110/cap_868000000_txrx_on.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011110/cap_868000000_txrx_on_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011110/cap_868000000_txrx_on_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011110/cap_868000000_txrx_on_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011110/cap_868000000_txrx_on_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold, uart_packet_count>0): lr_fhss_candidate_score=0.154 (threshold 0.50), hop_like=3, peak/median=1.8 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011155/cap_868000000_txrx_on.fc32",
+      "size_bytes": 2118936,
+      "sample_count": 264867,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011155/cap_868000000_txrx_on_analysis.json",
+      "plots": [],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No LR-FHSS evidence detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_off.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_off_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_off_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_off_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_off_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold): lr_fhss_candidate_score=0.202 (threshold 0.50), hop_like=4, peak/median=1.8 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_on.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_on_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_on_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_on_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011203/cap_868000000_txrx_on_waterfall.png"
+      ],
+      "validation_status": "signal_detected",
+      "signal_detected": true,
+      "note": "Signal detected (gates applied: score>=threshold, uart_packet_count>0): lr_fhss_candidate_score=0.780>=thr, hop_like=252, occ_freq=96, maxhold_peaks=14. CFO/EVM are RF-quality proxies only and are NOT the LR-FHSS metric (LR-FHSS is GMSK-like sparse hopping, not QPSK); lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_off.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_off_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_off_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_off_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_off_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold): lr_fhss_candidate_score=0.248 (threshold 0.50), hop_like=5, peak/median=1.9 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_on.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_on_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_on_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_on_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011257/cap_868000000_txrx_on_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold, uart_packet_count>0): lr_fhss_candidate_score=0.773 (threshold 0.50), hop_like=147, peak/median=10.1 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_off.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_off_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_off_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_off_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_off_waterfall.png"
+      ],
+      "validation_status": "weak_signal_candidate",
+      "signal_detected": false,
+      "note": "Weak signal candidate (gates applied: score>=threshold): lr_fhss_candidate_score=0.109 (threshold 0.50), hop_like=2, peak/median=1.8 dB. Evidence present but not corroborated/strong enough for signal_detected. CFO/EVM proxies intentionally withheld (conservative). EVM is NOT the LR-FHSS metric; lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_on.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_on_analysis.json",
+      "plots": [
+        "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_on_maxhold.png",
+        "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_on_maxhold_quick.png",
+        "hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_on_waterfall.png"
+      ],
+      "validation_status": "signal_detected",
+      "signal_detected": true,
+      "note": "Signal detected (gates applied: score>=threshold, uart_packet_count>0): lr_fhss_candidate_score=0.757>=thr, hop_like=86, occ_freq=74, maxhold_peaks=14. CFO/EVM are RF-quality proxies only and are NOT the LR-FHSS metric (LR-FHSS is GMSK-like sparse hopping, not QPSK); lr_fhss_candidate_score is the relevant indicator."
+    },
+    {
+      "path": "hardware/captures/lr1121_lrfhss_868_baseline.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/lr1121_lrfhss_868_baseline_analysis.json",
+      "plots": [],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    },
+    {
+      "path": "hardware/captures/lr1121_lrfhss_868_txrx.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/lr1121_lrfhss_868_txrx_analysis.json",
+      "plots": [],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    },
+    {
+      "path": "hardware/captures/lr1121_lrfhss_baseline.fc32",
+      "size_bytes": 80000000,
+      "sample_count": 10000000,
+      "analysis_json": "hardware/captures/lr1121_lrfhss_baseline_analysis.json",
+      "plots": [],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    },
+    {
+      "path": "hardware/captures/sweep_20260603_230255/cap_868e6_rx2.fc32",
+      "size_bytes": 282986136,
+      "sample_count": 35373267,
+      "analysis_json": "hardware/captures/sweep_20260603_230255/cap_868e6_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/sweep_20260603_230255/cap_868e6_rx2_maxhold.png",
+        "hardware/captures/sweep_20260603_230255/cap_868e6_rx2_maxhold_quick.png",
+        "hardware/captures/sweep_20260603_230255/cap_868e6_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/sweep_20260603_230255/cap_868e6_txrx.fc32",
+      "size_bytes": 202218456,
+      "sample_count": 25277307,
+      "analysis_json": "hardware/captures/sweep_20260603_230255/cap_868e6_txrx_analysis.json",
+      "plots": [
+        "hardware/captures/sweep_20260603_230255/cap_868e6_txrx_maxhold.png",
+        "hardware/captures/sweep_20260603_230255/cap_868e6_txrx_maxhold_quick.png",
+        "hardware/captures/sweep_20260603_230255/cap_868e6_txrx_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/sweep_20260603_230255/cap_915e6_rx2.fc32",
+      "size_bytes": 130785816,
+      "sample_count": 16348227,
+      "analysis_json": "hardware/captures/sweep_20260603_230255/cap_915e6_rx2_analysis.json",
+      "plots": [
+        "hardware/captures/sweep_20260603_230255/cap_915e6_rx2_maxhold.png",
+        "hardware/captures/sweep_20260603_230255/cap_915e6_rx2_maxhold_quick.png",
+        "hardware/captures/sweep_20260603_230255/cap_915e6_rx2_waterfall.png"
+      ],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/sweep_20260603_230255/cap_915e6_txrx.fc32",
+      "size_bytes": 480000000,
+      "sample_count": 60000000,
+      "analysis_json": "hardware/captures/sweep_20260603_230255/cap_915e6_txrx_analysis.json",
+      "plots": [],
+      "validation_status": "noise_floor_only",
+      "signal_detected": false,
+      "note": "No modulated signal detected; CFO/EVM proxy not meaningful. Capture is consistent with noise floor (DC/LO spike excluded)."
+    },
+    {
+      "path": "hardware/captures/usrp_noise.fc32",
+      "size_bytes": 16000000,
+      "sample_count": 2000000,
+      "analysis_json": "hardware/captures/usrp_noise_analysis.json",
+      "plots": [],
+      "validation_status": null,
+      "signal_detected": null,
+      "note": "legacy analysis, no validation_status"
+    }
+  ]
+}
