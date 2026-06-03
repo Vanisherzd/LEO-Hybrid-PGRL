@@ -1,0 +1,23 @@
+{
+  "tx_on": {
+    "maxhold_excess_db": 12.64,
+    "hot_bin_count": 810,
+    "occupied_frequency_bins": 74,
+    "occupied_time_bins": 260,
+    "lr_fhss_candidate_score": 0.7566
+  },
+  "tx_off": {
+    "maxhold_excess_db": 2.82,
+    "hot_bin_count": 2,
+    "occupied_frequency_bins": 2,
+    "occupied_time_bins": 2,
+    "lr_fhss_candidate_score": 0.109
+  },
+  "on_off_delta_db": 9.82,
+  "hot_bin_delta": 808,
+  "freq_occupancy_delta": 72,
+  "tx_on_stronger_than_off": true,
+  "sample_rate_hz": 1000000.0,
+  "threshold_db": 8.0,
+  "note": "ON vs OFF A/B comparison. tx_on_stronger_than_off requires freq_occupancy_delta >= 3 AND on_off_delta_db >= 3.0 dB. Metrics computed via analyze_capture.detect_signal (shared math). DC/LO guard band excluded from all counts."
+}

@@ -1,0 +1,35 @@
+{
+  "serial": "8000304",
+  "generated_at": "2026-06-03T17:12:57Z",
+  "mode": "on-off",
+  "reset_method": "none",
+  "rate": 1000000,
+  "gain": "45",
+  "duration": "10",
+  "n_captures": 1,
+  "n_signal_detected": 1,
+  "captures": [
+    {
+      "capture_file": "cap_868000000_txrx_on.fc32",
+      "frequency_hz": 868000000,
+      "antenna": "TX/RX",
+      "rate": 1000000,
+      "gain": "45",
+      "duration": "10",
+      "actual_duration_s": 12.556,
+      "capture_status": "ok",
+      "validation_status": "signal_detected",
+      "signal_detected": true,
+      "peak_to_median_db": 7.67,
+      "burst_energy_excess_db": 0.4,
+      "maxhold_excess_db": 15.4,
+      "peak_frequency_offset_hz": -393798.83,
+      "uart_log": "cap_868000000_txrx_on_uart.log",
+      "uart_packet_sent_count": 7,
+      "uart_seen_init": false,
+      "note": "ok; signal_detected",
+      "on_off_delta_db": 11.87,
+      "tx_on_stronger_than_off": true
+    }
+  ]
+}

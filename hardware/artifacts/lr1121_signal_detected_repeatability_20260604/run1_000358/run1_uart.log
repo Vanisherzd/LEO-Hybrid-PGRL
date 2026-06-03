@@ -1,0 +1,21 @@
+Packet to send: 000102030405060708090a0b0c
+RF=868000000 Hz, PWR=10 dBm, payload_len=13
+Packet sent!
+Packet to send: 000102030405060708090a0b0c0d
+RF=868000000 Hz, PWR=10 dBm, payload_len=14
+Packet sent!
+Packet to send: 000102030405060708090a0b0c0d0e
+RF=868000000 Hz, PWR=10 dBm, payload_len=15
+Packet sent!
+Packet to send: 000102030405060708090a0b0c0d0e0f
+RF=868000000 Hz, PWR=10 dBm, payload_len=16
+Packet sent!
+Packet to send: 000102030405060708090a0b0c0d0e0f10
+RF=868000000 Hz, PWR=10 dBm, payload_len=17
+Packet sent!
+Packet to send: 000102030405060708090a0b0c0d0e0f1011
+RF=868000000 Hz, PWR=10 dBm, payload_len=18
+Packet sent!
+Packet to send: 000102030405060708090a0b0c0d0e0f101112
+RF=868000000 Hz, PWR=10 dBm, payload_len=19
+Packet sent!

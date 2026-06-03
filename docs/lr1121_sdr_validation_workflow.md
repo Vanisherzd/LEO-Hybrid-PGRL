@@ -242,3 +242,25 @@ generates the README + index from `sweep_summary.json` and the ON analysis JSON.
 `hardware/artifacts/lr1121_signal_detected_20260604_000358/` — TX/RX @ 868 MHz,
 `signal_detected=true`, 8.88 dB ON/OFF delta, LR-FHSS candidate score 0.753.
 This is IQ-level signal detection only — NOT LR-FHSS decoding or PER.
+
+## 10. Repeatability result
+
+Three successful TX ON/OFF trials on 2026-06-04 (868 MHz, TX/RX, 1 Msps,
+gain 45, 10 s), all IQ-level `signal_detected=true` with `tx_on_stronger_than_off=true`:
+
+| Run | Sweep dir | ON/OFF delta (dB) | LR-FHSS score |
+|-----|-----------|-------------------|---------------|
+| 1 | `auto_sweep_20260604_000358` | 8.88 | 0.753 |
+| 2 | `auto_sweep_20260604_011203` | 11.87 | 0.780 |
+| 3 | `auto_sweep_20260604_011519` | 9.82 | 0.757 |
+
+(`auto_sweep_20260604_011257` is excluded — UART failed / transmitter presence
+not confirmed.)
+
+Curated set: `hardware/artifacts/lr1121_signal_detected_repeatability_20260604/`
+(per-run subfolders + `repeatability_summary.csv/json`). Bar chart:
+`paper/figures/hardware/fig_hw_lrfhss_repeatability.png`.
+
+This upgrades the hardware status from a single signal-detected run to
+**repeated hardware-signal-detected evidence**. Still IQ-level signal detection
+only — NOT LR-FHSS decoding, NOT PER, NOT a full gateway receiver.
