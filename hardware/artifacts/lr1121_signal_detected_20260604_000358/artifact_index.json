@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-06-03T16:19:47Z",
+  "source_directory": "hardware/captures/auto_sweep_20260604_000358",
+  "curated_directory": "hardware/artifacts/lr1121_signal_detected_20260604_000358",
+  "copied_files": [
+    "README.md",
+    "cap_868000000_txrx_comparison.json",
+    "cap_868000000_txrx_comparison.png",
+    "cap_868000000_txrx_off_analysis.json",
+    "cap_868000000_txrx_off_maxhold.json",
+    "cap_868000000_txrx_off_maxhold.png",
+    "cap_868000000_txrx_off_maxhold_quick.png",
+    "cap_868000000_txrx_off_waterfall.png",
+    "cap_868000000_txrx_on_analysis.json",
+    "cap_868000000_txrx_on_maxhold.json",
+    "cap_868000000_txrx_on_maxhold.png",
+    "cap_868000000_txrx_on_maxhold_quick.png",
+    "cap_868000000_txrx_on_uart.log",
+    "cap_868000000_txrx_on_waterfall.png",
+    "sweep_summary.csv",
+    "sweep_summary.json"
+  ],
+  "excluded_raw_files": [
+    {
+      "file": "cap_868000000_txrx_off.fc32",
+      "reason": "raw_iq_or_binary",
+      "size_bytes": 80000000
+    },
+    {
+      "file": "cap_868000000_txrx_on.fc32",
+      "reason": "raw_iq_or_binary",
+      "size_bytes": 80000000
+    }
+  ],
+  "validation_status": "signal_detected",
+  "signal_detected": true,
+  "key_metrics": {
+    "frequency_hz": 868000000,
+    "antenna": "TX/RX",
+    "uart_packet_sent_count": 7,
+    "on_off_delta_db": 8.88,
+    "tx_on_stronger_than_off": true,
+    "lr_fhss_candidate_score": 0.7534,
+    "hop_like_segment_count": 173,
+    "occupied_frequency_bins": 91,
+    "maxhold_peak_count_excluding_dc": 16
+  }
+}

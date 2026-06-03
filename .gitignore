@@ -63,4 +63,20 @@ hardware/captures/**/*.png
 hardware/captures/**/*.json
 hardware/captures/**/*.csv
 hardware/captures/**/*.log
+
+# Curated evidence + paper figures ARE committed (override the broad ignores above,
+# incl. the global *.log rule). Raw .fc32/.dat are still never tracked here.
+!hardware/artifacts/
+!hardware/artifacts/**/*.png
+!hardware/artifacts/**/*.json
+!hardware/artifacts/**/*.csv
+!hardware/artifacts/**/*.log
+!hardware/artifacts/**/*.md
+!paper/figures/hardware/
+!paper/figures/hardware/**/*.png
+!paper/figures/hardware/**/*.md
+
+# Local raw-IQ archive (never committed)
+hardware/local_raw_archive/
+
 semtech_validation/lr1121_tx_config_example.json

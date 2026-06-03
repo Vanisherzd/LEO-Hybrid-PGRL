@@ -215,3 +215,30 @@ rung.
 
 For the GLOBECOM workshop paper, keep claims conservative: report only the
 highest rung whose evidence is actually in hand.
+
+## 9. Artifact organization
+
+Keep raw IQ out of git; commit only small curated evidence and paper figures.
+
+| Location | Contents | Git |
+|----------|----------|-----|
+| `hardware/captures/` | Raw sweep output: `.fc32` IQ, analysis JSON, UART logs, plots, summaries | **ignored** (raw IQ never committed) |
+| `hardware/artifacts/<name>/` | Curated small evidence (PNG/JSON/CSV/log/MD) + auto README + `artifact_index.json` | committed |
+| `paper/figures/hardware/` | Stable-named paper figures + caption README | committed |
+| `hardware/local_raw_archive/` | Optional local home for older raw `.fc32` (record source in the manifest before moving) | **ignored** |
+
+Curate a successful run with:
+
+```bash
+uv run python scripts/curate_hardware_artifacts.py \
+  --source hardware/captures/auto_sweep_20260604_000358 \
+  --name lr1121_signal_detected_20260604_000358
+```
+
+The script copies only small artifacts (never `.fc32`/`.dat`/binaries), and
+generates the README + index from `sweep_summary.json` and the ON analysis JSON.
+
+**First signal-detected artifact:**
+`hardware/artifacts/lr1121_signal_detected_20260604_000358/` — TX/RX @ 868 MHz,
+`signal_detected=true`, 8.88 dB ON/OFF delta, LR-FHSS candidate score 0.753.
+This is IQ-level signal detection only — NOT LR-FHSS decoding or PER.
