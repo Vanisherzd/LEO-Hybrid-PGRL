@@ -252,41 +252,32 @@ PGRL reduces pass-timing RMSE by $99.6\%$ versus SGP4 (4.2~s $\to$ 16~ms) and re
 \subsection{Validation Scope and Limitations}
 All quantitative PGRL and uplink-control results are trace-driven or proxy-simulation. This work does \emph{not} implement a full standard-compliant LR-FHSS gateway, and LR-FHSS PER is not reported. QPSK EVM is used strictly as an RF-quality proxy. The Semtech LR-FHSS TX and SDR IQ-capture pipeline has produced preliminary IQ-level hardware signal detection (Sec.~\ref{sec:hardware}).
 
-\emph{Hardware status.} The USRP B210 capture path and SWDM001 LR1121 firmware bring-up are operational, and the IQ-level pipeline has reached the \emph{signal-detected} state in three repeated TX ON/OFF trials (Sec.~\ref{sec:hardware}). We use four validation labels: \textbf{trace-driven}, \textbf{simulation}, \textbf{proxy-simulation}, and \textbf{hardware-signal-detected}. The maximum hardware claim remains \emph{hardware-signal-detected}: IQ-level RF signal presence only, \emph{not} LR-FHSS decoding or PER.
-
-These labels separate evidence layers: \textbf{trace-driven} covers orbit-prediction and control-interface accuracy, \textbf{proxy-simulation} covers LR-FHSS grid and QPSK-EVM indicators, and \textbf{hardware-signal-detected} covers IQ-level TX ON/OFF RF evidence only. None should be read as packet decoding, gateway interoperability, or PER measurement.
+\emph{Hardware status.} The USRP B210 capture path and SWDM001 LR1121 firmware bring-up are operational, and the IQ-level pipeline has reached \emph{hardware-signal-detected} in three repeated TX ON/OFF trials (Sec.~\ref{sec:hardware}). We use four validation labels: \textbf{trace-driven}, \textbf{simulation}, \textbf{proxy-simulation}, and \textbf{hardware-signal-detected}. They separate orbit/control accuracy, LR-FHSS grid or QPSK-EVM indicators, and IQ-level TX ON/OFF RF evidence; none implies packet decoding, gateway interoperability, or PER.
 
 % ── Hardware Validation ──────────────────────────────────────────────────────
 \section{Hardware Validation}
 \label{sec:hardware}
 
-We now summarize the hardware TX/capture path and the preliminary IQ-level evidence it produces.
-
 \subsection{Semtech LR1121 TX Path}
 The Semtech LR1121 dev kit running SWDM001 firmware~\cite{swdm001} provides a standards-compatible LR-FHSS TX path. A validation script converts PGRL output into a TX configuration JSON specifying center frequency, TX power, hopping-grid parameters, guard time, and Doppler pre-compensation flags.
 
 \subsection{SDR IQ Testbed}
-A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection only; conducted RF characterization is left for future work. The SDR captures IQ at 1~MHz bandwidth and feeds the sparse-hop detector together with auxiliary CFO, EVM-proxy, and waterfall analysis.
+A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection only. The SDR captures IQ at 1~MHz bandwidth and feeds the sparse-hop detector together with auxiliary CFO, EVM-proxy, and spectral-occupancy analysis.
 
 \subsection{Preliminary IQ-Level Signal Detection}
 \label{sec:hw-results}
-Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet interval) and a USRP B210 receiver (TX/RX antenna, 1~Msps, 45~dB gain, 10~s capture), the pipeline was run with a transmitter-on/off differential protocol. A capture is labeled \emph{signal-detected} only when the LR-FHSS-aware detector finds sparse-hop time-frequency occupancy above the per-bin noise floor (DC/LO spike excluded), corroborated by UART transmit logs and a TX-OFF reference. In three TX ON/OFF trials at 868~MHz, TX-ON exceeded TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB, with all three reaching \emph{signal-detected} (Fig.~\ref{fig:hw_lrfhss_waterfall} and Fig.~\ref{fig:hw_lrfhss_summary}).
+Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet interval) and a USRP B210 receiver (TX/RX antenna, 1~Msps, 45~dB gain, 10~s capture), the pipeline was run with a transmitter-on/off differential protocol. In three TX ON/OFF trials at 868~MHz, TX-ON exceeded TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB, with all three reaching \emph{signal-detected} (Fig.~\ref{fig:hw_lrfhss_detection}).
 
-The ON/OFF control matters because it separates LR1121-dependent RF evidence from static interferers, DC/LO leakage, and narrowband spurs that may persist without LR-FHSS transmission. UART logs align the TX-ON capture with firmware activity, and the detector promotes a run to \emph{signal-detected} only when sparse-hop occupancy exceeds both the TX-OFF reference and the per-bin noise floor.
+Detector gate: \emph{signal-detected} requires UART-confirmed TX activity, ON/OFF occupancy dominance, exclusion of DC/LO guard bins, and LR-FHSS candidate score above threshold. In the curated artifacts, this means positive UART packet count, score above 0.50, and TX-ON occupancy that exceeds the TX-OFF reference under shared detector math.
+
+The ON/OFF reference suppresses static spurs and receiver artifacts, so the reported delta is transmitter-dependent rather than environment-only. Because this artifact does not include a standard-compliant LR-FHSS gateway decoder, it validates RF presence and detector consistency rather than packet recovery or PER.
 
 \begin{figure*}[!t]
     \centering
-    \includegraphics[width=0.98\textwidth]{figures/hardware/fig_hw_lrfhss_waterfall_onoff.pdf}
-    \caption{TX-ON/TX-OFF waterfall evidence for preliminary IQ-level LR1121 LR-FHSS detection at 868~MHz. TX-ON shows sparse-hop-like time-frequency occupancy during LR1121 transmission, while TX-OFF suppresses this structure. IQ-level RF evidence only; no packet decoding or PER.}
-    \label{fig:hw_lrfhss_waterfall}
+    \includegraphics[width=0.95\textwidth]{figures/hardware/fig_hw_lrfhss_detection_evidence.pdf}
+    \caption{Hardware signal-detection evidence from the Semtech LR1121 and USRP B210 testbed at 868~MHz. The figure summarizes TX-ON/TX-OFF spectral evidence, sparse-hop occupancy metrics, and repeatability across three trials. TX-ON exceeds TX-OFF by 8.88, 11.87, and 9.82~dB, with UART-confirmed transmissions and \emph{signal-detected} in all trials. IQ-level RF signal detection only; no standard-compliant LR-FHSS decoding or PER is claimed.}
+    \label{fig:hw_lrfhss_detection}
 \end{figure*}
-
-\begin{figure}[!b]
-    \centering
-    \includegraphics[width=\linewidth]{figures/hardware/fig_hw_lrfhss_detection_summary.pdf}
-    \caption{TX-ON/TX-OFF max-hold comparison and repeatability summary. Across three trials, TX-ON exceeds TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB. This supports the hardware-signal-detected label only, not standard-compliant LR-FHSS decoding.}
-    \label{fig:hw_lrfhss_summary}
-\end{figure}
 
 % ── Conclusion ────────────────────────────────────────────────────────────────
 \section{Conclusion}
