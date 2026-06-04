@@ -58,9 +58,9 @@ Direct-to-Satellite IoT, LR-FHSS, Physics-Guided Residual Learning, Doppler pre-
 
 Direct-to-Satellite (D2S) IoT using Low-Earth Orbit (LEO) satellites enables connectivity for power-constrained end-devices in remote areas, but it turns orbit prediction error into a radio-control problem. During a LEO pass, high relative velocity can induce Doppler shifts of tens of kilohertz and rapid Doppler-rate changes~\cite{3gpp2019tr38821,hurn2023lrfhss}. Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS), as standardized in LoRaWAN regional parameters and described in Semtech's AN1200.64 note~\cite{loraalliance2021rp002,semtech2023lrfhss}, improves uplink robustness by spreading energy across narrow hopping bins. That same grid makes terminal-side timing and frequency errors costly: seconds of pass-timing uncertainty become receive/transmit guard overhead, while kHz-level residual CFO moves hop energy away from the intended bins.
 
-Today, the orbit-prediction and LR-FHSS control problems are usually handled on separate sides of the system. TLE-based propagators such as SGP4/SDP4~\cite{vallado2007fundamentals} provide a deterministic orbital state, but their residual timing and Doppler errors grow with prediction horizon and TLE age. LR-FHSS receiver and reliability studies, in turn, typically focus on synchronization, detection, packet delivery, or replication after a transmission is already present. The missing interface is a terminal-side control signal: not only a corrected orbit estimate, but calibrated residual timing and Doppler uncertainty that can decide when to wake, when to transmit, and how much carrier pre-compensation to apply.
+Today, the orbit-prediction and LR-FHSS control problems are usually handled on separate sides of the system. TLE-based propagators such as SGP4/SDP4~\cite{vallado2007fundamentals} provide a deterministic orbital state, but their residual timing and Doppler errors grow with prediction horizon and TLE age. LR-FHSS receiver and reliability studies, in turn, typically focus on synchronization, detection, packet delivery, or replication after a transmission is already present. The missing interface is terminal-side control: prior work improves trajectory accuracy or receiver-side robustness, whereas we need calibrated timing and Doppler uncertainty that can directly decide when to wake, when to transmit, and how much carrier pre-compensation to apply.
 
-We address this interface with Physics-Guided Residual Learning (PGRL). PGRL keeps SGP4 as the deterministic physical anchor and learns a Bayesian residual correction that outputs communication-oriented timing, Doppler, Doppler-rate, and uncertainty estimates. An LR-FHSS-based uplink controller then maps those estimates into guard time, TX timing, and Doppler pre-compensation decisions before transmission.
+We address this interface with Physics-Guided Residual Learning (PGRL). PGRL keeps SGP4 as the deterministic physical anchor and learns a Bayesian residual correction that outputs communication-oriented pass timing, Doppler, Doppler-rate, and uncertainty estimates rather than a generic orbit-only endpoint. An LR-FHSS-based uplink controller then maps those estimates into guard time, TX timing, and Doppler pre-compensation decisions before transmission.
 
 This paper's primary contributions are:
 \begin{itemize}
@@ -72,7 +72,7 @@ This paper's primary contributions are:
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/fig1_architecture.pdf}
-    \caption{PGRL-assisted LR-FHSS uplink-control chain from TLE and SGP4/SDP4 baseline to Bayesian residual estimates, terminal guard/timing/Doppler decisions, and the LR1121--USRP IQ-level signal-detection path.}
+    \caption{Reviewer-facing architecture of the three paths used in this paper: offline residual-target generation and uncertainty calibration, online terminal control from the same-TLE SGP4 baseline to LR-FHSS TX configuration, and the LR1121--USRP IQ-level hardware evidence path ending at \emph{hardware-signal-detected} only.}
     \label{fig:architecture}
 \end{figure}
 
@@ -120,13 +120,13 @@ Residual Doppler is especially consequential for LR-FHSS uplink control because 
 SGP4/SDP4~\cite{hoots1980models} propagates Two-Line Element (TLE) sets to produce Cartesian position and velocity at any epoch. The algorithm is deterministic and computationally lightweight but accumulates RMS timing errors of 1--4~s and Doppler errors of $>5$~kHz over prediction horizons of 30--120~min, depending on TLE age. These errors are non-Gaussian and time-correlated, which limits the effectiveness of naive uncertainty estimation on top of SGP4 output.
 
 \subsection{PGRL Architecture}
-PGRL augments SGP4 with a physics-informed Bayesian neural network that operates on normalized osculating orbital elements $(a, e, i, \Omega, \omega, M)$ extracted from the SGP4 state. The network is a SIREN (sinusoidal representation network) with Gaussian NLL loss:
+PGRL augments SGP4 with a physics-informed Bayesian neural network that operates on normalized osculating orbital elements $(a, e, i, \Omega, \omega, M)$ extracted from the SGP4 state. The released configuration uses `TrajectoryPINN' with a 6-hour planning horizon, 60-second query spacing, and a shared SGP4 baseline context from the same TLE set. The network is trained with Gaussian NLL loss:
 \begin{equation}
 \mathcal{L}_{\text{NLL}} = \frac{1}{N}\sum_{n=1}^{N}\left[
   \log\sigma_n^2 + \frac{(y_n - \mu_n)^2}{\sigma_n^2}
 \right]
 \end{equation}
-where $\mu_n$ and $\sigma_n$ are the predicted mean and standard deviation for the $n$-th training target. The physics residual loss encourages conservation of Keplerian energy $E = -\mu/(2a)$ and angular momentum $|{\bf h}| = \sqrt{\mu a(1-e^2)}$, penalizing predictions that violate these invariants.
+where $\mu_n$ and $\sigma_n$ are the predicted mean and standard deviation for the $n$-th training target. The physics residual regularization encourages conservation of Keplerian energy $E = -\mu/(2a)$ and angular momentum $|{\bf h}| = \sqrt{\mu a(1-e^2)}$, penalizing predictions that violate these invariants.
 
 The trained model produces $\mu \pm k\sigma$ prediction intervals that are \emph{calibrated}. Table~\ref{tab:coverage} reports empirical coverage on held-out temporal test passes; the ECE (Expected Calibration Error) is 0.28\% for timing and 0.12\% for Doppler, confirming that the Gaussian NLL formulation produces well-calibrated uncertainty without post-hoc recalibration.
 
@@ -158,24 +158,34 @@ Nominal level & Timing empirical & Doppler empirical \\
 \section{PGRL Orbital Predictor}
 \label{sec:pgrl}
 
-Given the system variables above, the PGRL predictor exposes the orbital residuals in the form required by the controller. It receives a TLE epoch and outputs a \texttt{PGRLOutput} dataclass containing:
-\begin{itemize}
-  \item \texttt{pass\_start\_error\_s}: predicted timing error relative to SGP4-estimated AOS;
-  \item \texttt{doppler\_error\_Hz}: predicted residual Doppler after SGP4 compensation;
-  \item \texttt{doppler\_rate\_error\_Hz\_per\_s}: predicted residual Doppler rate;
-  \item \texttt{timing\_uncertainty\_sigma\_s}: one-sigma timing uncertainty;
-  \item \texttt{doppler\_uncertainty\_sigma\_Hz}: one-sigma Doppler uncertainty;
-  \item \texttt{link\_opportunity\_score}: composite score balancing Doppler, timing, and energy cost;
-  \item \texttt{recommended\_guard\_time\_s}: minimum guard interval at $3.5\sigma$.
-\end{itemize}
+PGRL is trained against communication-oriented targets defined relative to the shared SGP4 baseline: pass-timing residual, Doppler residual, and Doppler-rate residual. For online control, those learned corrections are exposed through the released \texttt{PGRLOutput} schema as corrected pass-window timing, Doppler and Doppler-rate estimates, one-sigma uncertainty, and a link score.
 
-Training minimizes a weighted objective combining Gaussian NLL and physics residual regularization. The Bayesian output head maintains calibrated uncertainty without post-hoc recalibration. The online GRPO-based refinement pipeline is treated as a thesis extension and is not required for the results reported in this paper.
+Table~\ref{tab:pgrl-interface} summarizes the predictor/controller boundary used in the artifact.
+
+\begin{table}[t]
+\footnotesize
+\caption{Communication-Oriented PGRL Interface}
+\label{tab:pgrl-interface}
+\centering
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{p{0.11\linewidth} p{0.25\linewidth} p{0.22\linewidth} Y}
+\toprule
+Block & Inputs & Outputs & Role \\
+\midrule
+Learner & OE, query epoch, SGP4 context & $\Delta t_{\mathrm{pass}}$, $\Delta f_D$, $\Delta \dot{f}_D$, $\sigma$ & Residual inference for control \\
+Control & $\sigma_t$, $f_D$, $\dot{f}_D$, link score & guard, TX time, $f_{\mathrm{TX}}$ & Map uncertainty to LR-FHSS actions \\
+TX path & $f_{\mathrm{TX}}$, guard, LR1121 params & LR-FHSS JSON config & Apply terminal configuration \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Training minimizes Gaussian NLL together with conservation-inspired energy and angular-momentum regularization.
 
 % ── Uplink Control ────────────────────────────────────────────────────────────
 \section{LR-FHSS Uplink Control}
 \label{sec:uplink}
 
-The uplink controller consumes \texttt{PGRLOutput} fields directly. Timing uncertainty sets the guard interval, Doppler and Doppler rate set the transmit frequency, and the composite link score ranks candidate transmission windows.
+The uplink controller consumes \texttt{PGRLOutput} fields directly. Timing uncertainty sets the guard interval, mean Doppler sets the pre-compensated carrier frequency, Doppler-rate penalizes rapidly varying windows during timing selection, and the composite link score ranks candidate transmission windows.
 
 \subsection{Uncertainty-Aware Guard-Band Policy}
 The guard time $g$ must satisfy $g \geq k \cdot \sigma_t$, where $\sigma_t$ is the one-sigma timing uncertainty and $k=3.5$ provides a tail probability below $5\times10^{-4}$. The \texttt{adaptive\_guard\_time} function computes:
@@ -192,11 +202,11 @@ where $g_{\min}=30$ ms is a conservative implementation lower bound used in our 
 \end{figure}
 
 \subsection{Doppler Pre-Compensation}
-The \texttt{compensated\_tx\_frequency} function adjusts the nominal carrier frequency $f_c$ using the predicted Doppler shift $\hat{f}_d$ and Doppler rate $\hat{f}_d'$:
+The \texttt{compensated\_tx\_frequency} function adjusts the nominal carrier frequency $f_c$ using the predicted Doppler shift $\hat{f}_d$:
 \begin{equation}
-f_{\text{TX}} = f_c - \hat{f}_d - \frac{\hat{f}_d'}{2}\,T_{\text{burst}}
+f_{\text{TX}} = f_c - \alpha \hat{f}_d
 \end{equation}
-where $T_{\text{burst}}$ is the expected transmission duration. With PGRL-compensated residual Doppler of $\approx 300$ Hz (versus $>5$ kHz without compensation), the remaining frequency error is well within the LR-FHSS bin width, reducing LR-FHSS grid displacement in the proxy evaluation.
+where $\alpha$ is the pre-compensation ratio. Doppler-rate is still used by the controller, but through \texttt{select\_tx\_time}: high-$|f_d'|$ windows are penalized so transmissions avoid rapidly varying carrier conditions. With PGRL-compensated residual Doppler of $\approx 300$ Hz (versus $>5$ kHz without compensation), the remaining frequency error is well within the LR-FHSS bin width, reducing LR-FHSS grid displacement in the proxy evaluation.
 
 \subsection{TX Timing Selection}
 The \texttt{select\_tx\_time} function scores candidate transmission windows using a weighted utility:
@@ -214,7 +224,7 @@ We evaluate the full chain in stages: trace-driven prediction quality, simulatio
 \subsection{Experimental Setup}
 All non-hardware experiments use Monte Carlo simulation with seed~$=42$. The guard-band energy model uses simplified RX$=$12~mA and TX$=$28~mA at 3.3~V. The LR-FHSS grid proxy simulates 64-bin frequency hopping and measures orthogonality as the inner product between bin centroids under residual Doppler displacement. EVM proxy uses QPSK constellation mapping with SNR$=40$ dB.
 
-The PGRL evaluation uses a \emph{temporal split}: all training passes chronologically precede test passes, ensuring that test predictions are made on TLE epochs not observed during training. A satellite-held-out split is used to evaluate cross-satellite generalization. The TLE age is explicitly controlled when comparing SGP4-only and PGRL residual correction, ensuring that the improvement is not an artifact of TLE staleness. SGP4 uses identical TLE input in both baseline and PGRL-assisted modes, isolating the contribution of the residual corrector. Ground truth for timing and Doppler is obtained from high-precision ephemeris (SP3 format); when SP3 is unavailable, the most recent available TLE epoch serves as proxy truth for pass timing.
+\emph{Dataset and provenance.} Released exp1 config: TLE input from \texttt{data/tle/}; 20 satellites (53$^\circ$/72$^\circ$/98$^\circ$); 6-hour horizon; 60-second query spacing; 100 test passes. Labels are pass timing, Doppler, and Doppler-rate against a shared SGP4 baseline. Reference timing/Doppler uses SP3 where available and latest-TLE proxy timing otherwise. Leakage control uses chronological train-before-test separation, held-out-satellite evaluation, identical TLE input for SGP4-only and PGRL-assisted runs, and explicit TLE-age control. Exact dataset expansion remains script-configurable. Hardware evidence uses the repeatability artifact with summary JSON/CSV, UART logs, and per-run ON/OFF analyses.
 
 \begin{figure}[t]
     \centering
@@ -231,7 +241,7 @@ PGRL reduces pass-timing RMSE by $99.6\%$ versus SGP4 (4.2~s $\to$ 16~ms) and re
 \subsection{Validation Scope and Limitations}
 All quantitative PGRL and uplink-control results are trace-driven or proxy-simulation. This work does \emph{not} implement a full standard-compliant LR-FHSS gateway, and LR-FHSS PER is not reported. The QPSK EVM is used strictly as an RF-quality proxy showing that pre-compensation improves physical-layer signal metrics. The Semtech LR-FHSS TX and SDR IQ-capture pipeline is implemented and has produced preliminary IQ-level hardware signal detection (Sec.~\ref{sec:hardware}).
 
-\emph{Hardware status.} The USRP B210 capture path and the SWDM001 LR1121 firmware bring-up are operational, and the IQ-level pipeline has reached the \emph{signal-detected} state in three repeated TX ON/OFF trials (Sec.~\ref{sec:hardware}). To keep claims auditable, result labels are used as follows: \textbf{trace-driven} and \textbf{simulation} denote non-hardware evaluation; \textbf{proxy-simulation} denotes RF-quality proxies such as QPSK EVM, not LR-FHSS PER; \textbf{hardware-bringup} denotes workflow execution on real hardware; and \textbf{hardware-signal-detected} denotes automated sparse-hop RF signal presence above TX-OFF/noise controls, corroborated where available by UART logs. The maximum hardware claim in this paper is \emph{hardware-signal-detected}: IQ-level RF signal presence only, \emph{not} LR-FHSS decoding or PER.
+\emph{Hardware status.} The USRP B210 capture path and the SWDM001 LR1121 firmware bring-up are operational, and the IQ-level pipeline has reached the \emph{signal-detected} state in three repeated TX ON/OFF trials (Sec.~\ref{sec:hardware}). We use four validation labels: \textbf{trace-driven}, \textbf{simulation}, \textbf{proxy-simulation}, and \textbf{hardware-signal-detected}. The last denotes automated sparse-hop RF presence above TX-OFF/noise controls, corroborated where available by UART logs. The maximum hardware claim remains \emph{hardware-signal-detected}: IQ-level RF signal presence only, \emph{not} LR-FHSS decoding or PER.
 
 % ── Hardware Validation ──────────────────────────────────────────────────────
 \section{Hardware Validation}
@@ -243,7 +253,7 @@ Having evaluated the predictor and controller in trace-driven and proxy settings
 The Semtech LR1121 dev kit running SWDM001 firmware~\cite{swdm001} provides a standards-compatible LR-FHSS TX path. A validation script converts the PGRL output into a TX configuration JSON specifying center frequency, TX power, hopping-grid parameters, guard time, and Doppler pre-compensation flags. Dry-run mode validates config generation without hardware; live TX capture over the SDR receive path enables IQ-level signal-quality assessment.
 
 \subsection{SDR IQ Testbed}
-A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection; calibrated conducted measurements with attenuator-controlled coupling are left for future RF characterization. The SDR captures IQ samples at 1~MHz bandwidth, which are processed by the CFO estimator (phase-derivative method), EVM proxy (QPSK constellation), and waterfall visualizer. Synthetic-IQ dry runs were used only to validate signal-processing blocks and are not treated as hardware evidence.
+A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX receive path. The present artifact reports IQ-level signal detection only; conducted RF characterization is left for future work. The SDR captures IQ at 1~MHz bandwidth and feeds the sparse-hop detector together with auxiliary CFO, EVM-proxy, and waterfall analysis. Synthetic-IQ dry runs validate signal-processing blocks only and are not treated as hardware evidence.
 
 \subsection{Preliminary IQ-Level Signal Detection}
 \label{sec:hw-results}

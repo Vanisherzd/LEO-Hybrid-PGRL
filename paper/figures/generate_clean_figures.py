@@ -78,9 +78,9 @@ def float_from_text(value):
 
 
 def fig1_architecture():
-    fig, ax = plt.subplots(figsize=(7.05, 2.55))
-    ax.set_xlim(0, 11.2)
-    ax.set_ylim(0, 4.7)
+    fig, ax = plt.subplots(figsize=(7.05, 2.82))
+    ax.set_xlim(0, 12.2)
+    ax.set_ylim(0, 5.7)
     ax.axis("off")
 
     def box(x, y, w, h, text, face, edge=BLACK, lw=0.8):
@@ -106,37 +106,61 @@ def fig1_architecture():
         if label:
             ax.text((x1 + x2) / 2, (y1 + y2) / 2 + 0.12, label, ha="center", va="bottom", fontsize=7.2, color=GRAY)
 
-    ax.text(0.25, 4.35, "Orbit baseline", fontsize=8.3, weight="bold", color=BLACK)
-    ax.text(0.25, 2.32, "Uncertainty-aware LR-FHSS uplink control", fontsize=8.3, weight="bold", color=BLACK)
-    ax.text(0.25, 0.60, "Hardware evidence path", fontsize=8.3, weight="bold", color=BLACK)
+    panels = [
+        (0.15, 3.72, 11.85, 1.45, "Offline training / calibration", "#f8fbff"),
+        (0.15, 2.00, 11.85, 1.32, "Online terminal control", "#fbfbfb"),
+        (0.15, 0.35, 11.85, 1.22, "Hardware evidence path", "#fffdf8"),
+    ]
+    for x, y, w, h, title, face in panels:
+        rect = patches.FancyBboxPatch(
+            (x, y),
+            w,
+            h,
+            boxstyle="round,pad=0.04,rounding_size=0.08",
+            facecolor=face,
+            edgecolor=LIGHT,
+            linewidth=0.7,
+        )
+        ax.add_patch(rect)
+        ax.text(x + 0.18, y + h - 0.22, title, fontsize=8.4, weight="bold", color=BLACK, va="top")
 
-    box(0.25, 3.35, 1.55, 0.58, "TLE", "0.96")
-    box(2.25, 3.35, 1.65, 0.58, "SGP4/SDP4", "0.96")
-    box(4.45, 3.20, 1.95, 0.88, "Bayesian\nresidual learner", "#e8f2fb")
-    box(7.00, 3.20, 1.75, 0.88, "Residuals\nand variance", "#e8f2fb")
+    # Offline training / calibration
+    box(0.45, 4.05, 1.45, 0.56, "TLE /\nephemeris", "0.96")
+    box(2.25, 4.05, 1.55, 0.56, "SGP4/\nSDP4", "0.96")
+    box(4.15, 4.05, 1.85, 0.56, "Residual target\ngeneration", "#f2f2f2")
+    box(6.45, 4.00, 1.85, 0.66, "Bayesian\nPGRL training", "#e8f2fb")
+    box(8.75, 4.00, 1.95, 0.66, "Uncertainty\ncalibration", "#e8f2fb")
+    arrow(1.90, 4.33, 2.25, 4.33)
+    arrow(3.80, 4.33, 4.15, 4.33)
+    arrow(6.00, 4.33, 6.45, 4.33, "shared baseline")
+    arrow(8.30, 4.33, 8.75, 4.33, "mu, sigma")
+    arrow(9.70, 4.00, 9.70, 3.30, "deployed model")
 
-    arrow(1.80, 3.64, 2.25, 3.64)
-    arrow(3.90, 3.64, 4.45, 3.64, "state")
-    arrow(6.40, 3.64, 7.00, 3.64, "mean, sigma")
+    # Online terminal control
+    box(0.45, 2.30, 1.55, 0.56, "New TLE /\npass query", "0.96")
+    box(2.35, 2.30, 1.55, 0.56, "SGP4/\nSDP4", "0.96")
+    box(4.25, 2.25, 1.95, 0.66, "PGRL residual\n+ sigma", "#e8f2fb")
+    box(6.55, 2.30, 1.35, 0.56, "Guard\ntime", "#f1f1f1")
+    box(8.15, 2.30, 1.35, 0.56, "TX\ntiming", "#f1f1f1")
+    box(9.75, 2.30, 1.65, 0.56, "Doppler\npre-comp.", "#f1f1f1")
+    box(8.55, 1.95, 2.15, 0.30, "LR-FHSS TX config", "#f1f1f1")
+    arrow(2.00, 2.58, 2.35, 2.58)
+    arrow(3.90, 2.58, 4.25, 2.58)
+    arrow(6.20, 2.58, 6.55, 2.58)
+    arrow(6.20, 2.58, 8.15, 2.58)
+    arrow(6.20, 2.58, 9.75, 2.58)
+    arrow(9.62, 2.12, 9.62, 2.25)
 
-    box(0.25, 1.45, 1.72, 0.70, "Adaptive\nguard time", "#f1f1f1")
-    box(2.55, 1.45, 1.72, 0.70, "TX timing\nselection", "#f1f1f1")
-    box(4.85, 1.45, 1.85, 0.70, "Doppler\npre-comp.", "#f1f1f1")
-    box(7.30, 1.45, 1.80, 0.70, "LR-FHSS TX\nconfiguration", "#f1f1f1")
+    # Hardware evidence path
+    box(1.05, 0.72, 2.35, 0.54, "Semtech LR1121\n+ NUCLEO-L476RG", "#fbf4df")
+    box(4.35, 0.72, 2.15, 0.54, "USRP B210\nIQ capture", "#eef7e9")
+    box(7.40, 0.72, 2.05, 0.54, "TX ON/OFF\nsparse-hop detector", "#eef7e9")
+    box(10.20, 0.72, 1.35, 0.54, "hardware-\nsignal-detected", "#eef7e9")
+    arrow(3.40, 0.99, 4.35, 0.99, "RF")
+    arrow(6.50, 0.99, 7.40, 0.99)
+    arrow(9.45, 0.99, 10.20, 0.99)
 
-    arrow(7.88, 3.20, 1.10, 2.18)
-    arrow(1.97, 1.80, 2.55, 1.80)
-    arrow(4.27, 1.80, 4.85, 1.80)
-    arrow(6.70, 1.80, 7.30, 1.80)
-
-    box(3.10, 0.25, 2.10, 0.62, "Semtech LR1121 TX", "#fbf4df")
-    box(6.15, 0.25, 2.05, 0.62, "USRP B210 IQ capture", "#eef7e9")
-    arrow(8.08, 1.45, 4.15, 0.88, "868 MHz")
-    arrow(5.20, 0.56, 6.15, 0.56, "RF")
-    ax.text(9.35, 0.56, "signal detection only", fontsize=7.4, color=GRAY, va="center")
-    arrow(8.20, 0.56, 9.28, 0.56)
-
-    fig.subplots_adjust(left=0.02, right=0.99, top=0.98, bottom=0.06)
+    fig.subplots_adjust(left=0.01, right=0.995, top=0.985, bottom=0.045)
     save_pdf_png(fig, FIG / "fig1_architecture")
 
 
