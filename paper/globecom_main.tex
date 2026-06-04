@@ -72,7 +72,7 @@ This paper's primary contributions are:
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{figures/fig1_architecture.pdf}
-    \caption{Reviewer-facing architecture of the three paths used in this paper: offline residual-target generation and uncertainty calibration, online terminal control from the same-TLE SGP4 baseline to LR-FHSS TX configuration, and the LR1121--USRP IQ-level hardware evidence path ending at \emph{hardware-signal-detected} only.}
+    \caption{System view of PGRL-assisted LR-FHSS uplink control. SGP4 provides the physical baseline, PGRL predicts communication-oriented residuals and calibrated uncertainty, and the controller maps these outputs into guard time, TX timing, and Doppler pre-compensation. Hardware evidence is limited to IQ-level signal detection.}
     \label{fig:architecture}
 \end{figure}
 
@@ -262,7 +262,7 @@ Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet
 \begin{figure}[!t]
     \centering
     \includegraphics[width=\linewidth]{figures/hardware/fig_hw_lrfhss_evidence_full.pdf}
-    \caption{Preliminary IQ-level LR1121 LR-FHSS signal detection with a USRP B210 at 868~MHz. The TX-ON waterfall shows sparse-hop-like occupancy during the LR1121 transmission window, while the TX-OFF reference suppresses this structure. The max-hold and repeatability panels show ON/OFF deltas of 8.88, 11.87, and 9.82~dB across three trials. IQ-level RF signal detection only; no standard-compliant LR-FHSS decoding or PER.}
+    \caption{Preliminary IQ-level LR1121 LR-FHSS signal detection with a USRP B210 at 868~MHz. Panels (a) and (b) compare TX-ON and TX-OFF waterfall evidence from the same successful trial; panel (c) compares TX-ON/TX-OFF max-hold spectra; panel (d) summarizes three repeated ON/OFF trials with sparse-hop occupancy deltas of 8.88, 11.87, and 9.82~dB. IQ-level RF signal detection only; no standard-compliant LR-FHSS decoding or PER.}
     \label{fig:hw_lrfhss}
 \end{figure}
 
