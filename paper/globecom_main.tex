@@ -1,7 +1,6 @@
 \documentclass[conference]{IEEEtran}
 \usepackage[utf8]{inputenc}
 \usepackage{graphicx}
-\usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{hyperref}
@@ -13,6 +12,12 @@
 \usepackage{array}
 
 \newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\textfloatsep}{6pt plus 1pt minus 1pt}
+\setlength{\floatsep}{5pt plus 1pt minus 1pt}
+\setlength{\intextsep}{5pt plus 1pt minus 1pt}
+\setlength{\dbltextfloatsep}{6pt plus 1pt minus 1pt}
+\setlength{\abovecaptionskip}{2pt}
+\setlength{\belowcaptionskip}{-2pt}
 
 % Horizontal justification for table notes
 \patchcmd{\table}{\refstepcounter{table}}{\refstepcounter{table}}{}{}
@@ -20,6 +25,10 @@
 \hyphenation{LEO-PGRL-LRFHSS}
 
 \begin{document}
+
+% For supervisor-review drafts only:
+% \pagestyle{plain}
+% \pagenumbering{arabic}
 
 % ── Title ────────────────────────────────────────────────────────────────────
 \title{PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT}
@@ -149,7 +158,7 @@ Nominal level & Timing empirical & Doppler empirical \\
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/fig2_pgrl_uncertainty.pdf}
+    \includegraphics[width=0.72\linewidth]{figures/fig2_pgrl_uncertainty.pdf}
     \caption{PGRL prediction-interval calibration: actual coverage probability vs nominal confidence level for timing (ECE=0.28\%) and Doppler (ECE=0.12\%) predictions. Perfect calibration would follow the diagonal dashed line.}
     \label{fig:uncertainty}
 \end{figure}
@@ -196,7 +205,7 @@ where $g_{\min}=30$ ms is a conservative implementation lower bound used in our 
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.75\linewidth]{figures/fig3_guard_energy.pdf}
+    \includegraphics[width=0.70\linewidth]{figures/fig3_guard_energy.pdf}
     \caption{Guard-band policy comparison: (a) guard overhead as fraction of orbit period (log scale); (b) energy consumed per TX opportunity. PGRL uncertainty-aware policy achieves lowest overhead and near-minimal energy among all calibrated policies.}
     \label{fig:guard-energy}
 \end{figure}
@@ -226,9 +235,11 @@ All non-hardware experiments use Monte Carlo simulation with seed~$=42$. The gua
 
 \emph{Dataset and provenance.} Released exp1 config: TLE input from \texttt{data/tle/}; 20 satellites (53$^\circ$/72$^\circ$/98$^\circ$); 6-hour horizon; 60-second query spacing; 100 test passes. Labels are pass timing, Doppler, and Doppler-rate against a shared SGP4 baseline. Reference timing/Doppler uses SP3 where available and latest-TLE proxy timing otherwise. Leakage control uses chronological train-before-test separation, held-out-satellite evaluation, identical TLE input for SGP4-only and PGRL-assisted runs, and explicit TLE-age control. Exact dataset expansion remains script-configurable. Hardware evidence uses the repeatability artifact with summary JSON/CSV, UART logs, and per-run ON/OFF analyses.
 
+SGP4-only and PGRL-assisted runs share the same TLE input, query epochs, and deterministic SGP4 baseline, so labels remain residuals relative to that shared baseline rather than an independent future feed.
+
 \begin{figure}[t]
     \centering
-    \includegraphics[width=0.75\linewidth]{figures/fig4_lrfhss_grid_proxy.pdf}
+    \includegraphics[width=0.70\linewidth]{figures/fig4_lrfhss_grid_proxy.pdf}
     \caption{LR-FHSS-inspired grid proxy as residual Doppler increases. The vertical marker indicates the PGRL residual-Doppler regime used by the controller; kHz-scale SGP4-only residuals push the proxy toward poor grid alignment. This is not an LR-FHSS PER result.}
     \label{fig:grid}
 \end{figure}
@@ -242,6 +253,8 @@ PGRL reduces pass-timing RMSE by $99.6\%$ versus SGP4 (4.2~s $\to$ 16~ms) and re
 All quantitative PGRL and uplink-control results are trace-driven or proxy-simulation. This work does \emph{not} implement a full standard-compliant LR-FHSS gateway, and LR-FHSS PER is not reported. QPSK EVM is used strictly as an RF-quality proxy. The Semtech LR-FHSS TX and SDR IQ-capture pipeline has produced preliminary IQ-level hardware signal detection (Sec.~\ref{sec:hardware}).
 
 \emph{Hardware status.} The USRP B210 capture path and SWDM001 LR1121 firmware bring-up are operational, and the IQ-level pipeline has reached the \emph{signal-detected} state in three repeated TX ON/OFF trials (Sec.~\ref{sec:hardware}). We use four validation labels: \textbf{trace-driven}, \textbf{simulation}, \textbf{proxy-simulation}, and \textbf{hardware-signal-detected}. The maximum hardware claim remains \emph{hardware-signal-detected}: IQ-level RF signal presence only, \emph{not} LR-FHSS decoding or PER.
+
+These labels separate evidence layers: \textbf{trace-driven} covers orbit-prediction and control-interface accuracy, \textbf{proxy-simulation} covers LR-FHSS grid and QPSK-EVM indicators, and \textbf{hardware-signal-detected} covers IQ-level TX ON/OFF RF evidence only. None should be read as packet decoding, gateway interoperability, or PER measurement.
 
 % ── Hardware Validation ──────────────────────────────────────────────────────
 \section{Hardware Validation}
@@ -257,20 +270,29 @@ A USRP B210 captures IQ samples from the LR1121 transmitter through the TX/RX re
 
 \subsection{Preliminary IQ-Level Signal Detection}
 \label{sec:hw-results}
-Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet interval) and a USRP B210 receiver (TX/RX antenna, 1~Msps, 45~dB gain, 10~s capture), the pipeline was run with a transmitter-on/off differential protocol. A capture is labeled \emph{signal-detected} only when the LR-FHSS-aware detector finds sparse-hop time-frequency occupancy above the per-bin noise floor (DC/LO spike excluded), corroborated by UART transmit logs and a TX-OFF reference. In three TX ON/OFF trials at 868~MHz, TX-ON exceeded TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB, with all three reaching \emph{signal-detected} (Fig.~\ref{fig:hw_lrfhss}).
+Using the SWDM001 LR1121 transmitter (RF $=868$~MHz, TX power 10~dBm, 1~s packet interval) and a USRP B210 receiver (TX/RX antenna, 1~Msps, 45~dB gain, 10~s capture), the pipeline was run with a transmitter-on/off differential protocol. A capture is labeled \emph{signal-detected} only when the LR-FHSS-aware detector finds sparse-hop time-frequency occupancy above the per-bin noise floor (DC/LO spike excluded), corroborated by UART transmit logs and a TX-OFF reference. In three TX ON/OFF trials at 868~MHz, TX-ON exceeded TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB, with all three reaching \emph{signal-detected} (Fig.~\ref{fig:hw_lrfhss_waterfall} and Fig.~\ref{fig:hw_lrfhss_summary}).
 
-\begin{figure}[!t]
+The ON/OFF control matters because it separates LR1121-dependent RF evidence from static interferers, DC/LO leakage, and narrowband spurs that may persist without LR-FHSS transmission. UART logs align the TX-ON capture with firmware activity, and the detector promotes a run to \emph{signal-detected} only when sparse-hop occupancy exceeds both the TX-OFF reference and the per-bin noise floor.
+
+\begin{figure*}[!t]
     \centering
-    \includegraphics[width=\linewidth]{figures/hardware/fig_hw_lrfhss_evidence_full.pdf}
-    \caption{Preliminary IQ-level LR1121 LR-FHSS signal detection with a USRP B210 at 868~MHz. Panels (a) and (b) compare TX-ON and TX-OFF waterfall evidence from the same successful trial; panel (c) compares TX-ON/TX-OFF max-hold spectra; panel (d) summarizes three repeated ON/OFF trials with sparse-hop occupancy deltas of 8.88, 11.87, and 9.82~dB. IQ-level RF signal detection only; no standard-compliant LR-FHSS decoding or PER.}
-    \label{fig:hw_lrfhss}
+    \includegraphics[width=0.98\textwidth]{figures/hardware/fig_hw_lrfhss_waterfall_onoff.pdf}
+    \caption{TX-ON/TX-OFF waterfall evidence for preliminary IQ-level LR1121 LR-FHSS detection at 868~MHz. TX-ON shows sparse-hop-like time-frequency occupancy during LR1121 transmission, while TX-OFF suppresses this structure. IQ-level RF evidence only; no packet decoding or PER.}
+    \label{fig:hw_lrfhss_waterfall}
+\end{figure*}
+
+\begin{figure}[!b]
+    \centering
+    \includegraphics[width=\linewidth]{figures/hardware/fig_hw_lrfhss_detection_summary.pdf}
+    \caption{TX-ON/TX-OFF max-hold comparison and repeatability summary. Across three trials, TX-ON exceeds TX-OFF sparse-hop occupancy by 8.88, 11.87, and 9.82~dB. This supports the hardware-signal-detected label only, not standard-compliant LR-FHSS decoding.}
+    \label{fig:hw_lrfhss_summary}
 \end{figure}
 
 % ── Conclusion ────────────────────────────────────────────────────────────────
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presented PGRL-assisted uncertainty-aware uplink control for LR-FHSS-based D2S IoT. By treating SGP4 as the deterministic anchor and learning calibrated timing/Doppler residuals, PGRL provides the variables needed for guard selection, TX timing, and Doppler pre-compensation. Trace-driven evaluation achieves 16~ms timing RMSE, sub-300~Hz residual Doppler, and $>95\%$ reduction in guard overhead and Doppler error relative to SGP4-only baselines. The hardware pipeline (Semtech LR1121 + USRP B210) provides preliminary IQ-level signal detection, with three repeated TX ON/OFF trials at 868~MHz reaching the \emph{signal-detected} state (8.88, 11.87, 9.82~dB ON/OFF occupancy deltas). Standard-compliant LR-FHSS decoding and PER measurement remain future work.
+This paper presented PGRL-assisted uncertainty-aware uplink control for LR-FHSS-based D2S IoT. Trace-driven evaluation achieves 16~ms timing RMSE, sub-300~Hz residual Doppler, and $>95\%$ reduction in guard overhead and Doppler error relative to SGP4-only baselines. The LR1121 + USRP B210 pipeline provides preliminary IQ-level signal detection in three repeated TX ON/OFF trials at 868~MHz (8.88, 11.87, 9.82~dB deltas); standards-compliant LR-FHSS decoding and PER measurement remain future work.
 
 % ── References ───────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}
