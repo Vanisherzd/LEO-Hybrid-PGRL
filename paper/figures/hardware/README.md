@@ -5,10 +5,13 @@ Preliminary IQ-level hardware evidence (USRP B210 @ 868 MHz, TX/RX antenna,
 
 | File | Content |
 |------|---------|
+| `fig_hw_lrfhss_evidence_full.pdf` | Preferred paper figure: TX-ON waterfall, TX-OFF reference, max-hold ON/OFF, and three-trial repeatability |
 | `fig_hw_lrfhss_onoff_comparison.png` | TX-ON vs TX-OFF max-hold / occupancy comparison (8.88 dB delta) |
 | `fig_hw_lrfhss_on_waterfall.png` | TX-ON waterfall — sparse hop-like time-frequency dashes |
 | `fig_hw_lrfhss_on_maxhold.png` | TX-ON max-hold spectrum — multiple narrow peaks across band |
 | `fig_hw_lrfhss_repeatability.png` | ON/OFF delta bar chart across three trials (8.88, 11.87, 9.82 dB) |
+
+The individual waterfall/max-hold assets remain in this directory for artifact inspection.
 
 ## Suggested caption
 
