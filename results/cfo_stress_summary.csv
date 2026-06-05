@@ -1,0 +1,10 @@
+cfo_offset_hz,abs_cfo_hz,grid_orthogonality_proxy,collision_probability_proxy,qpsk_evm_proxy_percent,validation_type,notes
+0,0,0.979,0.0,0.9928,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+-300,300,0.8947,0.048,99.5127,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+300,300,0.8947,0.048,99.4908,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+-500,500,0.7624,0.08,141.3845,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+500,500,0.7624,0.08,141.3756,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+-1000,1000,0.3602,0.16,141.433,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+1000,1000,0.3602,0.16,141.4436,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+-5000,5000,0.0,0.8,141.4457,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.
+5000,5000,0.0,0.8,141.4302,proxy-simulation,Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding.

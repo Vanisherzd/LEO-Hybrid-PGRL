@@ -1,0 +1,95 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-05T14:51:15Z",
+    "commit": "4b5a8850",
+    "validation_type": "proxy-simulation",
+    "source_files": [
+      "experiments/exp3_lrfhss_grid_proxy/run.sh",
+      "sdr_hwil/evm_proxy.py"
+    ],
+    "interpretation": "This stress test links residual CFO to the sparse-hop/grid-alignment proxy and a synthetic RF-quality proxy. It is not a decoding or PER result."
+  },
+  "rows": [
+    {
+      "cfo_offset_hz": 0,
+      "abs_cfo_hz": 0,
+      "grid_orthogonality_proxy": 0.979,
+      "collision_probability_proxy": 0.0,
+      "qpsk_evm_proxy_percent": 0.9928,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": -300,
+      "abs_cfo_hz": 300,
+      "grid_orthogonality_proxy": 0.8947,
+      "collision_probability_proxy": 0.048,
+      "qpsk_evm_proxy_percent": 99.5127,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": 300,
+      "abs_cfo_hz": 300,
+      "grid_orthogonality_proxy": 0.8947,
+      "collision_probability_proxy": 0.048,
+      "qpsk_evm_proxy_percent": 99.4908,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": -500,
+      "abs_cfo_hz": 500,
+      "grid_orthogonality_proxy": 0.7624,
+      "collision_probability_proxy": 0.08,
+      "qpsk_evm_proxy_percent": 141.3845,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": 500,
+      "abs_cfo_hz": 500,
+      "grid_orthogonality_proxy": 0.7624,
+      "collision_probability_proxy": 0.08,
+      "qpsk_evm_proxy_percent": 141.3756,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": -1000,
+      "abs_cfo_hz": 1000,
+      "grid_orthogonality_proxy": 0.3602,
+      "collision_probability_proxy": 0.16,
+      "qpsk_evm_proxy_percent": 141.433,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": 1000,
+      "abs_cfo_hz": 1000,
+      "grid_orthogonality_proxy": 0.3602,
+      "collision_probability_proxy": 0.16,
+      "qpsk_evm_proxy_percent": 141.4436,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": -5000,
+      "abs_cfo_hz": 5000,
+      "grid_orthogonality_proxy": 0.0,
+      "collision_probability_proxy": 0.8,
+      "qpsk_evm_proxy_percent": 141.4457,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    },
+    {
+      "cfo_offset_hz": 5000,
+      "abs_cfo_hz": 5000,
+      "grid_orthogonality_proxy": 0.0,
+      "collision_probability_proxy": 0.8,
+      "qpsk_evm_proxy_percent": 141.4302,
+      "validation_type": "proxy-simulation",
+      "notes": "Analytical LR-FHSS-inspired grid proxy plus synthetic QPSK EVM proxy; not LR-FHSS PER or decoding."
+    }
+  ]
+}
