@@ -1,9 +1,11 @@
 {
   "metadata": {
-    "generated_at": "2026-06-05T14:51:17Z",
-    "commit": "4b5a8850",
-    "validation_type": "planned / leakage-control scaffold",
+    "generated_at": "2026-06-05T15:55:07Z",
+    "commit": "37dd807b",
+    "validation_type": "partial measured / partial unsupported",
     "source_files": [
+      "experiments/summary_table.py",
+      "paper/tables/main_results.json",
       "experiments/exp1_pgrl_prediction/config.yaml",
       "experiments/exp6_robustness/results.json",
       "experiments/exp6_robustness/config.yaml"
@@ -12,93 +14,101 @@
       "chronological train-before-test separation",
       "held-out-satellite testing where available",
       "identical TLE input for SGP4-only and PGRL-assisted runs",
-      "explicit TLE-age and prediction-horizon breakdown scaffolds"
+      "explicit TLE-age and prediction-horizon breakdown when saved artifacts exist"
+    ],
+    "measured_row_count": 2,
+    "unsupported_rows": [
+      "held_out_satellite",
+      "tle_age_breakdown",
+      "prediction_horizon_30min",
+      "prediction_horizon_60min",
+      "prediction_horizon_120min"
     ]
   },
   "rows": [
     {
       "split_name": "chronological_future_pass",
-      "status": "configured",
+      "status": "measured",
       "prediction_horizon_min": 360,
       "num_passes": 100,
       "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "Chronological train-before-test separation is described in the paper but no standalone result file exists yet."
+      "sgp4_timing_rmse": 4.1419,
+      "pgrl_timing_rmse": 0.0164,
+      "sgp4_doppler_error": 5536.8,
+      "pgrl_doppler_error": 234.5,
+      "notes": "Repo-backed nominal trace-driven evaluation reused from experiments/summary_table.py and paper/tables/main_results.json for the configured 100-pass, 20-satellite, 6 h test horizon. Chronological train-before-test separation is documented, but per-pass split membership is not stored separately."
     },
     {
       "split_name": "held_out_satellite",
-      "status": "planned",
+      "status": "unsupported",
       "prediction_horizon_min": 360,
-      "num_passes": "TODO",
-      "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "Held-out satellite sweep scaffold exists in exp6_robustness; no measured values are present."
+      "num_passes": "",
+      "num_satellites": "",
+      "sgp4_timing_rmse": "",
+      "pgrl_timing_rmse": "",
+      "sgp4_doppler_error": "",
+      "pgrl_doppler_error": "",
+      "notes": "Unsupported: experiments/exp6_robustness marks satellite_held_out_split as planned, the held_out_satellites list is empty, and no saved per-satellite prediction residual artifact exists."
     },
     {
       "split_name": "tle_age_breakdown",
-      "status": "planned",
+      "status": "unsupported",
       "prediction_horizon_min": "0/1/3/7/14 day age bins",
-      "num_passes": "TODO",
-      "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "TLE-age control is configured but not yet evaluated in a saved results artifact."
+      "num_passes": "",
+      "num_satellites": "",
+      "sgp4_timing_rmse": "",
+      "pgrl_timing_rmse": "",
+      "sgp4_doppler_error": "",
+      "pgrl_doppler_error": "",
+      "notes": "Unsupported: experiments/exp6_robustness/config.yaml defines the TLE-age bins, but experiments/exp6_robustness/results.json contains no evaluated metrics and the repo has no saved per-age prediction outputs."
     },
     {
       "split_name": "prediction_horizon_30min",
-      "status": "template",
+      "status": "unsupported",
       "prediction_horizon_min": 30,
-      "num_passes": "TODO",
-      "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+      "num_passes": "",
+      "num_satellites": "",
+      "sgp4_timing_rmse": "",
+      "pgrl_timing_rmse": "",
+      "sgp4_doppler_error": "",
+      "pgrl_doppler_error": "",
+      "notes": "Unsupported: the repo stores only the nominal 360 min aggregate evaluation; no saved 30 min breakdown artifact or per-pass prediction export is present."
     },
     {
       "split_name": "prediction_horizon_60min",
-      "status": "template",
+      "status": "unsupported",
       "prediction_horizon_min": 60,
-      "num_passes": "TODO",
-      "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+      "num_passes": "",
+      "num_satellites": "",
+      "sgp4_timing_rmse": "",
+      "pgrl_timing_rmse": "",
+      "sgp4_doppler_error": "",
+      "pgrl_doppler_error": "",
+      "notes": "Unsupported: the repo stores only the nominal 360 min aggregate evaluation; no saved 60 min breakdown artifact or per-pass prediction export is present."
     },
     {
       "split_name": "prediction_horizon_120min",
-      "status": "template",
+      "status": "unsupported",
       "prediction_horizon_min": 120,
-      "num_passes": "TODO",
-      "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+      "num_passes": "",
+      "num_satellites": "",
+      "sgp4_timing_rmse": "",
+      "pgrl_timing_rmse": "",
+      "sgp4_doppler_error": "",
+      "pgrl_doppler_error": "",
+      "notes": "Unsupported: the repo stores only the nominal 360 min aggregate evaluation; no saved 120 min breakdown artifact or per-pass prediction export is present."
     },
     {
       "split_name": "prediction_horizon_360min",
-      "status": "template",
+      "status": "measured",
       "prediction_horizon_min": 360,
-      "num_passes": "TODO",
+      "num_passes": 100,
       "num_satellites": 20,
-      "sgp4_timing_rmse": "TODO",
-      "pgrl_timing_rmse": "TODO",
-      "sgp4_doppler_error": "TODO",
-      "pgrl_doppler_error": "TODO",
-      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+      "sgp4_timing_rmse": 4.1419,
+      "pgrl_timing_rmse": 0.0164,
+      "sgp4_doppler_error": 5536.8,
+      "pgrl_doppler_error": 234.5,
+      "notes": "Repo-backed nominal 6 h evaluation reused as the only materialized horizon-specific artifact. This row reflects the configured 360 min horizon, not a separate multi-horizon sweep."
     }
   ]
 }
