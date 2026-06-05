@@ -1,0 +1,50 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-05T14:51:12Z",
+    "commit": "4b5a8850",
+    "source_files": [
+      "hardware/artifacts/lr1121_signal_detected_repeatability_20260604/repeatability_summary.json",
+      "hardware/artifacts/lr1121_signal_detected_repeatability_20260604/run*/run*_off_analysis.json",
+      "hardware/captures/auto_sweep_20260603_231940/sweep_summary.json"
+    ],
+    "claim_boundary": "All rows remain IQ-level RF-path evidence only. None implies LR-FHSS decoding, PER, or gateway interoperability."
+  },
+  "rows": [
+    {
+      "condition": "TX ON/OFF",
+      "runs": 3,
+      "mean_on_off_delta_db": 10.19,
+      "std_db": 1.53,
+      "detection_rate": "3/3",
+      "validation_type": "hardware-signal-detected",
+      "notes": "Curated 868 MHz repeatability artifact; all three runs report signal_detected=true."
+    },
+    {
+      "condition": "TX-OFF only",
+      "runs": 3,
+      "mean_on_off_delta_db": "N/A",
+      "std_db": "N/A",
+      "detection_rate": "0/3",
+      "validation_type": "hardware-signal-detected",
+      "notes": "Reference captures only. Mean TX-OFF candidate score = 0.141."
+    },
+    {
+      "condition": "wrong frequency",
+      "runs": 4,
+      "mean_on_off_delta_db": "N/A",
+      "std_db": "N/A",
+      "detection_rate": "0/4",
+      "validation_type": "hardware negative control",
+      "notes": "915/923 MHz pre-signal-detected sweep entries; no LR1121 868 MHz detection expected."
+    },
+    {
+      "condition": "idle firmware / UART-no-TX",
+      "runs": 1,
+      "mean_on_off_delta_db": "N/A",
+      "std_db": "N/A",
+      "detection_rate": "0/1",
+      "validation_type": "hardware negative control",
+      "notes": "Subset of wrong-frequency sweep with uart_packet_sent_count=0; retained as a conservative no-TX control."
+    }
+  ]
+}

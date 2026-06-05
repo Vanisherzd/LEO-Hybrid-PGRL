@@ -1,0 +1,5 @@
+condition,runs,mean_on_off_delta_db,std_db,detection_rate,validation_type,notes
+TX ON/OFF,3,10.19,1.53,3/3,hardware-signal-detected,Curated 868 MHz repeatability artifact; all three runs report signal_detected=true.
+TX-OFF only,3,N/A,N/A,0/3,hardware-signal-detected,Reference captures only. Mean TX-OFF candidate score = 0.141.
+wrong frequency,4,N/A,N/A,0/4,hardware negative control,915/923 MHz pre-signal-detected sweep entries; no LR1121 868 MHz detection expected.
+idle firmware / UART-no-TX,1,N/A,N/A,0/1,hardware negative control,Subset of wrong-frequency sweep with uart_packet_sent_count=0; retained as a conservative no-TX control.
