@@ -1,0 +1,20 @@
+% Auto-generated / curated for reviewer-defense wording.
+\begin{table}[t]
+\footnotesize
+\setlength{\tabcolsep}{2.6pt}
+\centering
+\caption{Proxy and Evidence Mapping}
+\label{tab:proxy_mapping}
+\begin{tabular}{p{1.35cm}p{1.35cm}p{1.55cm}}
+\toprule
+Metric & Represents & Does not represent \\
+\midrule
+Residual CFO & Carrier-precomp. error & LR-FHSS decoding / PER \\
+Grid orthogonality & Hop-grid alignment proxy & Gateway packet recovery \\
+QPSK EVM proxy & Synthetic RF-quality proxy & LR-FHSS waveform EVM / PER \\
+ON/OFF occupancy delta & IQ-level RF presence evidence & Packet success / interoperability \\
+UART-confirmed TX & Firmware issued TX events & Radiated packet decoding \\
+\bottomrule
+\end{tabular}
+\par\vspace{2pt}\raggedright\footnotesize\textit{All rows are evidence-layer mappings only. None should be read as standard-compliant LR-FHSS decoding, PER, or gateway interoperability.}
+\end{table}
