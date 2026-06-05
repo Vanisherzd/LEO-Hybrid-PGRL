@@ -1,0 +1,8 @@
+split_name,status,prediction_horizon_min,num_passes,num_satellites,sgp4_timing_rmse,pgrl_timing_rmse,sgp4_doppler_error,pgrl_doppler_error,notes
+chronological_future_pass,configured,360,100,20,TODO,TODO,TODO,TODO,Chronological train-before-test separation is described in the paper but no standalone result file exists yet.
+held_out_satellite,planned,360,TODO,20,TODO,TODO,TODO,TODO,Held-out satellite sweep scaffold exists in exp6_robustness; no measured values are present.
+tle_age_breakdown,planned,0/1/3/7/14 day age bins,TODO,20,TODO,TODO,TODO,TODO,TLE-age control is configured but not yet evaluated in a saved results artifact.
+prediction_horizon_30min,template,30,TODO,20,TODO,TODO,TODO,TODO,Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts.
+prediction_horizon_60min,template,60,TODO,20,TODO,TODO,TODO,TODO,Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts.
+prediction_horizon_120min,template,120,TODO,20,TODO,TODO,TODO,TODO,Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts.
+prediction_horizon_360min,template,360,TODO,20,TODO,TODO,TODO,TODO,Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts.

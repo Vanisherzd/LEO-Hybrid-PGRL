@@ -1,0 +1,84 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-05T14:50:30Z",
+    "commit": "4b5a8850",
+    "validation_labels": [
+      "trace-driven",
+      "simulation",
+      "proxy-simulation",
+      "hardware-signal-detected"
+    ],
+    "source_files": [
+      "paper/tables/main_results.json",
+      "paper/tables/ablation_baselines.json"
+    ],
+    "limitations": "This summary does not fabricate missing controller metrics for variants that are only described at predictor level. Missing cells are marked TODO."
+  },
+  "rows": [
+    {
+      "variant": "SGP4-only",
+      "timing_rmse": "4.14 s",
+      "doppler_metric_hz": "5537",
+      "nll": "3.01",
+      "ece": "TODO",
+      "guard_overhead": "2.41\\%",
+      "missed_opportunity_rate": "0.0005",
+      "energy_per_opportunity_j": "0.09506",
+      "validation_type": "simulation",
+      "status": "available",
+      "notes": "Baseline propagated from paper/tables/main_results.json and ablation_baselines.json."
+    },
+    {
+      "variant": "SGP4 + deterministic residual MLP",
+      "timing_rmse": "0.93 s",
+      "doppler_metric_hz": "969",
+      "nll": "TODO",
+      "ece": "TODO",
+      "guard_overhead": "TODO",
+      "missed_opportunity_rate": "TODO",
+      "energy_per_opportunity_j": "TODO",
+      "validation_type": "simulation",
+      "status": "partial",
+      "notes": "Predictor-only deterministic residual variant is available; controller metrics are not separately reported."
+    },
+    {
+      "variant": "PGRL without physics regularization",
+      "timing_rmse": "0.32 s",
+      "doppler_metric_hz": "429",
+      "nll": "0.84",
+      "ece": "TODO",
+      "guard_overhead": "TODO",
+      "missed_opportunity_rate": "TODO",
+      "energy_per_opportunity_j": "TODO",
+      "validation_type": "simulation",
+      "status": "partial",
+      "notes": "No standalone controller sweep for the no-physics-loss predictor is present in the repo."
+    },
+    {
+      "variant": "PGRL without uncertainty-aware guard",
+      "timing_rmse": "0.0164 s",
+      "doppler_metric_hz": "234",
+      "nll": "0.17",
+      "ece": "0.12\\% (Doppler), 0.28\\% (timing)",
+      "guard_overhead": "0.51\\%",
+      "missed_opportunity_rate": "0.0005",
+      "energy_per_opportunity_j": "0.174",
+      "validation_type": "trace-driven / simulation",
+      "status": "available",
+      "notes": "Uses the full predictor with the mean-only guard policy row already reported in Table IV."
+    },
+    {
+      "variant": "Full PGRL + uncertainty-aware control",
+      "timing_rmse": "0.0164 s",
+      "doppler_metric_hz": "234",
+      "nll": "0.17",
+      "ece": "0.12\\% (Doppler), 0.28\\% (timing)",
+      "guard_overhead": "0.23\\%",
+      "missed_opportunity_rate": "0.0005",
+      "energy_per_opportunity_j": "0.09665",
+      "validation_type": "trace-driven / simulation",
+      "status": "available",
+      "notes": "Current paper operating point."
+    }
+  ]
+}

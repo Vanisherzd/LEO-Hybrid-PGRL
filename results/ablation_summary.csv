@@ -1,0 +1,6 @@
+variant,timing_rmse,doppler_metric_hz,nll,ece,guard_overhead,missed_opportunity_rate,energy_per_opportunity_j,validation_type,status,notes
+SGP4-only,4.14 s,5537,3.01,TODO,2.41\%,0.0005,0.09506,simulation,available,Baseline propagated from paper/tables/main_results.json and ablation_baselines.json.
+SGP4 + deterministic residual MLP,0.93 s,969,TODO,TODO,TODO,TODO,TODO,simulation,partial,Predictor-only deterministic residual variant is available; controller metrics are not separately reported.
+PGRL without physics regularization,0.32 s,429,0.84,TODO,TODO,TODO,TODO,simulation,partial,No standalone controller sweep for the no-physics-loss predictor is present in the repo.
+PGRL without uncertainty-aware guard,0.0164 s,234,0.17,"0.12\% (Doppler), 0.28\% (timing)",0.51\%,0.0005,0.174,trace-driven / simulation,available,Uses the full predictor with the mean-only guard policy row already reported in Table IV.
+Full PGRL + uncertainty-aware control,0.0164 s,234,0.17,"0.12\% (Doppler), 0.28\% (timing)",0.23\%,0.0005,0.09665,trace-driven / simulation,available,Current paper operating point.

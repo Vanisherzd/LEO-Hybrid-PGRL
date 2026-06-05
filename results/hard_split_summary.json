@@ -1,0 +1,104 @@
+{
+  "metadata": {
+    "generated_at": "2026-06-05T14:51:17Z",
+    "commit": "4b5a8850",
+    "validation_type": "planned / leakage-control scaffold",
+    "source_files": [
+      "experiments/exp1_pgrl_prediction/config.yaml",
+      "experiments/exp6_robustness/results.json",
+      "experiments/exp6_robustness/config.yaml"
+    ],
+    "leakage_controls": [
+      "chronological train-before-test separation",
+      "held-out-satellite testing where available",
+      "identical TLE input for SGP4-only and PGRL-assisted runs",
+      "explicit TLE-age and prediction-horizon breakdown scaffolds"
+    ]
+  },
+  "rows": [
+    {
+      "split_name": "chronological_future_pass",
+      "status": "configured",
+      "prediction_horizon_min": 360,
+      "num_passes": 100,
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "Chronological train-before-test separation is described in the paper but no standalone result file exists yet."
+    },
+    {
+      "split_name": "held_out_satellite",
+      "status": "planned",
+      "prediction_horizon_min": 360,
+      "num_passes": "TODO",
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "Held-out satellite sweep scaffold exists in exp6_robustness; no measured values are present."
+    },
+    {
+      "split_name": "tle_age_breakdown",
+      "status": "planned",
+      "prediction_horizon_min": "0/1/3/7/14 day age bins",
+      "num_passes": "TODO",
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "TLE-age control is configured but not yet evaluated in a saved results artifact."
+    },
+    {
+      "split_name": "prediction_horizon_30min",
+      "status": "template",
+      "prediction_horizon_min": 30,
+      "num_passes": "TODO",
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+    },
+    {
+      "split_name": "prediction_horizon_60min",
+      "status": "template",
+      "prediction_horizon_min": 60,
+      "num_passes": "TODO",
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+    },
+    {
+      "split_name": "prediction_horizon_120min",
+      "status": "template",
+      "prediction_horizon_min": 120,
+      "num_passes": "TODO",
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+    },
+    {
+      "split_name": "prediction_horizon_360min",
+      "status": "template",
+      "prediction_horizon_min": 360,
+      "num_passes": "TODO",
+      "num_satellites": 20,
+      "sgp4_timing_rmse": "TODO",
+      "pgrl_timing_rmse": "TODO",
+      "sgp4_doppler_error": "TODO",
+      "pgrl_doppler_error": "TODO",
+      "notes": "Horizon-specific breakdown requested for reviewer defense; exact counts remain configurable in current scripts."
+    }
+  ]
+}
