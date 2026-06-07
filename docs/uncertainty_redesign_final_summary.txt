@@ -1,0 +1,74 @@
+Uncertainty Redesign Final Summary
+
+Branch:
+uncertainty-head-experiment
+
+Latest commit:
+fad4ec9
+
+Core commits:
+1a86294 train: add calibrated uncertainty head fine-tuning
+5ff331c docs: record Stage 3E uncertainty calibration results
+04faf6c eval: add uncertainty temperature calibration sweep
+fad4ec9 eval: add risk-aware control ablation
+
+Stage 3E:
+Calibrated uncertainty-head-only fine-tuning.
+
+Key result:
+- Mean head frozen
+- RMSE remains 5.35 m
+- <5 m remains 61.3%
+- Initial per-axis sigma approximately 10 m
+- Epoch 20 axis sigma mean approximately 3.01 m
+- Cov68/Cov95 approximately 0.625/0.969 in training-script validation
+
+Stage 3F:
+Post-hoc uncertainty temperature calibration.
+
+Key result:
+- Best temperature T = 1.0
+- RMSE remains 5.35 m across all T
+- Cov68 = 0.713
+- Cov95 = 0.947
+- Calibration error = 0.0331
+- Interpretation: learned uncertainty scale is already near-optimal without post-hoc rescaling
+
+Stage 4:
+Risk-aware control ablation.
+
+Policy:
+guard_uncertain = guard_base + alpha * radial_sigma_m
+
+Key result:
+- alpha=0.00 deterministic baseline:
+  outage=0.050, success=0.9500, reward=0.9500
+- alpha=0.25 uncertainty-aware policy:
+  outage=0.017, success=0.9828, reward=0.9690
+- outage reduced from 5.0% to 1.7%
+- success improves from 0.9500 to 0.9828
+- reward improves from 0.9500 to 0.9690
+- guard overhead increases by 13.8%
+- collision proxy remains 0.000 in this proxy setup
+
+Supported claims:
+1. The model includes an uncertainty-aware output head.
+2. The uncertainty head can be calibrated using Gaussian NLL and chi-square Mahalanobis coverage.
+3. Post-hoc temperature sweep confirms that the learned uncertainty scale is already near-optimal.
+4. The uncertainty head does not improve deterministic RMSE when the mean head is frozen.
+5. Calibrated uncertainty enables risk-aware LR-FHSS/PGRL control.
+6. Risk-aware guard adaptation reduces outage proxy under bounded guard overhead.
+
+Unsupported claims:
+1. Do not claim improved deterministic trajectory RMSE from Stage 3E/3F/4.
+2. Do not claim Bayesian neural network unless additional Bayesian methods are implemented.
+3. Do not claim real online daily TLE continual learning.
+4. Do not claim real hardware packet delivery or LR1121 validation from these stages.
+5. Do not claim collision reduction as the main result because collision proxy is already 0.000 for all alpha values.
+
+Paper rewrite guidance:
+Use "uncertainty-aware" instead of "Bayesian" unless Bayesian methods are added.
+Frame the contribution around risk-aware control, not RMSE improvement.
+Describe Stage 4 as a proxy/control ablation, not real hardware validation.
+Use conservative wording such as:
+"Calibrated uncertainty enables risk-aware guard adaptation, reducing outage proxy from 5.0% to 1.7% with 13.8% guard overhead."
