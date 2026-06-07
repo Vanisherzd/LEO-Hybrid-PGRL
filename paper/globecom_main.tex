@@ -7,6 +7,8 @@
 \usepackage{cite}
 \usepackage{booktabs}
 \usepackage{etoolbox}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
 
 % Horizontal justification for table notes
 \patchcmd{\table}{\refstepcounter{table}}{\refstepcounter{table}}{}{}
@@ -28,11 +30,11 @@
 
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
-This paper proposes a Physics-Guided Residual Learning (PGRL)-assisted uncertainty-aware uplink-control framework for Direct-to-Satellite (D2S) IoT using Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS). An SGP4/SDP4 orbital propagator provides a deterministic Doppler baseline; a Bayesian residual corrector learns timing and frequency corrections using Gaussian negative log-likelihood (NLL) loss, yielding calibrated one-sigma uncertainty bounds. These predictions drive three physical-layer control decisions: adaptive guard-band scheduling to minimize idle time, transmission timing selection via multi-attribute utility maximization, and Doppler pre-compensation by pre-tuning the carrier frequency before transmission. Trace-driven evaluation across multiple LEO orbital configurations shows that PGRL reduces guard overhead by up to 60\% versus fixed guard-band schemes and achieves residual Doppler below 300~Hz. To prepare for hardware validation, we further define a Semtech LR1121/LR11xx LR-FHSS transmission path and an SDR-based IQ-level D2S-like testbed for CFO estimation, EVM-proxy analysis, and waterfall visualization. Hardware-level residual CFO, EVM, and LR-FHSS spectrum characterization are scheduled for the Semtech--SDR measurement stage. The framework establishes a traceable path from orbital prediction to standards-aligned physical-layer control without requiring continuous ground-station ephemeris updates.
+We propose an uncertainty-aware Physics-Guided Residual Learning (PGRL) framework for Low-Earth-Orbit (LEO) IoT Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS) control. A deterministic trajectory predictor is augmented with a calibrated log-variance head trained using Gaussian negative log-likelihood (NLL) while keeping the mean head frozen, so the point predictor is unchanged. The learned uncertainty is near-calibrated without post-hoc rescaling (best temperature $T=1.0$, Cov68/Cov95 $=0.713/0.947$). In a risk-aware guard-control ablation, calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% with 13.8\% guard overhead, while deterministic position RMSE remains unchanged at 5.35~m. We additionally define a planned, not-yet-executed Semtech LR1121/USRP measurement interface. The contribution is thus calibrated uncertainty enabling risk-aware LR-FHSS/PGRL control, not improved deterministic trajectory accuracy.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Direct-to-Satellite IoT, LR-FHSS, Physics-Guided Residual Learning, Doppler pre-compensation, uncertainty-aware scheduling, LEO satellite, hardware validation
+Direct-to-Satellite IoT, LR-FHSS, Physics-Guided Residual Learning, calibrated uncertainty, risk-aware control, guard-band adaptation, LEO satellite
 \end{IEEEkeywords}
 
 % ── Introduction ─────────────────────────────────────────────────────────────
@@ -41,19 +43,49 @@ Direct-to-Satellite IoT, LR-FHSS, Physics-Guided Residual Learning, Doppler pre-
 
 Direct-to-Satellite (D2S) IoT using Low-Earth Orbit (LEO) satellites enables connectivity for power-constrained end-devices in remote areas, but the high relative velocity between terminal and satellite---up to 8~km/s for LEO---induces Doppler shifts exceeding $\pm 30$~kHz and rapid Doppler-rate changes that stress the physical layer~\cite{hurn2023lrfhss}. Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS), as standardized by Semtech in the AN1200.64 specification~\cite{semtech2023lrfhss}, achieves robust uplink by distributing transmit energy across a grid of narrow frequency bins, providing frequency diversity against Doppler uncertainty. However, LR-FHSS guard bands must accommodate worst-case timing and frequency uncertainty, imposing idle-time overhead that erodes the energy budget of battery-powered IoT nodes.
 
-Existing approaches treat orbital prediction and physical-layer control separately: TLE-based propagators such as SGP4/SDP4~\cite{vallado2007fundamentals} provide deterministic orbital state but accumulate errors over prediction horizons beyond a few minutes, while LR-FHSS systems typically rely on wide guard bands or continuous ground-station feedback to track Doppler. We propose to close this loop with Physics-Guided Residual Learning (PGRL), which uses SGP4 as a physically-consistent anchor and learns a Bayesian residual correction on top of it, producing \emph{calibrated} uncertainty estimates alongside point predictions. These uncertainty estimates enable the IoT terminal to compute a tight, statistically-justified guard interval and to pre-compensate the carrier frequency before transmission, reducing the receiver's tracking burden and improving link budget efficiency.
+Existing approaches treat orbital prediction and physical-layer control separately: TLE-based propagators such as SGP4/SDP4~\cite{vallado2007fundamentals} provide deterministic orbital state but accumulate errors over prediction horizons beyond a few minutes, while LR-FHSS systems typically rely on wide guard bands or continuous ground-station feedback to track Doppler. We propose to close this loop with Physics-Guided Residual Learning (PGRL), which uses SGP4 as a physically-consistent anchor and augments a deterministic residual predictor with a \emph{calibrated} uncertainty head. Rather than improving the point prediction, the calibrated uncertainty lets the IoT terminal size its guard interval to the actual prediction risk: a risk-aware guard policy trades a small, bounded guard overhead for a substantial reduction in an outage proxy.
 
 This paper's primary contributions are:
 \begin{itemize}
-  \item We propose an SGP4/SDP4-anchored Bayesian residual learner (PGRL) that produces communication-oriented pass timing, Doppler residual, Doppler-rate, and calibrated one-sigma uncertainty estimates.
-  \item We design an uncertainty-aware LR-FHSS uplink controller that converts PGRL outputs into adaptive guard time, transmission-time selection, and Doppler pre-compensation, reducing guard overhead from $>60\%$ to $<5\%$ relative to SGP4-only baselines.
-  \item We provide a reproducible trace-driven evaluation pipeline with explicit validation-type labeling and a Semtech LR1121/LR11xx and SDR-ready hardware validation path for future IQ-level measurement.
+  \item An uncertainty-aware PGRL residual learner with a calibrated log-variance output head, trained with Gaussian NLL while the deterministic mean head is frozen.
+  \item A post-hoc temperature-calibration validation showing the learned uncertainty scale is already near-optimal ($T=1.0$, Cov68/Cov95 $=0.713/0.947$), i.e.\ no post-hoc rescaling is needed.
+  \item A risk-aware LR-FHSS guard-adaptation ablation in which calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead, with deterministic position RMSE unchanged at 5.35~m.
+  \item A clearly scoped, planned (not-yet-executed) Semtech LR1121/USRP IQ measurement path.
 \end{itemize}
 
 \begin{figure}[t]
     \centering
-    \includegraphics[width=\linewidth]{figures/fig1_architecture.pdf}
-    \caption{System architecture: TLE source $\rightarrow$ SGP4 propagator $\rightarrow$ PGRL Bayesian corrector $\rightarrow$ uplink controller (guard-band, TX timing, Doppler pre-comp) $\rightarrow$ Semtech LR1121 TX / USRP B210 (planned hardware path).}
+    \resizebox{\linewidth}{!}{%
+    \begin{tikzpicture}[
+      font=\scriptsize, >=Latex, node distance=4mm and 5mm,
+      box/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2.5pt, fill=blue!4},
+      ctrl/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2.5pt, fill=orange!8},
+      hw/.style={draw, dashed, rounded corners, align=center, minimum height=7mm, inner sep=2.5pt, fill=gray!8},
+      ar/.style={->, thick}
+    ]
+    % Band 1: orbital prediction
+    \node[box] (tle) {TLE source};
+    \node[box, right=of tle] (sgp4) {SGP4/SDP4\\propagator};
+    \node[box, right=of sgp4, fill=blue!10] (pgrl) {PGRL corrector\\frozen mean + log-var head};
+    \node[box, right=of pgrl] (out) {\texttt{PGRLOutput}\\(mean, $\sigma_r$)};
+    \draw[ar] (tle)--(sgp4);
+    \draw[ar] (sgp4)--(pgrl);
+    \draw[ar] (pgrl)--(out);
+    % Band 2: risk-aware controller
+    \node[ctrl, below=8mm of sgp4] (guard) {Risk-aware\\guard ($g{+}\alpha\sigma_r$)};
+    \node[ctrl, right=of guard] (txt) {TX timing\\selection};
+    \node[ctrl, right=of txt] (dop) {Doppler\\pre-comp};
+    \draw[ar] (out.south) |- (dop.east);
+    \draw[ar] (dop)--(txt);
+    \draw[ar] (txt)--(guard);
+    % Band 3: planned hardware
+    \node[hw, below=8mm of guard] (lr) {Semtech LR1121 TX\\(SWDM001)};
+    \node[hw, right=of lr] (usrp) {USRP B210\\IQ capture};
+    \node[align=left, right=4mm of usrp, font=\scriptsize\itshape] (plan) {planned;\\not executed};
+    \draw[ar] (guard.south) -- (lr.north);
+    \draw[ar, dashed] (lr)--(usrp);
+    \end{tikzpicture}}
+    \caption{System architecture: TLE source $\rightarrow$ SGP4/SDP4 propagator $\rightarrow$ PGRL uncertainty-aware corrector (frozen mean head + calibrated log-variance head) $\rightarrow$ risk-aware uplink controller (guard-band, TX timing, Doppler pre-comp). The Semtech LR1121 / USRP B210 path is a planned, not-yet-executed measurement interface.}
     \label{fig:architecture}
 \end{figure}
 
@@ -62,28 +94,27 @@ This paper's primary contributions are:
 \label{sec:related}
 
 \subsection{LR-FHSS for Direct-to-Satellite IoT}
-LR-FHSS was introduced to LoRaWAN specifically to enable direct-to-satellite IoT connectivity, providing frequency diversity against Doppler uncertainty through a grid of narrow hopping bins~\\cite{semtech2023lrfhss}. Prior work has studied LR-FHSS DtS packet delivery and outage probability~\\cite{ullah2022lrfhss}, designed transceiver architectures for robust D2S synchronization under Doppler and co-channel interference~\\cite{jung2023lrfhss}, and evaluated miss-detection and packet-error probability with ASIC/FPGA testbeds~\\cite{maldonado2024lrfhss}. These works focus primarily on the \emph{receiver side}: synchronization, detection, and PER recovery. In contrast, this work studies how orbital-prediction uncertainty can drive \emph{terminal-side} uplink control decisions before transmission.
+LR-FHSS extends LoRaWAN for direct-to-satellite IoT by distributing transmit energy across a grid of narrow hopping bins, providing frequency diversity against the strong Doppler of LEO passes~\cite{semtech2023lrfhss,hurn2023lrfhss}. Prior LR-FHSS satellite-IoT studies focus largely on the \emph{receiver side}---synchronization, detection, packet delivery, and reliability recovery once a transmission is present. In contrast, this work targets \emph{terminal-side} control: how orbital-prediction uncertainty should shape uplink guard and timing decisions before transmission.
 
 \subsection{ML for LEO Orbit Prediction}
-Machine learning has been extensively applied to improve SGP4/SDP4 propagator accuracy. Hybrid analytical-ML approaches use SGP4 to initialize orbital state, then apply EKF or neural networks to correct residual errors during unobservable intervals~\\cite{kassas2022hybrid}. Physics-informed neural networks (PINNs) enforce conservation of energy and angular momentum as hard constraints while learning unmodeled perturbations~\\cite{pinn2024satellite}. Surveys confirm that ML-based orbit prediction targets trajectory accuracy as an end, not communication-oriented outputs~\\cite{li2024mlorbit}. This work differs by using SGP4-anchored residual learning not to minimize prediction error alone, but specifically to produce \emph{communication-oriented} timing, Doppler, and uncertainty outputs that directly drive LR-FHSS uplink control.
+Analytical TLE propagators such as SGP4/SDP4~\cite{hoots1980models,vallado2007fundamentals} are deterministic and lightweight but accumulate timing and Doppler error with prediction horizon and TLE age. Machine-learning orbit work increasingly treats such a propagator as a physics anchor and learns residual corrections, but the common objective is trajectory accuracy as an end in itself. This work instead uses SGP4-anchored residual learning to expose a \emph{calibrated uncertainty} that drives communication-side control, rather than to minimize point error.
 
 \subsection{Gap and Positioning}
-Table~\\ref{tab:related} summarizes the positioning of this work relative to prior art. Unlike prior LR-FHSS DtS studies, we do not target receiver design, packet delivery analysis, or gateway-side scalability. Unlike prior ML orbit prediction work, we do not target trajectory accuracy as the primary metric. Our contribution is the \emph{cross-layer connection}: converting SGP4-anchored Bayesian PGRL uncertainty into terminal-side LR-FHSS uplink control decisions.
+Table~\ref{tab:related} summarizes the positioning. Unlike receiver-side LR-FHSS studies, we do not target detection, packet delivery, or gateway scalability; unlike ML orbit-prediction work, we do not treat trajectory accuracy as the primary metric. Our contribution is the \emph{cross-layer connection}: converting SGP4-anchored, calibrated uncertainty into terminal-side risk-aware LR-FHSS guard control.
 
 \begin{table}[htbp]
 \small
-\caption{Related Work Gap Analysis}
+\caption{Positioning Relative to Prior Art}
 \label{tab:related}
-\begin{tabular}{p{1.6cm}p{1.8cm}p{2.2cm}p{2.7cm}}
+\begin{tabular}{p{2.0cm}p{2.6cm}p{2.7cm}}
 \toprule
-Category & Representative works & Focus & This work's difference \\
+Category & Typical focus & This work's difference \\
 \midrule
-LR-FHSS DtS analysis & Ullah et al.~\\cite{ullah2022lrfhss} & Packet delivery / outage & No prediction-driven uplink control \\
-LR-FHSS DtS transceiver & Jung et al.~\\cite{jung2023lrfhss} & Receiver sync / PER & Terminal pre-compensation design \\
-ML orbit prediction & PINN/surveys~\\cite{pinn2024satellite,li2024mlorbit} & Trajectory accuracy & Communication-oriented uncertainty outputs \\
-LEO energy / air-time & LR-FHSS measurement~\\cite{lrfhss2023energy} & Device current consumption & Used as baseline in energy model \\
+LR-FHSS DtS analysis & Packet delivery / outage & No prediction-driven uplink control \\
+LR-FHSS transceiver & Receiver sync / detection & Terminal-side pre-transmission control \\
+ML orbit prediction & Trajectory accuracy & Calibrated uncertainty for control \\
 \midrule
-\textbf{This work} & — & PGRL uncertainty $\rightarrow$ LR-FHSS uplink control & Cross-layer terminal design \\
+\textbf{This work} & Calibrated uncertainty $\rightarrow$ risk-aware guard & Cross-layer terminal design \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -109,38 +140,18 @@ where $\hat{f}_D$ is the predicted Doppler and $f_{\mathrm{osc}}$ is the termina
 SGP4/SDP4~\cite{hoots1980models} propagates Two-Line Element (TLE) sets to produce Cartesian position and velocity at any epoch. The algorithm is deterministic and computationally lightweight but accumulates RMS timing errors of 1--4~s and Doppler errors of $>5$~kHz over prediction horizons of 30--120~min, depending on TLE age. These errors are non-Gaussian and time-correlated, which limits the effectiveness of naive uncertainty estimation on top of SGP4 output.
 
 \subsection{PGRL Architecture}
-PGRL augments SGP4 with a physics-informed Bayesian neural network that operates on normalized osculating orbital elements $(a, e, i, \Omega, \omega, M)$ extracted from the SGP4 state. The network is a SIREN (sinusoidal representation network) with Gaussian NLL loss:
+PGRL augments SGP4 with a SIREN (sinusoidal representation network) residual predictor operating on normalized orbital state from the SGP4 propagation. The network produces a $6$-dimensional deterministic mean output (position and velocity residuals); a parallel $6$-dimensional log-variance head $\log\sigma_i^2$ provides a per-axis uncertainty estimate. This is a heteroscedastic-uncertainty head, not a Bayesian posterior: there is no weight sampling, ensemble, or variational inference. The deterministic mean predictor is trained with a physics residual regularizer that encourages conservation of Keplerian energy $E=-\mu/(2a)$ and angular momentum $|\mathbf{h}|=\sqrt{\mu a(1-e^2)}$.
+
+\emph{Uncertainty-head fine-tuning (Stage 3E).} Starting from the trained deterministic checkpoint, the mean head is \emph{frozen} and only the log-variance layer is trained with the Gaussian NLL objective
 \begin{equation}
-\mathcal{L}_{\text{NLL}} = \frac{1}{N}\sum_{n=1}^{N}\left[
-  \log\sigma_n^2 + \frac{(y_n - \mu_n)^2}{\sigma_n^2}
-\right]
+\mathcal{L}_{\text{NLL}} = \frac{1}{N}\sum_{n=1}^{N}\sum_{i=1}^{3}\left[
+  \log\sigma_{n,i}^2 + \frac{(y_{n,i} - \mu_{n,i})^2}{\sigma_{n,i}^2}
+\right],
+\label{eq:nll}
 \end{equation}
-where $\mu_n$ and $\sigma_n$ are the predicted mean and standard deviation for the $n$-th training target. The physics residual loss encourages conservation of Keplerian energy $E = -\mu/(2a)$ and angular momentum $|{\bf h}| = \sqrt{\mu a(1-e^2)}$, penalizing predictions that violate these invariants.
+where $\mu_{n,i},\sigma_{n,i}$ are the (frozen) mean and learned per-axis standard deviation. The log-variance layer is initialized to $\log((10/\mathrm{DU})^2)$ (an initial per-axis $\sigma\approx 10$~m in reported metres, $\mathrm{DU}$ the distance unit) and converges to a mean axis $\sigma\approx 3.01$~m. Because the mean head is frozen, the point prediction---and therefore the deterministic accuracy---is unchanged by this stage. The learned uncertainty is thus a calibrated \emph{position-domain} ($\sigma$ in metres) estimate, not a directly trained timing (ms) or Doppler (Hz) uncertainty.
 
-The trained model produces $\mu \pm k\sigma$ prediction intervals that are \emph{calibrated}. Table~\ref{tab:coverage} reports empirical coverage on held-out temporal test passes; the ECE (Expected Calibration Error) is 0.28\% for timing and 0.12\% for Doppler, confirming that the Gaussian NLL formulation produces well-calibrated uncertainty without post-hoc recalibration.
-
-\begin{table}[htbp]
-\small
-\caption{Prediction Interval Coverage by Nominal Confidence Level}
-\label{tab:coverage}
-\begin{tabular}{cccc}
-\toprule
-Confidence level & Timing (empirical) & Doppler (empirical) & Notes \\
-\midrule
-68\% & 66.1\% & 67.4\% & Near-nominal coverage \\
-90\% & 88.3\% & 89.1\% & Slight underconfidence \\
-95\% & 93.2\% & 94.5\% & Acceptable for safety margins \\
-99\% & 97.8\% & 98.1\% & Conservative design basis \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.8\linewidth]{figures/fig2_pgrl_uncertainty.pdf}
-    \caption{PGRL prediction-interval calibration: actual coverage probability vs nominal confidence level for timing (ECE=0.28\%) and Doppler (ECE=0.12\%) predictions. Perfect calibration would follow the diagonal dashed line.}
-    \label{fig:uncertainty}
-\end{figure}
+\emph{Coverage metric.} Calibration is assessed by Mahalanobis chi-square coverage: for each sample $z^2=\sum_i (e_i/\sigma_i)^2$ with per-axis error $e_i$. Under a calibrated $3$-DoF Gaussian, the 68\% and 95\% credible regions correspond to thresholds $z^2\le 3.506$ and $z^2\le 7.815$; the empirical coverage is the fraction of samples below each threshold (Sec.~\ref{sec:eval}).
 
 % ── PGRL Orbital Predictor ────────────────────────────────────────────────────
 \section{PGRL Orbital Predictor}
@@ -157,32 +168,27 @@ The PGRL predictor receives a TLE epoch and outputs a \texttt{PGRLOutput} datacl
   \item \texttt{recommended\_guard\_time\_s}: minimum guard interval at $3.5\sigma$.
 \end{itemize}
 
-Training minimizes a weighted objective combining Gaussian NLL and physics residual regularization. The Bayesian output head maintains calibrated uncertainty without post-hoc recalibration. The online GRPO-based refinement pipeline is treated as a thesis extension and is not required for the results reported in this paper.
+The trained uncertainty head emits a per-axis \emph{position-domain} standard deviation (in metres); the timing- and Doppler-domain $\sigma$ fields above are schema conveniences derived under the simulation mapping of Sec.~\ref{sec:uplink} and are not directly trained quantities. The uncertainty head maintains a near-calibrated scale without post-hoc rescaling (Sec.~\ref{sec:eval}); online/continual refinement is out of scope for this paper.
 
 % ── Uplink Control ────────────────────────────────────────────────────────────
 \section{LR-FHSS Uplink Control}
 \label{sec:uplink}
 
-\subsection{Uncertainty-Aware Guard-Band Policy}
-The guard time $g$ must satisfy $g \geq k \cdot \sigma_t$, where $\sigma_t$ is the one-sigma timing uncertainty and $k=3.5$ provides a tail probability below $5\times10^{-4}$. The \texttt{adaptive\_guard\_time} function computes:
+\subsection{Risk-Aware Guard-Band Policy}
+\label{sec:guard}
+The calibrated position-domain uncertainty is used to size the guard margin to the actual prediction risk. Let $\sigma_r$ be the calibrated radial standard deviation (in metres) from the uncertainty head. The risk-aware guard is
 \begin{equation}
-g^* = \max\left(g_{\min}, \; k \cdot \sigma_t^{\text{PGRL}}\right)
+g_{\text{uncertain}} = g_{\text{base}} + \alpha\,\sigma_r,
+\label{eq:riskguard}
 \end{equation}
-where $g_{\min}=30$ ms is a conservative implementation lower bound used in our evaluation (not a standards-specified minimum). With PGRL's $\sigma_t^{\text{PGRL}} = 16$ ms, the recommended guard is $3.5 \times 16 = 56$ ms, compared to $3.5 \times 1500 = 5250$ ms required under SGP4 uncertainty ($\sigma_t^{\text{SGP4}} \approx 1.5$ s). This reduces guard overhead from 64\% to $<5\%$ of a 240~s orbit period (Table~\ref{tab:guard}).
+where $\alpha\ge 0$ scales the uncertainty contribution. With $\alpha=0$ the policy reduces to the deterministic baseline (guard sized to the point prediction only); increasing $\alpha$ widens the guard in proportion to the predicted uncertainty. An \emph{outage proxy} counts the fraction of samples whose residual error exceeds the guard ($e_r>g_{\text{uncertain}}$); a \emph{success proxy} is its complement, and a risk-adjusted reward subtracts a small normalized guard-overhead penalty (Sec.~\ref{sec:eval}). We sweep $\alpha\in\{0.00,0.25,0.50,0.75,1.00\}$. All these quantities are control proxies, not measured packet-error rates.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.75\linewidth]{figures/fig3_guard_energy.pdf}
-    \caption{Guard-band policy comparison: (a) guard overhead as fraction of orbit period (log scale); (b) energy consumed per TX opportunity. PGRL uncertainty-aware policy achieves lowest overhead and near-minimal energy among all calibrated policies.}
-    \label{fig:guard-energy}
-\end{figure}
-
-\subsection{Doppler Pre-Compensation}
-The \texttt{compensated\_tx\_frequency} function adjusts the nominal carrier frequency $f_c$ using the predicted Doppler shift $\hat{f}_d$ and Doppler rate $\hat{f}_d'$:
+\subsection{Doppler Pre-Compensation (Simulation/Proxy)}
+As a separate control-framework component (a \emph{simulation/proxy assumption}, not part of the Stage~3E/3F/4 trained-model evidence), the \texttt{compensated\_tx\_frequency} function adjusts the nominal carrier $f_c$ using a predicted Doppler shift $\hat{f}_d$ and rate $\hat{f}_d'$:
 \begin{equation}
-f_{\text{TX}} = f_c - \hat{f}_d - \frac{\hat{f}_d'}{2}\,T_{\text{burst}}
+f_{\text{TX}} = f_c - \hat{f}_d - \frac{\hat{f}_d'}{2}\,T_{\text{burst}},
 \end{equation}
-where $T_{\text{burst}}$ is the expected transmission duration. With PGRL-compensated residual Doppler of $\approx 300$ Hz (versus $>5$ kHz without compensation), the remaining frequency error is well within the LR-FHSS bin width, reducing PER from saturation (no sync) to link-budget-limited performance.
+with $T_{\text{burst}}$ the burst duration. Under the simulation assumptions of Sec.~\ref{sec:eval}, tighter residual CFO keeps hop energy within an LR-FHSS bin; we report only proxy RF-quality indicators (EVM proxy, grid orthogonality) and do not measure PER.
 
 \subsection{TX Timing Selection}
 The \texttt{select\_tx\_time} function scores candidate transmission windows using a weighted utility:
@@ -196,47 +202,38 @@ where $\alpha, \beta, \gamma$ are tunable weights. The optimizer selects the win
 \label{sec:eval}
 
 \subsection{Experimental Setup}
-All non-hardware experiments use Monte Carlo simulation with seed~$=42$. The guard-band energy model uses simplified RX$=$12~mA and TX$=$28~mA at 3.3~V. The LR-FHSS grid proxy simulates 64-bin frequency hopping and measures orthogonality as the inner product between bin centroids under residual Doppler displacement. EVM proxy uses QPSK constellation mapping with SNR$=40$ dB.
+The uncertainty and control results (Stages 3E/3F/4) are produced by the released offline pipeline (\texttt{scripts/train\_uncertainty\_offline.py}, \texttt{calibrate\_uncertainty\_temperature.py}, \texttt{risk\_aware\_control\_ablation.py}) applied to the deterministic checkpoint, with seed~$=42$; trained checkpoints reside on the training machine and are not included in the repository. Reported metres use $e_m = e_{\text{norm}}\cdot\mathrm{DU}$. The risk-aware ablation (Eq.~\ref{eq:riskguard}) defines the outage proxy as the fraction of samples with $e_r>g_{\text{uncertain}}$, the success proxy as its complement, and the reward as $\text{success}-\lambda(\,\overline{g}-1)$ with energy weight $\lambda=0.1$ and $\overline{g}$ the guard normalized to the $\alpha{=}0$ baseline. As \emph{separate control-framework simulation proxies} (Monte Carlo, seed~42; not Stage~3E/3F/4 trained-model evidence) we additionally report an LR-FHSS 64-bin grid-orthogonality proxy and a QPSK EVM proxy at SNR$=40$~dB; these are RF-quality indicators only and are not LR-FHSS PER.
 
-The PGRL evaluation uses a \emph{temporal split}: all training passes chronologically precede test passes, ensuring that test predictions are made on TLE epochs not observed during training. A satellite-held-out split is used to evaluate cross-satellite generalization. The TLE age is explicitly controlled when comparing SGP4-only and PGRL residual correction, ensuring that the improvement is not an artifact of TLE staleness. SGP4 uses identical TLE input in both baseline and PGRL-assisted modes, isolating the contribution of the residual corrector. Ground truth for timing and Doppler is obtained from high-precision ephemeris (SP3 format); when SP3 is unavailable, the most recent available TLE epoch serves as proxy truth for pass timing.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.75\linewidth]{figures/fig4_lrfhss_grid_proxy.pdf}
-    \caption{LR-FHSS grid orthogonality score vs residual Doppler. Oracle pre-compensation maintains near-perfect orthogonality across all Doppler values; uncompensated and SGP4-compensated paths show rapid degradation. PGRL-compensated orthogonality of 0.706 at 300~Hz residual Doppler substantially exceeds the SGP4-only baseline.}
-    \label{fig:grid}
-\end{figure}
-
-\subsection{Trace-Driven Results}
+\subsection{Calibrated Uncertainty and Risk-Aware Control}
 \input{tables/main_results}
 
-PGRL reduces pass-timing RMSE by $99.6\%$ versus SGP4 (4.2~s $\to$ 16~ms) and residual Doppler by $95.5\%$ ($5.5$ kHz $\to$ 235~Hz). The guard overhead drops from $>60\%$ to $<5\%$, enabling near-zero missed-opportunity probability. The QPSK EVM proxy should be interpreted strictly as a controlled RF-quality indicator under synthetic SNR$=40$ dB. Oracle pre-compensation (perfect knowledge) achieves 0.95\% EVM. SGP4-only EVM saturates at $>200\%$ due to $>5$ kHz residual CFO. PGRL pre-compensation at $\sim$300 Hz residual Doppler does not achieve full link recovery; the QPSK EVM proxy of $\approx 67\%$ at $\sim$300 Hz residual CFO indicates that constellation rotation remains measurable, confirming that hardware-level CFO tracking or residual feedback is required for robust production LR-FHSS operation. PGRL meaningfully reduces the impairment relative to SGP4-only, but does not replace full receiver-side tracking. The LR-FHSS grid orthogonality improves from $0.587$ (uncompensated) to $0.979$ with oracle pre-compensation; PGRL-compensated achieves $0.706$ at 300~Hz residual Doppler, substantially better than the SGP4-only baseline.
+\emph{Stage 3E (uncertainty-head fine-tuning).} With the mean head frozen, deterministic accuracy is unchanged: position RMSE remains 5.35~m and the fraction of predictions within 5~m remains 61.3\%. The log-variance head learns a metre-scale uncertainty, with the mean per-axis $\sigma$ moving from an initialized $\approx 10$~m to $\approx 3.01$~m, yielding non-trivial Mahalanobis coverage.
 
-\subsection{Validation Scope and Limitations}
-All completed results are trace-driven or proxy-simulation. This work does \emph{not} implement a full standard-compliant LR-FHSS gateway; LR-FHSS PER is not reported. The QPSK EVM is used strictly as an RF-quality proxy demonstrating that pre-compensation improves physical-layer signal metrics. Semtech LR-FHSS TX and SDR IQ capture are defined in the experiment pipeline and ready for hardware execution; full hardware results are left to the measurement stage.
+\emph{Stage 3F (temperature calibration).} Table~\ref{tab:tempsweep} sweeps a scalar temperature $T$ applied as $\log\sigma^2_T=\log\sigma^2+2\log T$. RMSE is invariant to $T$ (the mean is frozen). The best calibration error occurs at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), confirming that the learned uncertainty scale is already near-optimal \emph{without} post-hoc rescaling.
+
+\emph{Stage 4 (risk-aware guard ablation).} Table~\ref{tab:risk} sweeps $\alpha$ in Eq.~\ref{eq:riskguard}. RMSE is fixed at 5.35~m across all $\alpha$, confirming the point predictor is untouched. Relative to the deterministic baseline ($\alpha{=}0$: outage 5.0\%, reward 0.9500), the uncertainty-aware policy at $\alpha{=}0.25$ reduces the outage proxy to 1.7\% (a $3\times$ reduction) and raises the success proxy to 0.9828 and the reward to 0.9690, at a guard overhead of $+13.8\%$. Larger $\alpha$ drives outage lower still but the risk-adjusted reward peaks at $\alpha{=}0.25$. The collision proxy is $0.000$ for all $\alpha$, so outage---not collision---is the binding robustness metric in this proxy setup; we therefore do not claim collision reduction. The separate simulation proxies give a QPSK EVM proxy of $\approx 67\%$ and a grid orthogonality of $0.706$ at 300~Hz residual CFO; these RF-quality proxies are not PER and are reported only to indicate that residual-CFO tracking would remain necessary for production operation.
+
+\subsection{Validation Scope}
+All reported results are simulation or proxy. Stages~3E/3F/4 are offline trained-model and control-proxy results; the grid/EVM rows are simulation/proxy assumptions, not trained-model evidence. This work does \emph{not} implement a standards-compliant LR-FHSS gateway and reports no LR-FHSS PER. The Semtech LR-FHSS TX and SDR IQ paths are defined but \emph{not executed}; no hardware packet delivery is claimed.
+
+\subsection{Limitations}
+This work does not claim improved deterministic trajectory RMSE from uncertainty fine-tuning; the mean predictor is frozen and remains at 5.35~m RMSE. The uncertainty head is a heteroscedastic log-variance output and is \emph{not} Bayesian in the posterior-sampling sense (no weight sampling, ensemble, or variational inference). The learned uncertainty is a position-domain ($\sigma$ in metres) quantity; the timing- and Doppler-domain figures are separate simulation/proxy assumptions and a modeling gap remains between position uncertainty and timing/Doppler control margins. The LR1121/USRP path is a planned measurement interface, not hardware packet-delivery validation. Outage, success, reward, and collision are control proxies rather than measured PER, and the collision proxy is $0.000$ for all $\alpha$, so no collision-reduction claim is made. There is no online or daily-TLE continual learning; the corrector is trained offline.
 
 % ── Hardware Validation Plan ─────────────────────────────────────────────────
 \section{Hardware Validation Plan}
 \label{sec:hardware}
 
 \subsection{Semtech LR1121 TX Path}
-The Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} produces a standards-compliant LR-FHSS transmission. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into a TX configuration JSON specifying center frequency, TX power, hopping grid parameters, guard time, and Doppler pre-compensation flags. The dry-run mode validates the config generation without hardware; real TX capture with the attenuator loopback cable (30~dB) enables direct signal quality measurement.
+The Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} is the intended LR-FHSS transmitter for a future measurement stage. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into a TX configuration JSON specifying center frequency, TX power, hopping-grid parameters, guard time, and Doppler pre-compensation flags. Only this config generation is exercised here (dry-run); no transmission has been captured or validated.
 
 \subsection{SDR IQ Testbed}
-A USRP B210 connected via coax (30~dB attenuator) to the Semtech TX forms a deterministic impairment testbed. The SDR captures IQ samples at 1~MHz bandwidth, which are processed by the CFO estimator (phase-derivative method), EVM proxy (QPSK constellation), and waterfall visualizer. The SDR pipeline runs in synthetic-IQ mode for dry-run validation of all signal processing blocks before live capture.
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{figures/fig5_sdr_synthetic_pipeline.pdf}
-    \caption{SDR synthetic-IQ pipeline (dry-run). (a) EVM vs SNR for oracle, PGRL-compensated, and SGP4-only paths. (b) QPSK constellation at SNR$=40$ dB with $\sim$300~Hz residual CFO (PGRL-compensated case). (c) CFO estimation convergence on synthetic IQ. This figure will be replaced with hardware IQ capture once the Semtech LR-FHSS transmitter and USRP B210 receiver are connected.}
-    \label{fig:sdr}
-\end{figure}
+A USRP B210 connected via coax (30~dB attenuator) to the Semtech TX forms the intended impairment testbed. The SDR is configured to capture IQ at 1~MHz bandwidth for a CFO estimator (phase-derivative method), an EVM proxy (QPSK constellation), and a waterfall visualizer. To date only the synthetic-IQ dry-run of these signal-processing blocks has been exercised; no live capture has been performed, and no hardware figure is reported.
 
 % ── Conclusion ────────────────────────────────────────────────────────────────
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presented PGRL-assisted uncertainty-aware uplink control for LR-FHSS-based D2S IoT. On trace-driven evaluation, the PGRL predictor achieves calibrated, sub-300~Hz residual Doppler and 16~ms timing RMSE, enabling tight guard bands, accurate pre-compensation, and energy-efficient TX timing. Trace-driven evaluation demonstrates $>95\%$ reduction in guard overhead and Doppler error relative to SGP4-only baselines. The hardware validation pipeline (Semtech LR1121 + USRP B210) is defined and ready for execution; physical-layer results will be incorporated once Semtech LR-FHSS TX and SDR IQ capture are available.
+This paper presented an uncertainty-aware PGRL framework for LR-FHSS LEO IoT control. Augmenting a frozen deterministic predictor with a calibrated log-variance head leaves the point prediction unchanged (position RMSE 5.35~m) while producing a near-calibrated uncertainty scale that needs no post-hoc rescaling ($T{=}1.0$, Cov68/Cov95 $=0.713/0.947$). In a risk-aware guard-control ablation, this calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead. The contribution is therefore calibrated uncertainty enabling risk-aware LR-FHSS/PGRL control, not improved deterministic trajectory accuracy. A Semtech LR1121 + USRP B210 IQ measurement path is defined but not yet executed; hardware characterization is left to future work.
 
 % ── References ───────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}
