@@ -147,7 +147,8 @@ class PINNTotalLoss(nn.Module):
             (total_loss, metrics_dict)
         """
         # ---- 1. Data loss (normalised MSE) ----
-        pred_state = model(t_norm, oe_norm)            # (batch, 6) normalised
+        pred_state_full = model(t_norm, oe_norm)            # (batch, 6) or (batch, 12)
+        pred_state = pred_state_full[..., :6]                # always take first 6 (mean)
         l_data = F.mse_loss(pred_state, target_state)
 
         # ---- 2. Physics loss (autograd acceleration, bounded) ----

@@ -183,9 +183,9 @@ class TrajectoryPINN(nn.Module):
         if self.output_uncertainty:
             mean = self.mean_layer(x)
             log_var = self.log_var_layer(x)
-            # Clamp log_var to a safe range: exp(log_var) in ~[4.5e-5, 148] km
-            # (log_var in [-10, 5] maps to sigma in ~[0.007, 12.2] km)
-            log_var = torch.clamp(log_var, min=-10.0, max=5.0)
+            # Clamp log_var to a safe range: exp(log_var) in ~[2.1e-9, 148] km
+            # (log_var in [-20, 5] maps to sigma in ~[4.5e-5, 12.2] normalized units)
+            log_var = torch.clamp(log_var, min=-20.0, max=5.0)
             return torch.cat([mean, log_var], dim=-1)
         else:
             state = self.final_layer(x)
