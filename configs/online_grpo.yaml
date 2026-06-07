@@ -2,7 +2,7 @@
 
 # Model (must match pretrained)
 model:
-  orbital_elem_dim: 7
+  orbital_elem_dim: 6
   hidden_dim: 256
   num_layers: 6
   fourier_features: 128

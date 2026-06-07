@@ -388,7 +388,7 @@ def create_grpo_agent(pinn_model: nn.Module, **kwargs) -> GRPOAgent:
 
 if __name__ == "__main__":
     # Smoke test
-    from models.pinn_core import TrajectoryPINN
+    from physics_ml.pinn_core import TrajectoryPINN
 
     pinn = TrajectoryPINN()
     agent = create_grpo_agent(pinn)
