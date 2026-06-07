@@ -30,7 +30,7 @@
 
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
-We propose an uncertainty-aware Physics-Guided Residual Learning (PGRL) framework for Low-Earth-Orbit (LEO) IoT Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS) control. A deterministic trajectory predictor is augmented with a calibrated log-variance head trained using Gaussian negative log-likelihood (NLL) while keeping the mean head frozen, so the point predictor is unchanged. The learned uncertainty is near-calibrated without post-hoc rescaling (best temperature $T=1.0$, Cov68/Cov95 $=0.713/0.947$). In a risk-aware guard-control ablation, calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% with 13.8\% guard overhead, while deterministic position RMSE remains unchanged at 5.35~m. We additionally define a planned, not-yet-executed Semtech LR1121/USRP measurement interface. The contribution is thus calibrated uncertainty enabling risk-aware LR-FHSS/PGRL control, not improved deterministic trajectory accuracy.
+We propose an uncertainty-aware Physics-Guided Residual Learning (PGRL) framework for Low-Earth-Orbit (LEO) IoT Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS) control. A deterministic trajectory predictor is augmented with a calibrated log-variance head trained using Gaussian negative log-likelihood (NLL) while keeping the mean head frozen, so the point predictor is unchanged. The learned uncertainty is near-calibrated without post-hoc rescaling (best temperature $T=1.0$, Cov68/Cov95 $=0.713/0.947$). In a risk-aware guard-control ablation, calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% with 13.8\% guard overhead, while deterministic position RMSE remains unchanged at 5.35~m. We additionally report a conducted LR1121-to-USRP B210 IQ-level capture, where TX-ON/TX-OFF max-hold spectra show a 9.82~dB signal margin; receiver-side decoding and PER remain future work. The contribution is calibrated uncertainty enabling risk-aware LR-FHSS/PGRL control plus IQ-level RF signal detection, not improved deterministic trajectory accuracy or packet-delivery validation.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -50,7 +50,7 @@ This paper's primary contributions are:
   \item An uncertainty-aware PGRL residual learner with a calibrated log-variance output head, trained with Gaussian NLL while the deterministic mean head is frozen.
   \item A post-hoc temperature-calibration validation showing the learned uncertainty scale is already near-optimal ($T=1.0$, Cov68/Cov95 $=0.713/0.947$), i.e.\ no post-hoc rescaling is needed.
   \item A risk-aware LR-FHSS guard-adaptation ablation in which calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead, with deterministic position RMSE unchanged at 5.35~m.
-  \item A clearly scoped, planned (not-yet-executed) Semtech LR1121/USRP IQ measurement path.
+  \item A conducted LR1121-to-USRP B210 IQ-level capture showing TX-ON/OFF signal detection with a 9.82~dB margin, while explicitly excluding receiver decoding and PER claims.
 \end{itemize}
 
 \begin{figure}[t]
@@ -78,14 +78,14 @@ This paper's primary contributions are:
     \draw[ar] (out.south) |- (dop.east);
     \draw[ar] (dop)--(txt);
     \draw[ar] (txt)--(guard);
-    % Band 3: planned hardware
+    % Band 3: conducted IQ-level capture (no decode/PER)
     \node[hw, below=8mm of guard] (lr) {Semtech LR1121 TX\\(SWDM001)};
     \node[hw, right=of lr] (usrp) {USRP B210\\IQ capture};
-    \node[align=left, right=4mm of usrp, font=\scriptsize\itshape] (plan) {planned;\\not executed};
+    \node[align=left, right=4mm of usrp, font=\scriptsize\itshape] (plan) {conducted IQ capture;\\no decode/PER};
     \draw[ar] (guard.south) -- (lr.north);
     \draw[ar, dashed] (lr)--(usrp);
     \end{tikzpicture}}
-    \caption{System architecture: TLE source $\rightarrow$ SGP4/SDP4 propagator $\rightarrow$ PGRL uncertainty-aware corrector (frozen mean head + calibrated log-variance head) $\rightarrow$ risk-aware uplink controller (guard-band, TX timing, Doppler pre-comp). The Semtech LR1121 / USRP B210 path is a planned, not-yet-executed measurement interface.}
+    \caption{System architecture: TLE source $\rightarrow$ SGP4/SDP4 propagator $\rightarrow$ PGRL uncertainty-aware corrector (frozen mean head + calibrated log-variance head) $\rightarrow$ risk-aware uplink controller (guard-band, TX timing, Doppler pre-comp). The LR1121/USRP path is exercised at the conducted IQ signal-detection layer; packet decoding and PER are not claimed.}
     \label{fig:architecture}
 \end{figure}
 
@@ -205,35 +205,62 @@ where $\alpha, \beta, \gamma$ are tunable weights. The optimizer selects the win
 The uncertainty and control results (Stages 3E/3F/4) are produced by the released offline pipeline (\texttt{scripts/train\_uncertainty\_offline.py}, \texttt{calibrate\_uncertainty\_temperature.py}, \texttt{risk\_aware\_control\_ablation.py}) applied to the deterministic checkpoint, with seed~$=42$; trained checkpoints reside on the training machine and are not included in the repository. Reported metres use $e_m = e_{\text{norm}}\cdot\mathrm{DU}$. The risk-aware ablation (Eq.~\ref{eq:riskguard}) defines the outage proxy as the fraction of samples with $e_r>g_{\text{uncertain}}$, the success proxy as its complement, and the reward as $\text{success}-\lambda(\,\overline{g}-1)$ with energy weight $\lambda=0.1$ and $\overline{g}$ the guard normalized to the $\alpha{=}0$ baseline. As \emph{separate control-framework simulation proxies} (Monte Carlo, seed~42; not Stage~3E/3F/4 trained-model evidence) we additionally report an LR-FHSS 64-bin grid-orthogonality proxy and a QPSK EVM proxy at SNR$=40$~dB; these are RF-quality indicators only and are not LR-FHSS PER.
 
 \subsection{Calibrated Uncertainty and Risk-Aware Control}
-\input{tables/main_results}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figures/fig2_temperature_calibration.pdf}
+    \caption{Stage~3F post-hoc temperature calibration. Empirical Cov68/Cov95 and calibration error vs.\ scalar temperature $T$; RMSE is invariant at 5.35~m (frozen mean). Best calibration at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), i.e.\ no post-hoc rescaling needed.}
+    \label{fig:tempcal}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figures/fig3_risk_aware_ablation.pdf}
+    \caption{Stage~4 risk-aware guard ablation over $\alpha$ (Eq.~\ref{eq:riskguard}). Outage/success/reward are control proxies (not PER); RMSE is fixed at 5.35~m and collision proxy is $0.000$ for all $\alpha$. Risk-adjusted reward peaks at $\alpha=0.25$.}
+    \label{fig:risk}
+\end{figure}
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figures/fig4_guard_residual_distribution.pdf}
+    \caption{Outage proxy vs.\ guard margin from the Stage~4 $\alpha$ sweep (operating points; per-sample residuals are not exported). Deterministic guard (9.56~m, $\alpha{=}0$) gives 5.0\% outage; the uncertainty-aware guard (10.88~m, $\alpha{=}0.25$) gives 1.7\%.}
+    \label{fig:guardres}
+\end{figure}
 
 \emph{Stage 3E (uncertainty-head fine-tuning).} With the mean head frozen, deterministic accuracy is unchanged: position RMSE remains 5.35~m and the fraction of predictions within 5~m remains 61.3\%. The log-variance head learns a metre-scale uncertainty, with the mean per-axis $\sigma$ moving from an initialized $\approx 10$~m to $\approx 3.01$~m, yielding non-trivial Mahalanobis coverage.
 
-\emph{Stage 3F (temperature calibration).} Table~\ref{tab:tempsweep} sweeps a scalar temperature $T$ applied as $\log\sigma^2_T=\log\sigma^2+2\log T$. RMSE is invariant to $T$ (the mean is frozen). The best calibration error occurs at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), confirming that the learned uncertainty scale is already near-optimal \emph{without} post-hoc rescaling.
+\emph{Stage 3F (temperature calibration).} Fig.~\ref{fig:tempcal} sweeps a scalar temperature $T$ applied as $\log\sigma^2_T=\log\sigma^2+2\log T$. RMSE is invariant to $T$ (the mean is frozen). The best calibration error occurs at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), confirming that the learned uncertainty scale is already near-optimal \emph{without} post-hoc rescaling.
 
-\emph{Stage 4 (risk-aware guard ablation).} Table~\ref{tab:risk} sweeps $\alpha$ in Eq.~\ref{eq:riskguard}. RMSE is fixed at 5.35~m across all $\alpha$, confirming the point predictor is untouched. Relative to the deterministic baseline ($\alpha{=}0$: outage 5.0\%, reward 0.9500), the uncertainty-aware policy at $\alpha{=}0.25$ reduces the outage proxy to 1.7\% (a $3\times$ reduction) and raises the success proxy to 0.9828 and the reward to 0.9690, at a guard overhead of $+13.8\%$. Larger $\alpha$ drives outage lower still but the risk-adjusted reward peaks at $\alpha{=}0.25$. The collision proxy is $0.000$ for all $\alpha$, so outage---not collision---is the binding robustness metric in this proxy setup; we therefore do not claim collision reduction. The separate simulation proxies give a QPSK EVM proxy of $\approx 67\%$ and a grid orthogonality of $0.706$ at 300~Hz residual CFO; these RF-quality proxies are not PER and are reported only to indicate that residual-CFO tracking would remain necessary for production operation.
+\emph{Stage 4 (risk-aware guard ablation).} Fig.~\ref{fig:risk} sweeps $\alpha$ in Eq.~\ref{eq:riskguard}, and Fig.~\ref{fig:guardres} shows the resulting outage-vs-guard operating points. RMSE is fixed at 5.35~m across all $\alpha$, confirming the point predictor is untouched. Relative to the deterministic baseline ($\alpha{=}0$: outage 5.0\%, reward 0.9500), the uncertainty-aware policy at $\alpha{=}0.25$ reduces the outage proxy to 1.7\% (a $3\times$ reduction) and raises the success proxy to 0.9828 and the reward to 0.9690, at a guard overhead of $+13.8\%$. Larger $\alpha$ drives outage lower still but the risk-adjusted reward peaks at $\alpha{=}0.25$. The collision proxy is $0.000$ for all $\alpha$, so outage---not collision---is the binding robustness metric in this proxy setup; we therefore do not claim collision reduction. The separate simulation proxies give a QPSK EVM proxy of $\approx 67\%$ and a grid orthogonality of $0.706$ at 300~Hz residual CFO; these RF-quality proxies are not PER and are reported only to indicate that residual-CFO tracking would remain necessary for production operation.
 
 \subsection{Validation Scope}
-All reported results are simulation or proxy. Stages~3E/3F/4 are offline trained-model and control-proxy results; the grid/EVM rows are simulation/proxy assumptions, not trained-model evidence. This work does \emph{not} implement a standards-compliant LR-FHSS gateway and reports no LR-FHSS PER. The Semtech LR-FHSS TX and SDR IQ paths are defined but \emph{not executed}; no hardware packet delivery is claimed.
+All reported results are simulation or proxy. Stages~3E/3F/4 are offline trained-model and control-proxy results; the grid/EVM rows are simulation/proxy assumptions, not trained-model evidence. This work does \emph{not} implement a standards-compliant LR-FHSS gateway and reports no LR-FHSS PER. A conducted LR1121$\rightarrow$USRP IQ capture is reported at the \emph{IQ-level signal-detection} layer only (Sec.~\ref{sec:hardware}); no decoding or packet delivery is claimed.
 
 \subsection{Limitations}
-This work does not claim improved deterministic trajectory RMSE from uncertainty fine-tuning; the mean predictor is frozen and remains at 5.35~m RMSE. The uncertainty head is a heteroscedastic log-variance output and is \emph{not} Bayesian in the posterior-sampling sense (no weight sampling, ensemble, or variational inference). The learned uncertainty is a position-domain ($\sigma$ in metres) quantity; the timing- and Doppler-domain figures are separate simulation/proxy assumptions and a modeling gap remains between position uncertainty and timing/Doppler control margins. The LR1121/USRP path is a planned measurement interface, not hardware packet-delivery validation. Outage, success, reward, and collision are control proxies rather than measured PER, and the collision proxy is $0.000$ for all $\alpha$, so no collision-reduction claim is made. There is no online or daily-TLE continual learning; the corrector is trained offline.
+This work does not claim improved deterministic trajectory RMSE from uncertainty fine-tuning; the mean predictor is frozen and remains at 5.35~m RMSE. The uncertainty head is a heteroscedastic log-variance output and is \emph{not} Bayesian in the posterior-sampling sense (no weight sampling, ensemble, or variational inference). The learned uncertainty is a position-domain ($\sigma$ in metres) quantity; the timing- and Doppler-domain figures are separate simulation/proxy assumptions and a modeling gap remains between position uncertainty and timing/Doppler control margins. The conducted LR1121/USRP capture is an IQ-level signal-detection measurement, not packet-delivery or PER validation, and its raw IQ is held locally rather than committed. Outage, success, reward, and collision are control proxies rather than measured PER, and the collision proxy is $0.000$ for all $\alpha$, so no collision-reduction claim is made. There is no online or daily-TLE continual learning; the corrector is trained offline.
 
-% ── Hardware Validation Plan ─────────────────────────────────────────────────
-\section{Hardware Validation Plan}
+% ── Hardware: Conducted IQ-Level Capture ─────────────────────────────────────
+\section{Hardware: Conducted IQ-Level Capture}
 \label{sec:hardware}
 
 \subsection{Semtech LR1121 TX Path}
-The Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} is the intended LR-FHSS transmitter for a future measurement stage. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into a TX configuration JSON specifying center frequency, TX power, hopping-grid parameters, guard time, and Doppler pre-compensation flags. Only this config generation is exercised here (dry-run); no transmission has been captured or validated.
+A Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} transmits LR-FHSS bursts at 868~MHz, 10~dBm. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into the TX configuration (center frequency, TX power, hopping-grid parameters, guard time, Doppler pre-compensation flags); the device UART log confirms packets were emitted. This is transmitter-side activity only; we do \emph{not} decode at a receiver and report no packet-error rate.
 
-\subsection{SDR IQ Testbed}
-A USRP B210 connected via coax (30~dB attenuator) to the Semtech TX forms the intended impairment testbed. The SDR is configured to capture IQ at 1~MHz bandwidth for a CFO estimator (phase-derivative method), an EVM proxy (QPSK constellation), and a waterfall visualizer. To date only the synthetic-IQ dry-run of these signal-processing blocks has been exercised; no live capture has been performed, and no hardware figure is reported.
+\subsection{Conducted USRP IQ Capture}
+A USRP B210 (1~MHz sample rate, 45~dB gain, $\sim$10~s) connected by coax to the LR1121 captures raw IQ under a TX-ON/TX-OFF differential protocol. Fig.~\ref{fig:sdr} shows the max-hold spectra computed from the raw IQ: the TX-ON capture exceeds the TX-OFF reference by 9.82~dB with discrete hop tones, passing the shared signal-detection test (LR-FHSS-candidate score 0.76, status \emph{signal-detected}; DC/LO guard band excluded). This is \emph{IQ-level RF signal detection only}: it confirms a transmitter-dependent LR-FHSS-like emission, not symbol decoding, packet delivery, or PER. Per the repository hardware-claim checklist this is a conducted capture (hardware acquired); the raw IQ is held locally and is not committed, so the result is not labeled fully ``hardware-validated.''
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figures/fig5_sdr_capture_validation.pdf}
+    \caption{Conducted LR1121$\rightarrow$USRP B210 IQ capture at 868~MHz: TX-ON vs TX-OFF max-hold spectrum from the raw IQ ($\Delta=9.82$~dB; DC/LO guard shaded). IQ-level RF signal detection only --- not decoding, packet delivery, or PER.}
+    \label{fig:sdr}
+\end{figure}
 
 % ── Conclusion ────────────────────────────────────────────────────────────────
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presented an uncertainty-aware PGRL framework for LR-FHSS LEO IoT control. Augmenting a frozen deterministic predictor with a calibrated log-variance head leaves the point prediction unchanged (position RMSE 5.35~m) while producing a near-calibrated uncertainty scale that needs no post-hoc rescaling ($T{=}1.0$, Cov68/Cov95 $=0.713/0.947$). In a risk-aware guard-control ablation, this calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead. The contribution is therefore calibrated uncertainty enabling risk-aware LR-FHSS/PGRL control, not improved deterministic trajectory accuracy. A Semtech LR1121 + USRP B210 IQ measurement path is defined but not yet executed; hardware characterization is left to future work.
+This paper presented an uncertainty-aware PGRL framework for LR-FHSS LEO IoT control. Augmenting a frozen deterministic predictor with a calibrated log-variance head leaves the point prediction unchanged (position RMSE 5.35~m) while producing a near-calibrated uncertainty scale that needs no post-hoc rescaling ($T{=}1.0$, Cov68/Cov95 $=0.713/0.947$). In a risk-aware guard-control ablation, this calibrated uncertainty reduces an outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead. The contribution is therefore calibrated uncertainty enabling risk-aware LR-FHSS/PGRL control, not improved deterministic trajectory accuracy. A conducted LR1121$\rightarrow$USRP B210 IQ capture corroborates transmitter-dependent LR-FHSS emission at the IQ-level signal-detection layer (9.82~dB ON/OFF margin); receiver-side decoding and PER characterization remain future work.
 
 % ── References ───────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}

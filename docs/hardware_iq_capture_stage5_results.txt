@@ -1,0 +1,58 @@
+Stage 5: Conducted LR1121 -> USRP B210 IQ-Level Capture (Evidence Summary)
+
+Scope: IQ-level RF signal-detection only. NOT receiver decoding, NOT packet
+delivery, NOT packet-error rate (PER), NOT full "hardware-validated" (raw IQ is
+local/uncommitted; see note below).
+
+Capture ID:            auto_sweep_20260604_011519
+Generated at:          2026-06-03T17:16:18Z (sweep_summary.json)
+Actual capture time:   ~2026-06-04 (capture-dir timestamp)
+
+SDR receiver:          USRP B210, serial 8000304
+Center frequency:      868.000 MHz
+Sample rate:           1.0 MHz (1,000,000 sps)
+RX gain:               45 dB
+Antenna:               TX/RX
+Capture duration:      10 s requested (actual 12.764 s; 10,000,000 samples)
+
+Transmitter:           Semtech LR1121/LR11xx, SWDM001 firmware
+TX power:              10 dBm
+UART note:             device log reports "Packet sent!" (uart_packet_sent_count = 7).
+                       This is TRANSMITTER-side activity only; there is no
+                       receiver-side decode and no acknowledgement.
+
+Detection result (TX-ON vs TX-OFF differential, shared detector math,
+DC/LO guard band excluded):
+  TX-ON/OFF max-hold delta:     9.82 dB
+  TX-ON maxhold excess:         12.64 dB
+  candidate_signal:             true
+  validation_status:            signal_detected
+  LR-FHSS candidate score:      0.7566  (threshold 0.50)
+  hop-like segment count:       86
+  occupied frequency bins:      74
+  detection NFFT:               4096
+
+Metrics intentionally NOT reported as results (degenerate / not the LR-FHSS
+metric): rx_evm_percent and rx_cfo_std_hz are QPSK-constellation RF-quality
+proxies and are meaningless for GMSK-like LR-FHSS sparse hopping; the
+lr_fhss_candidate_score is the relevant indicator.
+
+Raw IQ (local, UNCOMMITTED due to size, ~76 MB each):
+  hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_on.fc32
+  hardware/captures/auto_sweep_20260604_011519/cap_868000000_txrx_off.fc32
+  SHA256 (txrx_on.fc32): 2e52734ffbfccccdf10f16b8d84f58eee9620b4bbcde73d65b20bb0cc07d0c53
+
+Committed processed metadata (small, reproducible figure inputs):
+  docs/hardware_iq_capture_stage5/cap_868000000_txrx_comparison.json
+  docs/hardware_iq_capture_stage5/cap_868000000_txrx_on_maxhold.json
+  docs/hardware_iq_capture_stage5/cap_868000000_txrx_off_maxhold.json
+  docs/hardware_iq_capture_stage5/sweep_summary.json
+  docs/hardware_iq_capture_stage5/sweep_summary.csv
+  docs/hardware_iq_capture_stage5/cap_868000000_txrx_on_uart.log
+
+Figure: paper/figures/fig5_sdr_capture_validation.pdf is the ON/OFF max-hold
+spectrum recomputed from the raw IQ via scripts/plot_sdr_validation.py.
+
+Claim boundary: this is a conducted IQ-level capture (hardware acquired). It is
+NOT hardware-validated per docs/hardware_claim_checklist.md because the raw IQ
+artifact chain is not committed. No decoding, no packet delivery, no PER.
