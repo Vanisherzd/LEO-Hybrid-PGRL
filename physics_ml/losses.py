@@ -280,3 +280,36 @@ class PINNTotalLoss(nn.Module):
             "pos_rmse_m":   pos_rmse_m,
             "below_5m_pct": below_5m,
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  Gaussian NLL Loss for uncertainty head
+# ─────────────────────────────────────────────────────────────────────────────
+def gaussian_nll_loss(
+    pred_mean: torch.Tensor,
+    pred_log_var: torch.Tensor,
+    target: torch.Tensor,
+    reduction: str = "mean",
+) -> torch.Tensor:
+    """
+    Gaussian negative log-likelihood for 6D state prediction.
+
+    Args:
+        pred_mean:    (batch, 6) — predicted mean
+        pred_log_var: (batch, 6) — predicted log-variance (clamped by caller)
+        target:       (batch, 6) — ground-truth state
+        reduction:    'mean' | 'sum' | 'none'
+
+    Returns:
+        NLL scalar (or per-sample if reduction='none')
+    """
+    # var = exp(log_var) — already clamped outside if needed
+    var = torch.exp(pred_log_var)
+    # NLL = 0.5 * [log(2π * var) + (y - μ)² / var]
+    nll = 0.5 * (torch.log(2 * math.pi * var) + (pred_mean - target) ** 2 / var)
+    if reduction == "mean":
+        return nll.mean()
+    elif reduction == "sum":
+        return nll.sum()
+    else:
+        return nll
