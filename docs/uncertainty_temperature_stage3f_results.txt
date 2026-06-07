@@ -1,0 +1,41 @@
+Stage 3F: Post-hoc Uncertainty Temperature Calibration
+
+Base checkpoint:
+artifacts/checkpoints/pgrl_uncertainty_stage3e_20ep.pt
+
+Script:
+scripts/calibrate_uncertainty_temperature.py
+
+Summary:
+This stage evaluates post-hoc scalar temperature calibration for the Stage 3E uncertainty head.
+The deterministic mean prediction is unchanged. Temperature is applied only to uncertainty using:
+
+logvar_T = logvar + 2 * log(T)
+
+Temperature sweep:
+T in [0.6, 0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.3, 1.4]
+
+Results:
+T=0.6  RMSE=5.35m  Cov68=0.275  Cov95=0.601  CalErr=0.7569
+T=0.7  RMSE=5.35m  Cov68=0.389  Cov95=0.748  CalErr=0.4958
+T=0.8  RMSE=5.35m  Cov68=0.503  Cov95=0.845  CalErr=0.2852
+T=0.9  RMSE=5.35m  Cov68=0.606  Cov95=0.907  CalErr=0.1197
+T=1.0  RMSE=5.35m  Cov68=0.713  Cov95=0.947  CalErr=0.0331
+T=1.1  RMSE=5.35m  Cov68=0.783  Cov95=0.974  CalErr=0.1242
+T=1.2  RMSE=5.35m  Cov68=0.850  Cov95=0.988  CalErr=0.2053
+T=1.3  RMSE=5.35m  Cov68=0.893  Cov95=0.994  CalErr=0.2548
+T=1.4  RMSE=5.35m  Cov68=0.928  Cov95=0.996  CalErr=0.2909
+
+Best temperature:
+T = 1.0
+
+Interpretation:
+The Stage 3E uncertainty head is already near-calibrated without post-hoc rescaling.
+The best temperature is T=1.0, giving Cov68=0.713 and Cov95=0.947.
+RMSE remains unchanged across all temperatures because the deterministic mean head is frozen.
+
+Claim supported:
+Post-hoc temperature sweep confirms that the learned uncertainty scale is already near-optimal.
+
+Claim not supported:
+This does not show improved deterministic RMSE.
