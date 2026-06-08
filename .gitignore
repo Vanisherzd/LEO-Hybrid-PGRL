@@ -44,3 +44,11 @@ payload_results_realizations/hwil_usrp/*.json
 .hermes.md
 payload_results_realizations/live_usrp/
 *.aux *.bbl *.blg *.log *.out
+
+# Packet-validation run outputs (regenerable; do not commit)
+validation_runs/
+
+# Raw IQ captures (large; keep local)
+*.fc32
+*.cfile
+*.sigmf-data
