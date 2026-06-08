@@ -1,0 +1,16 @@
+# Dry-run experiment (NO hardware). Mock TX + mock RX self-test of the PER path.
+run_id: hw_dryrun_001
+mode: dryrun
+n_packets: 100
+seed: 42
+tx:
+  backend: mock
+  freq_hz: 868000000
+  power_dbm: 10
+rx:
+  backend: mock
+mock:
+  loss_rate: 0.05
+  crc_error_rate: 0.01
+  duplicate_rate: 0.0
+  false_positive_count: 0

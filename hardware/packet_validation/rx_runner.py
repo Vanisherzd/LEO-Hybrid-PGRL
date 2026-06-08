@@ -56,29 +56,12 @@ def run_mock(payloads, run_id, loss_rate, crc_error_rate, duplicate_rate,
     return recs
 
 
-_RX_RE = re.compile(
-    r"RX.*?seq\s*=\s*(\d+).*?payload\s*=\s*([0-9a-fA-F]+).*?crc\s*=\s*(ok|fail)",
-    re.IGNORECASE)
+from hardware.packet_validation.rx_log_parser import parse_rx_log  # noqa: E402
 
 
 def run_log_parser(run_id, rx_log):
-    recs = []
-    if not rx_log or not os.path.exists(rx_log):
-        return recs
-    with open(rx_log) as fh:
-        for line in fh:
-            m = _RX_RE.search(line)
-            if not m:
-                continue
-            seq, payload, crc = m.group(1), m.group(2), m.group(3).lower()
-            ok = crc == "ok"
-            recs.append(RxPacketRecord(
-                run_id=run_id, seq=int(seq), payload_hex=payload,
-                payload_len=len(payload) // 2, rx_timestamp_utc=_now(),
-                rx_backend="log_parser", crc_ok=ok,
-                decode_status="decoded" if ok else "crc_fail",
-                raw_log_path=os.path.abspath(rx_log)))
-    return recs
+    """Parse a decoded RX log (formats A/B/C/JSONL). Returns (records, stats)."""
+    return parse_rx_log(run_id, rx_log)
 
 
 def run_iq_only(run_id, iq_metadata):
@@ -126,7 +109,8 @@ def main(argv=None):
                         args.mock_crc_error_rate, args.mock_duplicate_rate,
                         args.mock_false_positive_count, args.seed)
     elif args.backend == "log_parser":
-        recs = run_log_parser(args.run_id, args.rx_log)
+        recs, stats = run_log_parser(args.run_id, args.rx_log)
+        extra = {"parser_stats": stats}
     else:
         recs, extra = run_iq_only(args.run_id, args.iq_metadata)
 

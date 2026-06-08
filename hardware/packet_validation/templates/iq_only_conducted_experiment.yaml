@@ -1,0 +1,16 @@
+# Conducted IQ-only experiment. Replays IQ signal-detection metadata.
+# Reports PER UNAVAILABLE (IQ-level signal detection only; no decode/PER).
+# Requires the runner --armed flag (hardware mode).
+run_id: hw_iq_only_001
+mode: iq_only
+n_packets: 10
+seed: 42
+safety:
+  conducted_or_shielded: true        # conducted/shielded ONLY; no OTA
+  acknowledged_by: REPLACE_WITH_OPERATOR
+tx:
+  backend: file_replay
+  tx_log: docs/hardware_iq_capture_stage5/cap_868000000_txrx_on_uart.log
+rx:
+  backend: iq_only
+  iq_metadata_path: docs/hardware_iq_capture_stage5/cap_868000000_txrx_comparison.json

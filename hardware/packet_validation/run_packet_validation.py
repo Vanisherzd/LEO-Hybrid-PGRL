@@ -52,24 +52,43 @@ def main(argv=None):
     ap.add_argument("--mock-duplicate-rate", type=float, default=0.0)
     ap.add_argument("--mock-false-positive-count", type=int, default=0)
     ap.add_argument("--i-have-hardware", action="store_true")
+    ap.add_argument("--tx-records",
+                    help="use an existing tx_records.csv (skip TX generation)")
+    ap.add_argument("--skip-tx", action="store_true",
+                    help="skip payload generation + TX backend (needs --tx-records)")
     ap.add_argument("--out", required=True)
     args = ap.parse_args(argv)
 
     ensure_dir(args.out)
     payloads_csv = os.path.join(args.out, "tx_payloads.csv")
+    tx_records_path = os.path.join(args.out, "tx_records.csv")
+    tx_backend_label = args.tx_backend
 
-    generate_payloads.main(["--run-id", args.run_id, "--n-packets",
-                            str(args.n_packets), "--seed", str(args.seed),
-                            "--out", args.out])
-
-    tx_argv = ["--run-id", args.run_id, "--backend", args.tx_backend,
-               "--payloads", payloads_csv, "--freq-hz", str(args.freq_hz),
-               "--power-dbm", str(args.power_dbm), "--out", args.out]
-    if args.tx_log:
-        tx_argv += ["--tx-log", args.tx_log]
-    if args.i_have_hardware:
-        tx_argv += ["--i-have-hardware"]
-    tx_runner.main(tx_argv)
+    use_external_tx = bool(args.tx_records) or args.skip_tx
+    if use_external_tx:
+        if not args.tx_records:
+            raise SystemExit("[run] --skip-tx requires --tx-records <csv>")
+        # reuse caller-provided TX records so RX-log seqs/payloads align
+        import shutil
+        shutil.copyfile(args.tx_records, tx_records_path)
+        tx_payloads_src = os.path.join(os.path.dirname(args.tx_records),
+                                       "tx_payloads.csv")
+        if os.path.exists(tx_payloads_src):
+            shutil.copyfile(tx_payloads_src, payloads_csv)
+        tx_backend_label = "external_tx_records"
+        print(f"[run] using external TX records: {args.tx_records}")
+    else:
+        generate_payloads.main(["--run-id", args.run_id, "--n-packets",
+                                str(args.n_packets), "--seed", str(args.seed),
+                                "--out", args.out])
+        tx_argv = ["--run-id", args.run_id, "--backend", args.tx_backend,
+                   "--payloads", payloads_csv, "--freq-hz", str(args.freq_hz),
+                   "--power-dbm", str(args.power_dbm), "--out", args.out]
+        if args.tx_log:
+            tx_argv += ["--tx-log", args.tx_log]
+        if args.i_have_hardware:
+            tx_argv += ["--i-have-hardware"]
+        tx_runner.main(tx_argv)
 
     rx_argv = ["--run-id", args.run_id, "--backend", args.rx_backend,
                "--payloads", payloads_csv, "--seed", str(args.seed),
@@ -85,16 +104,16 @@ def main(argv=None):
     rx_runner.main(rx_argv)
 
     summary = evalmod.main([
-        "--tx-records", os.path.join(args.out, "tx_records.csv"),
+        "--tx-records", tx_records_path,
         "--rx-records", os.path.join(args.out, "rx_records.csv"),
         "--iq-summary", os.path.join(args.out, "rx_summary.json"),
-        "--run-id", args.run_id, "--tx-backend", args.tx_backend,
+        "--run-id", args.run_id, "--tx-backend", tx_backend_label,
         "--rx-backend", args.rx_backend, "--out", args.out])
 
     manifest = {
         "run_id": args.run_id,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "tx_backend": args.tx_backend, "rx_backend": args.rx_backend,
+        "tx_backend": tx_backend_label, "rx_backend": args.rx_backend,
         "n_packets": args.n_packets, "seed": args.seed,
         "decoding_available": summary.decoding_available,
         "packet_error_rate": summary.packet_error_rate,
