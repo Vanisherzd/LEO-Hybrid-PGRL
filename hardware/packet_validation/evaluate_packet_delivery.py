@@ -78,7 +78,11 @@ def evaluate(tx_rows, rx_rows, run_id, tx_backend=None, rx_backend=None):
                                    and int(t["seq"]) == seq), None))
             t_rx = _parse_ts(r.get("rx_timestamp_utc"))
             if t_tx and t_rx:
-                latencies_ms.append((t_rx - t_tx).total_seconds() * 1e3)
+                dt_ms = (t_rx - t_tx).total_seconds() * 1e3
+                # Only keep plausible latencies; synthetic fixtures with
+                # independent TX/RX clocks (or skewed real clocks) are dropped.
+                if 0.0 <= dt_ms <= 3.6e6:
+                    latencies_ms.append(dt_ms)
 
     s.n_payload_match = len(matched_seqs)
     s.packet_delivery_ratio = s.n_payload_match / s.n_tx if s.n_tx else None

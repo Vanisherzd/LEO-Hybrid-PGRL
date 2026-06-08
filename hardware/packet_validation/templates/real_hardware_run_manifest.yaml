@@ -1,0 +1,43 @@
+# Real-hardware packet-delivery run manifest (TEMPLATE).
+# Conducted/shielded setup ONLY (coax + attenuator / dummy load / shielded box).
+# Over-the-air testing is out of scope. TX power is never raised by tooling.
+# Fill in fields after a run; commit this YAML + small summaries, NOT raw IQ.
+
+run_id:
+date_utc:
+operator:
+
+setup:
+  mode: conducted
+  tx_device: LR1121
+  rx_device:                 # e.g. LR1121 RX / LR-FHSS gateway / USRP+decoder
+  attenuator_db:
+  center_frequency_hz:
+  sample_rate_sps:
+  tx_power_dbm:
+  region_note:               # regional RF profile actually configured on device
+  rf_safety_note: conducted_or_shielded_only
+
+tx:
+  backend: lr1121_uart       # requires --i-have-hardware
+  command:                   # exact command used
+  tx_log:                    # path to TX UART log
+
+rx:
+  backend: log_parser        # decoded RX log (formats A/B/C/JSONL)
+  rx_log:                    # path to decoded RX log
+
+iq:
+  raw_iq_path:               # local only; NOT committed
+  metadata_path:             # small JSON metadata (committed)
+  raw_iq_sha256:
+
+evaluation:
+  n_packets:
+  expected_payload_file:     # tx_payloads.csv/jsonl used for matching
+  output_dir:
+
+claims_allowed:
+  packet_delivery: false
+  measured_per: false
+  notes: "Set true only after decoded RX log with CRC/payload matching is available."
