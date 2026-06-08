@@ -1,51 +1,218 @@
 % IEEE Communications Society BibTeX style
-% Minimal refs.bib — extend with full bibliography
-% ─── Orbital / Astrodynamics ──────────────────────────────────────────────────
+% Curated references for LR-FHSS D2S IoT, SGP4/PGRL orbit prediction,
+% NTN Doppler context, and LR-FHSS energy/reliability studies.
+
+% --- Orbital / astrodynamics --------------------------------------------------
+@techreport{hoots1980models,
+  author      = {Hoots, Felix R. and Roehrich, Ronald L.},
+  title       = {Models for Propagation of {NORAD} Element Sets},
+  institution = {Aerospace Defense Center},
+  year        = {1980},
+  month       = dec,
+  number      = {SPACETRACK Report No. 3},
+}
+
 @book{vallado2007fundamentals,
   author    = {Vallado, David A.},
   title     = {Fundamentals of Astrodynamics and Applications},
   publisher = {Microcosm Press},
-  year      = {2007},
-  address   = {El Segundo, CA},
-  edition   = {3rd},
+  year      = {2013},
+  address   = {Hawthorne, CA},
+  edition   = {4th},
+  isbn      = {9781881883180},
 }
 
-@techreport{hoots1980models,
-  author    = {Hoots, Felix R. and Roehrich, Ronald L.},
-  title     = {Models for Propagation of {NORAD} Element Sets},
-  institution = {US Air Force},
-  year      = {1980},
-  number    = {SPACETRACK Report No. 3},
+@inproceedings{vallado2006revisiting,
+  author    = {Vallado, David A. and Crawford, Paul and Hujsak, Richard and Kelso, T. S.},
+  title     = {Revisiting {Spacetrack} Report \#3},
+  booktitle = {AIAA/AAS Astrodynamics Specialist Conference and Exhibit},
+  year      = {2006},
+  doi       = {10.2514/6.2006-6753},
 }
 
-% ─── LR-FHSS / LoRa ────────────────────────────────────────────────────────────
+% --- Standards, application notes, and implementation artifacts ---------------
+@techreport{loraalliance2021rp002,
+  author      = {{LoRa Alliance}},
+  title       = {{RP002-1.0.3 LoRaWAN Regional Parameters}},
+  institution = {LoRa Alliance},
+  year        = {2021},
+  url         = {https://resources.lora-alliance.org/document/rp2-1-0-3-lorawan-regional-parameters},
+}
+
 @techreport{semtech2023lrfhss,
-  author    = {{Semtech Corporation}},
-  title     = {AN1200.64 — {LR-FHSS} System Performance},
-  year      = {2023},
-  url       = {https://www.mouser.com/pdfDocs/AN1200-64_LR-FHSS_system_performance_V1_2.pdf},
+  author      = {{Semtech Corporation}},
+  title       = {{AN1200.64: LR-FHSS System Performance}},
+  institution = {Semtech Corporation},
+  year        = {2022},
+  url         = {https://www.mouser.com/pdfDocs/AN1200-64_LR-FHSS_system_performance_V1_2.pdf},
 }
 
 @misc{swdm001,
-  author    = {{Semtech Corporation}},
-  title     = {SWDM001 — Long-Range Frequency Hopping Spread Spectrum ({LR-FHSS}) Transmission Demo},
+  author       = {{Semtech Corporation}},
+  title        = {{SWDM001: Long-Range Frequency Hopping Spread Spectrum (LR-FHSS) Transmission Demo}},
+  year         = {2024},
+  howpublished = {GitHub repository},
+  url          = {https://github.com/Lora-net/SWDM001},
+  note         = {Accessed: 2026-06-04},
+}
+
+@techreport{3gpp2019tr38821,
+  author      = {{3GPP}},
+  title       = {{TR 38.821: Solutions for NR to Support Non-Terrestrial Networks (NTN)}},
+  institution = {3rd Generation Partnership Project},
+  year        = {2019},
+  number      = {V16.0.0},
+  url         = {https://portal.3gpp.org/desktopmodules/Specifications/SpecificationDetails.aspx?specificationId=3525},
+}
+
+% --- LR-FHSS / LoRaWAN / Direct-to-Satellite IoT ------------------------------
+@article{boquet2021lrfhss,
+  author  = {Boquet, Guillem and Tuset-Peir{\'o}, Pere and Adelantado, Ferran and Watteyne, Thomas and Vilajosana, Xavier},
+  title   = {{LR-FHSS}: Overview and Performance Analysis},
+  journal = {IEEE Communications Magazine},
+  volume  = {59},
+  number  = {3},
+  pages   = {30--36},
+  year    = {2021},
+  doi     = {10.1109/MCOM.001.2000627},
+}
+
+@article{ullah2022lrfhss,
+  author  = {Ullah, Muhammad Asad and Mikhaylov, Konstantin and Alves, Hirley},
+  title   = {Analysis and Simulation of {LoRaWAN} {LR-FHSS} for Direct-to-Satellite Scenario},
+  journal = {IEEE Wireless Communications Letters},
+  volume  = {11},
+  number  = {3},
+  pages   = {548--552},
+  year    = {2022},
+  doi     = {10.1109/LWC.2021.3135984},
+}
+
+@article{alvarez2022uplink,
+  author  = {{\'A}lvarez, Guido and Fraire, Juan A. and Abdelfadeel Hassan, Khaled and C{\'e}spedes, Sandra and Pesch, Dirk},
+  title   = {Uplink Transmission Policies for {LoRa}-Based Direct-to-Satellite {IoT}},
+  journal = {IEEE Access},
+  volume  = {10},
+  pages   = {72687--72701},
+  year    = {2022},
+  doi     = {10.1109/ACCESS.2022.3189647},
+}
+
+% Key retained for existing Introduction citation.
+@article{hurn2023lrfhss,
+  author  = {Ullah, Muhammad Asad and Pasolini, Gianni and Mikhaylov, Konstantin and Alves, Hirley},
+  title   = {Understanding the Limits of {LoRa} Direct-to-Satellite: The {Doppler} Perspectives},
+  journal = {IEEE Open Journal of the Communications Society},
+  year    = {2023},
+  doi     = {10.1109/OJCOMS.2023.3337004},
+}
+
+% --- LR-FHSS receiver, transceiver, synchronization, and reliability -----------
+@article{jung2023lrfhss,
+  author  = {Jung, Sooyeob and Jeong, Seongah and Kang, Jinkyu and Ryu, Joon Gyu and Kang, Joonhyuk},
+  title   = {Transceiver Design and Performance Analysis for {LR-FHSS}-Based Direct-to-Satellite {IoT}},
+  journal = {IEEE Communications Letters},
+  volume  = {27},
+  number  = {12},
+  pages   = {3310--3314},
+  year    = {2023},
+  doi     = {10.1109/LCOMM.2023.3325052},
+}
+
+@article{jung2025lrfhss,
+  author  = {Jung, Sooyeob and Jeong, Seongah and Kang, Jinkyu and Im, Gyeongrae and Lee, Sangjae and Oh, Mi-Kyung and Ryu, Joon Gyu and Kang, Joonhyuk},
+  title   = {{LR-FHSS} Transceiver for Direct-to-Satellite {IoT} Communications: Design, Implementation, and Verification},
+  journal = {IEEE Open Journal of Vehicular Technology},
+  year    = {2025},
+  doi     = {10.1109/OJVT.2025.3585160},
+}
+
+@article{knop2024header,
+  author  = {Knop, Diogo Nogueira and Rebelatto, Jo{\~a}o Luiz and Souza, Richard Demo},
+  title   = {{LR-FHSS} With Network-Coded Header Replication},
+  journal = {IEEE Transactions on Vehicular Technology},
+  year    = {2024},
+  doi     = {10.1109/TVT.2024.3350635},
+}
+
+@article{santana2024acrda,
+  author  = {Sant'Ana, Jean Michel de Souza and Neto, Osvaldo da Silva and Hoeller, Arliones and Rebelatto, Jo{\~a}o Luiz and Souza, Richard Demo and Alves, Hirley},
+  title   = {Asynchronous Contention Resolution-Aided {ALOHA} in {LR-FHSS} Networks},
+  journal = {IEEE Internet of Things Journal},
+  volume  = {11},
+  number  = {9},
+  pages   = {16684--16692},
+  year    = {2024},
+  doi     = {10.1109/JIOT.2024.3355709},
+}
+
+@inproceedings{rathi2024replication,
+  author    = {Rathi, Sonu and Borkotoky, Siddhartha S.},
+  title     = {Message Replication for Improving Reliability of {LR-FHSS} Direct-to-Satellite {IoT}},
+  booktitle = {Proc. IEEE International Conference on Advanced Networks and Telecommunications Systems (ANTS)},
   year      = {2024},
-  url       = {https://github.com/Lora-net/SWDM001},
-  note      = {Accessed: 2024-01-15},
+  pages     = {1--6},
+  doi       = {10.1109/ANTS63515.2024.10898895},
 }
 
-% ─── ML / RL for Communications ───────────────────────────────────────────────
-@article{schulman2017ppo,
-  author  = {Schulman, John and Wolski, Filip and Dhariwal, Prafulla and Radford, Alec and Klimov, Oleg},
-  title   = {Proximal Policy Optimization Algorithms},
-  journal = {arXiv:1707.06347},
-  year    = {2017},
+@article{farhat2025probabilistic,
+  author  = {Farhat, Jamil de Araujo and Sant'Ana, Jean Michel de Souza and Rebelatto, Jo{\~a}o Luiz and Mahmood, Nurul Huda and Pasolini, Gianni and Souza, Richard Demo},
+  title   = {Probabilistic Allocation of Payload Code Rate and Header Copies in {LR-FHSS} Networks},
+  journal = {IEEE Access},
+  volume  = {13},
+  pages   = {30010--30020},
+  year    = {2025},
+  doi     = {10.1109/ACCESS.2025.3541407},
 }
 
-% ─── D2S / LEO IoT ────────────────────────────────────────────────────────────
-@inproceedings{hurn2023lrfhss,
-  author    = {Hurn, J. and others},
-  title     = {Performance Analysis of {LR-FHSS} for {LEO} Satellite IoT},
-  booktitle = {IEEE Aerospace Conf.},
-  year      = {2023},
+@article{sanchez2024energy,
+  author  = {Sanchez-Vital, Roger and Casals, Llu{\'i}s and Heer-Salva, Bartomeu and Vidal, Rafael and Gomez, Carles and Garcia-Villegas, Eduard},
+  title   = {Energy Performance of {LR-FHSS}: Analysis and Evaluation},
+  journal = {Sensors},
+  volume  = {24},
+  number  = {17},
+  pages   = {5770},
+  year    = {2024},
+  doi     = {10.3390/s24175770},
+}
+
+% --- ML / hybrid analytical-ML orbit prediction -------------------------------
+@article{peng2019gp,
+  author  = {Peng, Hao and Bai, Xiaoli},
+  title   = {Gaussian Processes for Improving Orbit Prediction Accuracy},
+  journal = {Acta Astronautica},
+  volume  = {161},
+  pages   = {44--56},
+  year    = {2019},
+  doi     = {10.1016/j.actaastro.2019.05.014},
+}
+
+@article{peng2021fusion,
+  author  = {Peng, Hao and Bai, Xiaoli},
+  title   = {Fusion of a Machine Learning Approach and Classical Orbit Predictions},
+  journal = {Acta Astronautica},
+  volume  = {184},
+  pages   = {222--240},
+  year    = {2021},
+  doi     = {10.1016/j.actaastro.2021.04.017},
+}
+
+@article{acciarini2025dsgp4,
+  author  = {Acciarini, Giacomo and Baydin, Atilim Gunes and Izzo, Dario},
+  title   = {Closing the Gap Between {SGP4} and High-Precision Propagation via Differentiable Programming},
+  journal = {Acta Astronautica},
+  volume  = {226},
+  pages   = {694--701},
+  year    = {2025},
+  doi     = {10.1016/j.actaastro.2024.10.063},
+}
+
+@article{caldas2024mlorbit,
+  author  = {Caldas, Francisco and Soares, Cl{\'a}udia},
+  title   = {Machine Learning in Orbit Estimation: A Survey},
+  journal = {Acta Astronautica},
+  volume  = {220},
+  pages   = {97--107},
+  year    = {2024},
+  doi     = {10.1016/j.actaastro.2024.03.072},
 }

@@ -1,0 +1,4 @@
+run_id,sweep_dir,validation_status,signal_detected,on_off_delta_db,tx_on_stronger_than_off,uart_packet_sent_count,peak_to_median_db,burst_energy_excess_db,maxhold_excess_db,lr_fhss_candidate_score,hop_like_segment_count,occupied_frequency_bins,maxhold_peak_count,frequency_hz,antenna,rate,gain,duration
+run1,auto_sweep_20260604_000358,signal_detected,True,8.88,True,7,6.17,0.29,12.19,0.7534,173,91,16,868000000,TX/RX,1000000,45,10
+run2,auto_sweep_20260604_011203,signal_detected,True,11.87,True,7,7.67,0.4,15.4,0.7799,252,96,14,868000000,TX/RX,1000000,45,10
+run3,auto_sweep_20260604_011519,signal_detected,True,9.82,True,7,5.68,0.29,12.64,0.7566,86,74,14,868000000,TX/RX,1000000,45,10

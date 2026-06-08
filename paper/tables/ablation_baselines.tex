@@ -1,0 +1,21 @@
+% Auto-generated originally by experiments/summary_table.py.
+% Manually compacted for the paper layout; values are unchanged.
+
+\begin{table}[htbp]
+\footnotesize
+\setlength{\tabcolsep}{2.5pt}
+\centering
+\caption{\label{tab:ablation_baselines}Method Comparison: Baselines vs PGRL Ablation}
+\begin{tabularx}{\columnwidth}{@{}>{\raggedright\arraybackslash}X>{\raggedleft\arraybackslash}p{0.9cm}>{\raggedleft\arraybackslash}p{0.9cm}>{\raggedleft\arraybackslash}p{0.55cm}>{\raggedright\arraybackslash}p{1.15cm}@{}}
+\toprule
+Method & Timing & Doppler & NLL & Validation \\
+\midrule
+SGP4-only & 4.14 s & 5537 & 3.01 & simulation \\
+Pure NN on orbital elements & 1.17 s & 1758 & 1.72 & simulation \\
+PGRL without uncertainty & 0.93 s & 969 & -- & simulation \\
+PGRL with uncertainty & 16.4 ms & 234 & 0.17 & trace/sim. \\
+Oracle ideal compensation & -- & 10 & -- & upper bound \\
+\bottomrule
+\end{tabularx}
+\par\vspace{2pt}\raggedright\footnotesize\textit{Doppler values are RMSE/residual in Hz. ``--'' means not evaluated or not applicable. Hardware signal-detection evidence is reported separately and is not a PER result.}
+\end{table}

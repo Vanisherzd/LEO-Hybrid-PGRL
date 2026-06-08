@@ -18,6 +18,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUT_TEX   = REPO_ROOT / "paper" / "tables" / "main_results.tex"
 OUT_JSON  = REPO_ROOT / "paper" / "tables" / "main_results.json"
+OUT_ABL_TEX  = REPO_ROOT / "paper" / "tables" / "ablation_baselines.tex"
+OUT_ABL_JSON = REPO_ROOT / "paper" / "tables" / "ablation_baselines.json"
 REPO_ROOT.joinpath("paper", "tables").mkdir(parents=True, exist_ok=True)
 
 try:
@@ -104,14 +106,14 @@ summary = {
             ["Doppler pre-comp",      "QPSK EVM (SNR=40 dB)",     f">{SGP4_EVM_PCT:.0f}\\%",          f"{PGRL_EVM_PCT:.0f}\\%",             "Proxy simulation"],
             ["Doppler pre-comp",      "Oracle EVM (upper bound)",  f"{ORACLE_EVM_PCT:.2f}\\%",         "—",                                 "Upper bound"],
             ["LR-FHSS grid proxy",    "Grid orthogonality",        f"{SGP4_ORTHOGONALITY:.3f}",       f"{PGRL_ORTHOGONALITY:.3f}",          "LR-FHSS-inspired proxy"],
-            ["Semtech LR-FHSS TX",    "Waterfall / CFO",           "—",                               "Planned",                           "Hardware (pending)"],
-            ["SDR HWIL",              "Residual CFO / EVM",        "—",                               "Planned",                           "Hardware (pending)"],
+            ["LR1121 + USRP B210",    "TX ON/OFF sparse-hop occupancy delta", "--",                  "8.88 / 11.87 / 9.82 dB",            "hardware-signal-detected"],
+            ["LR1121 + USRP B210",    "UART-confirmed packets per ON capture", "--",                 "7 packets",                         "hardware-signal-detected"],
         ],
         "note": (
-            "All non-Planned results use synthetic or literature-derived baselines. "
+            "Simulation/proxy results use synthetic or literature-derived baselines. "
             "QPSK EVM is an RF-quality proxy under SNR=40 dB — NOT a standard LR-FHSS PER. "
-            "PGRL pre-compensation substantially reduces impairment vs SGP4-only but remains "
-            "far from the oracle bound; residual hardware CFO tracking is required for production."
+            "The hardware rows report three repeated TX ON/OFF trials at 868 MHz: "
+            "IQ-level RF signal detection only; no LR-FHSS decoding or PER."
         ),
     },
     "table_2_ablation": {
@@ -149,7 +151,78 @@ summary = {
         "proxy_simulation": "Physical proxy metric (QPSK EVM) demonstrating RF chain quality — no hardware",
         "lrfhss_inspired_proxy": "LR-FHSS grid proxy — NOT a standards-compliant PER",
         "planned": "Hardware acquisition and measurement are planned but not yet executed",
-    }
+    },
+    # ─────────────────────────────────────────────────────────────
+    # Reviewer-facing ablation & baselines table (methods as ROWS).
+    # All cells reuse constants already documented above. Cells with
+    # no real source are "--" / "not evaluated" — NO new numbers.
+    # ─────────────────────────────────────────────────────────────
+    "ablation_baselines": {
+        "header": [
+            "Method", "Timing RMSE", "Doppler RMSE/residual (Hz)",
+            "NLL", "Uncertainty calib. (ECE)", "Validation type",
+        ],
+        "rows": [
+            {
+                "method": "SGP4-only",
+                "timing_rmse": f"{SGP4_TIMING_RMSE_S:.2f} s",
+                "doppler_rmse_hz": f"{SGP4_DOPPLER_RMSE_HZ:.0f}",
+                "nll": f"{SGP4_NLL:.2f}",
+                "uncertainty_ece": "--",
+                "validation_type": "simulation",
+            },
+            {
+                "method": "Pure NN (MLP on orbital elements)",
+                "timing_rmse": "1.17 s",
+                "doppler_rmse_hz": "1758",
+                "nll": "1.72",
+                "uncertainty_ece": "--",
+                "validation_type": "simulation",
+            },
+            {
+                # No dedicated "PGRL without uncertainty head" number exists.
+                # Use the closest existing row: SGP4 + deterministic residual
+                # (mean correction, no uncertainty). Uncertainty-specific
+                # columns are "--" because this variant has no uncertainty head.
+                "method": "PGRL w/o uncertainty (SGP4 + deterministic residual)",
+                "timing_rmse": "0.93 s",
+                "doppler_rmse_hz": "969",
+                "nll": "--",
+                "uncertainty_ece": "--",
+                "validation_type": "simulation",
+            },
+            {
+                "method": "PGRL with uncertainty (PGRL full)",
+                "timing_rmse": f"{PGRL_TIMING_RMSE_MS/1000:.4f} s",
+                "doppler_rmse_hz": f"{PGRL_DOPPLER_RMSE_HZ:.0f}",
+                "nll": f"{PGRL_NLL:.2f}",
+                "uncertainty_ece": f"{UNCERTAINTY_ECE_DOPPLER*100:.2f}\\% (Doppler), "
+                                   f"{UNCERTAINTY_ECE_TIMING*100:.2f}\\% (timing)",
+                "validation_type": "trace-driven / simulation",
+            },
+            {
+                # Oracle / ideal compensation: residual is applicable;
+                # trajectory timing RMSE and NLL/ECE are not applicable.
+                "method": "Oracle / ideal compensation",
+                "timing_rmse": "--",
+                "doppler_rmse_hz": f"{ORACLE_RESIDUAL_HZ:.0f}",
+                "nll": "--",
+                "uncertainty_ece": "--",
+                "validation_type": "upper bound (ideal)",
+            },
+        ],
+        "note": (
+            "All non-hardware values are literature-derived / synthesized baselines "
+            "or trace-driven simulation outputs (seed=42); they reuse the constants "
+            "documented in summary_table.py and introduce no new numbers. The "
+            "'PGRL w/o uncertainty' row reuses the SGP4+deterministic-residual "
+            "variant (mean correction, no uncertainty head), so its NLL and ECE "
+            "columns are marked '--' (not evaluated). The Oracle row reflects ideal "
+            "pre-compensation; its timing RMSE, NLL, and ECE are not applicable ('--'). "
+            "Any hardware rows are bring-up only (no LR-FHSS signal detected) and are "
+            "therefore excluded from this method-comparison table."
+        ),
+    },
 }
 
 
@@ -172,6 +245,9 @@ def make_booktabs(data, col_fmt="lcccc", label="tab:main"):
         "\\setlength{\\tabcolsep}{3pt}",
         "\\centering",
         f"\\caption{{\\label{{{label}}}{data.get('caption', 'Results Summary')}}}",
+        # Shrink-to-fit only when the natural table is wider than one column;
+        # leaves narrow tables at their natural size (no upscaling).
+        "\\resizebox{\\ifdim\\width>\\columnwidth \\columnwidth\\else\\width\\fi}{!}{%",
         f"\\begin{{tabular}}{{{col_fmt}}}",
         "\\toprule",
         " & ".join(str(c) for c in headers) + " \\\\",
@@ -183,8 +259,8 @@ def make_booktabs(data, col_fmt="lcccc", label="tab:main"):
     note_text = data.get("note", "")
     lines.extend([
         "\\bottomrule",
-        "\\end{tabular}",
-        f"\\raggedright\\small\\textit{{{note_text}}}",
+        "\\end{tabular}}",
+        f"\\par\\vspace{{2pt}}\\raggedright\\footnotesize\\textit{{{note_text}}}",
         "\\end{table}",
     ])
     return "\n".join(lines)
@@ -230,7 +306,60 @@ full_tex = f"""% Auto-generated by experiments/summary_table.py
 OUT_TEX.write_text(full_tex)
 OUT_JSON.write_text(json.dumps(summary, indent=2))
 
+
+# ─────────────────────────────────────────────────────────────────
+# Ablation & baselines table (reviewer-facing; methods as rows)
+# ─────────────────────────────────────────────────────────────────
+
+abl = summary["ablation_baselines"]
+abl_dict_rows = [
+    [r["method"], r["timing_rmse"], r["doppler_rmse_hz"],
+     r["nll"], r["uncertainty_ece"], r["validation_type"]]
+    for r in abl["rows"]
+]
+
+ablation_tex = make_booktabs(
+    {
+        "caption": "Method Comparison: Baselines vs PGRL Ablation",
+        "header": abl["header"],
+        "rows": abl_dict_rows,
+        "note": abl["note"],
+    },
+    col_fmt="p{2.7cm}p{1.0cm}p{1.4cm}p{0.7cm}p{1.9cm}p{1.9cm}",
+    label="tab:ablation_baselines",
+)
+
+ablation_full_tex = f"""% Auto-generated by experiments/summary_table.py
+% Commit: {COMMIT}
+% Generated: {NOW}
+% DO NOT EDIT MANUALLY — edit experiment scripts and re-run this script.
+% Reviewer-facing ablation & baselines comparison (methods as rows).
+% All cells reuse documented constants; missing cells are "--" / not evaluated.
+
+{ablation_tex}
+"""
+
+ablation_json = {
+    "metadata": {
+        "commit": COMMIT,
+        "generated_at": NOW,
+        "validation_type": "literature-derived / simulation (no hardware)",
+        "description": "Reviewer-facing method comparison. Reuses constants from "
+                       "summary_table.py; no new numbers. '--' = not evaluated / "
+                       "not applicable. Hardware rows excluded (bring-up only, "
+                       "no LR-FHSS signal detected).",
+    },
+    "header": abl["header"],
+    "rows": abl["rows"],
+    "note": abl["note"],
+}
+
+OUT_ABL_TEX.write_text(ablation_full_tex)
+OUT_ABL_JSON.write_text(json.dumps(ablation_json, indent=2))
+
 print(f"Written: {OUT_TEX}")
 print(f"Written: {OUT_JSON}")
+print(f"Written: {OUT_ABL_TEX}")
+print(f"Written: {OUT_ABL_JSON}")
 print(f"\nCommit: {COMMIT}")
 print(f"Generated: {NOW}")

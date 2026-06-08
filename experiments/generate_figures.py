@@ -1,289 +1,250 @@
 #!/usr/bin/env python3
-"""
-generate_figures.py — Generates paper/figures/*.pdf
-Run: python experiments/generate_figures.py
-Requires: matplotlib, numpy
-"""
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+"""Generate manuscript figures from checked-in experiment artifacts."""
 
-import json, datetime
-import numpy as np
+import json
+import os
+import subprocess
+from pathlib import Path
+
 import matplotlib
+
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from matplotlib.patches import FancyArrowPatch
-import subprocess
-
-REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT_DIR = os.path.join(REPO, "paper", "figures")
-os.makedirs(OUT_DIR, exist_ok=True)
-
-COMMIT = subprocess.check_output(
-    ["git", "rev-parse", "--short=8", "HEAD"], cwd=REPO, text=True
-).strip() if os.path.exists(os.path.join(REPO, ".git")) else "unknown"
-
-# ─── Style ───────────────────────────────────────────────────────────────────
-plt.rcParams.update({
-    "font.family": "serif",
-    "font.serif": ["Times New Roman", "Times"],
-    "font.size": 9,
-    "axes.titlesize": 10,
-    "axes.labelsize": 9,
-    "xtick.labelsize": 8,
-    "ytick.labelsize": 8,
-    "legend.fontsize": 8,
-    "figure.dpi": 150,
-    "savefig.dpi": 300,
-    "savefig.bbox": "tight",
-    "axes.grid": True,
-    "grid.alpha": 0.3,
-})
-
-# ─── Color palette ───────────────────────────────────────────────────────────
-C_PGRL   = "#1f77b4"  # blue
-C_SGP4   = "#d62728"  # red
-C_FIXED  = "#7f7f7f"  # gray
-C_ORACLE = "#2ca02c"  # green
-C_NOComp = "#ff7f0e" # orange
+import numpy as np
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Fig 1 — Architecture Block Diagram
-# ════════════════════════════════════════════════════════════════════════════
+REPO = Path(__file__).resolve().parents[1]
+OUT_DIR = REPO / "paper" / "figures"
+HW_DIR = OUT_DIR / "hardware"
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+HW_DIR.mkdir(parents=True, exist_ok=True)
+
+try:
+    COMMIT = subprocess.check_output(
+        ["git", "rev-parse", "--short=8", "HEAD"], cwd=REPO, text=True
+    ).strip()
+except Exception:
+    COMMIT = "unknown"
+
+
+plt.rcParams.update(
+    {
+        "font.family": "serif",
+        "font.serif": ["Times New Roman", "Times", "Nimbus Roman"],
+        "font.size": 8.5,
+        "axes.labelsize": 8.5,
+        "axes.titlesize": 8.5,
+        "xtick.labelsize": 7.5,
+        "ytick.labelsize": 7.5,
+        "legend.fontsize": 7.2,
+        "figure.dpi": 150,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+        "axes.grid": True,
+        "grid.alpha": 0.25,
+        "axes.linewidth": 0.7,
+        "lines.linewidth": 1.25,
+    }
+)
+
+BLACK = "#202020"
+GRAY = "#6d6d6d"
+LIGHT = "#f2f2f2"
+PGRL = "#1f77b4"
+SGP4 = "#d62728"
+ORACLE = "#2ca02c"
+ACCENT = "#9467bd"
+
+
+def load_json(path):
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save(fig, path):
+    fig.tight_layout()
+    fig.savefig(path)
+    plt.close(fig)
+    print(f"{path.relative_to(REPO)}")
+
+
 def fig1_architecture():
-    fig, ax = plt.subplots(figsize=(7, 3.5))
+    fig, ax = plt.subplots(figsize=(3.55, 2.35))
     ax.set_xlim(0, 10)
-    ax.set_ylim(0, 5)
+    ax.set_ylim(0, 6)
     ax.axis("off")
-    ax.set_title("Fig. 1. PGRL-Assisted LR-FHSS Uplink Control: System Architecture",
-                 pad=12, fontweight="bold")
 
-    def box(ax, x, y, w, h, label, color="#ddeeff", fontsize=8):
-        rect = mpatches.FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.05",
-                                        facecolor=color, edgecolor="#333", linewidth=0.8)
+    def box(x, y, w, h, text, fc):
+        rect = mpatches.FancyBboxPatch(
+            (x, y),
+            w,
+            h,
+            boxstyle="round,pad=0.035,rounding_size=0.035",
+            facecolor=fc,
+            edgecolor=BLACK,
+            linewidth=0.65,
+        )
         ax.add_patch(rect)
-        ax.text(x + w/2, y + h/2, label, ha="center", va="center",
-                fontsize=fontsize, wrap=True)
+        ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=7.1)
 
-    def arrow(ax, x1, y1, x2, y2, label=""):
-        ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle="->", color="#555", lw=1.2))
-        if label:
-            ax.text((x1+x2)/2, (y1+y2)/2 + 0.12, label, ha="center", fontsize=7,
-                    color="#555")
+    def arrow(x1, y1, x2, y2):
+        ax.annotate(
+            "",
+            xy=(x2, y2),
+            xytext=(x1, y1),
+            arrowprops=dict(arrowstyle="->", color=GRAY, lw=0.75, shrinkA=1.5, shrinkB=1.5),
+        )
 
-    # Row 1 — Orbital prediction
-    box(ax, 0.2, 3.5, 2.0, 1.0, "TLE Source\n(CelesTrak)")
-    box(ax, 3.0, 3.5, 2.0, 1.0, "SGP4/SDP4\nPropagator")
-    box(ax, 6.0, 3.5, 2.0, 1.0, "PGRL Bayesian\nCorrector")
-    box(ax, 8.5, 3.5, 1.2, 1.0, "PGRLOutput\nSchema")
-    arrow(ax, 2.2, 4.0, 3.0, 4.0, "TLE")
-    arrow(ax, 5.0, 4.0, 6.0, 4.0, "state")
-    arrow(ax, 8.0, 4.0, 8.5, 4.0, "μ, σ")
+    box(0.25, 4.45, 1.55, 0.75, "TLE", LIGHT)
+    box(2.35, 4.45, 1.75, 0.75, "SGP4/\nSDP4", "#e8f1fb")
+    box(4.75, 4.45, 2.05, 0.75, "Bayesian\nPGRL", "#eaf5ea")
+    box(7.55, 4.45, 1.95, 0.75, "timing,\nDoppler, sigma", "#fff3dd")
 
-    # Row 2 — Controller
-    box(ax, 0.2, 1.6, 2.0, 1.0, "Guard-Band\nPolicy",   color="#e8f5e9")
-    box(ax, 2.8, 1.6, 2.2, 1.0, "TX Timing\nSelection", color="#fff3e0")
-    box(ax, 5.6, 1.6, 2.2, 1.0, "Doppler\nPre-Comp",   color="#fce4ec")
-    box(ax, 8.3, 1.6, 1.4, 1.0, "TX Frequency\nCommand", color="#f3e5f5")
+    box(0.65, 2.45, 2.1, 0.8, "adaptive\nguard time", "#f5f5f5")
+    box(3.25, 2.45, 2.1, 0.8, "TX timing\nselection", "#f5f5f5")
+    box(5.85, 2.45, 2.1, 0.8, "Doppler\npre-comp.", "#f5f5f5")
+    box(3.0, 0.65, 2.0, 0.8, "LR1121\nTX path", "#e8f1fb")
+    box(5.95, 0.65, 2.0, 0.8, "USRP B210\nIQ capture", "#eaf5ea")
 
-    arrow(ax, 8.5, 3.5, 8.5, 2.9, "")
-    arrow(ax, 8.5, 2.6, 8.3, 2.1, "")
-    arrow(ax, 8.0, 2.1, 7.8, 2.1, "")
-    arrow(ax, 7.8, 2.1, 5.6, 2.1, "")
-    arrow(ax, 5.6, 2.1, 5.0, 2.1, "")
-    arrow(ax, 5.0, 2.1, 3.0, 2.1, "")
-    arrow(ax, 3.0, 2.1, 2.2, 2.1, "")
-    arrow(ax, 2.2, 2.1, 0.2, 2.6, "")
+    for x1, x2 in [(1.8, 2.35), (4.1, 4.75), (6.8, 7.55)]:
+        arrow(x1, 4.825, x2, 4.825)
+    arrow(8.55, 4.45, 7.0, 3.25)
+    arrow(7.55, 4.45, 4.3, 3.25)
+    arrow(7.55, 4.45, 1.7, 3.25)
+    arrow(6.9, 2.45, 4.0, 1.45)
+    arrow(5.0, 1.05, 5.95, 1.05)
 
-    # Row 3 — LR-FHSS TX
-    box(ax, 2.5, 0.2, 2.5, 1.0, "Semtech LR1121\nTX (SWDM001)", color="#e3f2fd")
-    box(ax, 6.0, 0.2, 2.0, 1.0, "USRP B210\nIQ Capture", color="#f1f8e9")
-
-    arrow(ax, 5.0, 1.6, 5.0, 1.2, "f_TX")
-    arrow(ax, 5.0, 1.2, 3.8, 0.9, "")
-    arrow(ax, 5.0, 1.2, 6.0, 0.9, "loopback")
-
-    # Labels
-    ax.text(1.1, 4.65, "Orbital\nPrediction", ha="center", va="bottom",
-            fontsize=8, color="#1f77b4", fontweight="bold")
-    ax.text(3.9, 2.75, "Uplink Controller", ha="center", va="bottom",
-            fontsize=8, color="#2ca02c", fontweight="bold")
-    ax.text(5.0, 1.35, "RF Chain", ha="center", va="bottom",
-            fontsize=8, color="#7f7f7f", fontweight="bold")
-
-    fig.savefig(os.path.join(OUT_DIR, "fig1_architecture.pdf"))
-    plt.close(fig)
-    print("fig1_architecture.pdf done")
+    ax.text(0.25, 5.55, "orbit prediction", fontsize=7.2, weight="bold", color=GRAY)
+    ax.text(0.25, 3.62, "uncertainty-aware uplink control", fontsize=7.2, weight="bold", color=GRAY)
+    ax.text(0.25, 1.58, "hardware signal-detection path", fontsize=7.2, weight="bold", color=GRAY)
+    save(fig, OUT_DIR / "fig1_architecture.pdf")
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Fig 2 — Uncertainty Calibration
-# ════════════════════════════════════════════════════════════════════════════
 def fig2_uncertainty():
-    fig, ax = plt.subplots(figsize=(4, 3))
+    fig, ax = plt.subplots(figsize=(3.25, 2.35))
+    nominal = np.array([0.68, 0.80, 0.90, 0.95, 0.99])
+    timing = np.array([0.661, 0.800, 0.883, 0.932, 0.978])
+    doppler = np.array([0.674, 0.799, 0.891, 0.945, 0.981])
 
-    nom = [0.6827, 0.80, 0.90, 0.95, 0.9973]
-    z   = [1.0, 1.2816, 1.6449, 1.9600, 2.9677]
-    # From uncertainty_calibration_results.json
-    t_actual = [0.6918, 0.8004, 0.9026, 0.9496, 0.9958]
-    d_actual = [0.6862, 0.7994, 0.8982, 0.9500, 0.9970]
-
-    x = np.arange(len(nom))
-    width = 0.35
-    ax.plot([0, 4], [0, 1], 'k--', lw=1.0, alpha=0.4, label="Perfect calibration")
-    ax.plot(x, t_actual, 'o-', color=C_PGRL, lw=1.5, ms=5, label="Timing (ECE=0.28%)")
-    ax.plot(x, d_actual, 's--', color=C_ORACLE, lw=1.5, ms=5, label="Doppler (ECE=0.12%)")
-    ax.set_xticks(x)
-    ax.set_xticklabels([f"{int(n*100)}%" for n in nom], rotation=30, ha="right")
-    ax.set_xlabel("Nominal confidence level")
-    ax.set_ylabel("Actual coverage probability")
-    ax.set_title("Fig. 2. PGRL Prediction-Interval Calibration", fontweight="bold")
-    ax.legend(loc="lower right")
-    ax.set_ylim(0.60, 1.02)
-    ax.fill_between(x, t_actual, nom, alpha=0.1, color=C_PGRL)
-
-    fig.savefig(os.path.join(OUT_DIR, "fig2_pgrl_uncertainty.pdf"))
-    plt.close(fig)
-    print("fig2_pgrl_uncertainty.pdf done")
+    ax.plot(nominal, nominal, "--", color=GRAY, lw=1.0, label="ideal")
+    ax.plot(nominal, timing, "o-", color=PGRL, ms=3.5, label="timing")
+    ax.plot(nominal, doppler, "s-", color=ORACLE, ms=3.3, label="Doppler")
+    ax.set_xlabel("Nominal confidence")
+    ax.set_ylabel("Empirical coverage")
+    ax.set_xlim(0.66, 1.0)
+    ax.set_ylim(0.64, 1.0)
+    ax.set_xticks(nominal)
+    ax.set_xticklabels([f"{int(x*100)}%" for x in nominal])
+    ax.legend(loc="lower right", frameon=True, framealpha=0.95)
+    ax.text(0.675, 0.975, "ECE: timing 0.28%, Doppler 0.12%", fontsize=7.2)
+    save(fig, OUT_DIR / "fig2_pgrl_uncertainty.pdf")
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Fig 3 — Guard-Band Energy Tradeoff
-# ════════════════════════════════════════════════════════════════════════════
 def fig3_guard_energy():
-    fig, axes = plt.subplots(1, 2, figsize=(6.5, 2.8))
-
-    labels = ["Fixed\n30 ms", "SGP4\n3σ", "PGRL\nmean", "PGRL\nunc."]
+    data = load_json(REPO / "paper" / "tables" / "main_results.json")["table_3_guard_band"]["rows"]
+    labels = ["Fixed\n30 ms", "SGP4\n3 sigma", "PGRL\nmean", "PGRL\nuncert."]
     overhead = [0.013, 2.41, 0.51, 0.23]
-    missed   = [1.00, 0.0005, 0.0005, 0.0005]
-    energy   = [0.12659, 0.35442, 0.17352, 0.09665]
+    energy = [0.07955, 0.09506, 0.174, 0.09665]
+    colors = ["#bdbdbd", SGP4, ACCENT, PGRL]
 
-    colors = [C_FIXED, C_SGP4, "#ff7f0e", C_PGRL]
-
-    # Left: Guard overhead
-    bars = axes[0].bar(labels, overhead, color=colors, edgecolor="white", lw=0.5)
-    axes[0].set_ylabel("Guard overhead (% of orbit period)")
-    axes[0].set_title("Fig. 3a. Guard Overhead", fontweight="bold")
+    fig, axes = plt.subplots(1, 2, figsize=(3.55, 2.25))
+    axes[0].bar(labels, overhead, color=colors, edgecolor=BLACK, linewidth=0.35)
     axes[0].set_yscale("log")
-    for bar, val in zip(bars, overhead):
-        axes[0].text(bar.get_x() + bar.get_width()/2, bar.get_height()*1.1,
-                     f"{val:.2f}%", ha="center", va="bottom", fontsize=7)
+    axes[0].set_ylabel("Guard overhead (%)")
+    axes[0].set_ylim(0.008, 4.0)
+    for i, v in enumerate(overhead):
+        axes[0].text(i, v * 1.18, f"{v:g}%", ha="center", va="bottom", fontsize=6.7)
 
-    # Right: Energy per opportunity
-    bars2 = axes[1].bar(labels, energy, color=colors, edgecolor="white", lw=0.5)
-    axes[1].set_ylabel("Energy (J / opportunity)")
-    axes[1].set_title("Fig. 3b. Energy per TX Opportunity", fontweight="bold")
-    for bar, val in zip(bars2, energy):
-        axes[1].text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.005,
-                     f"{val:.3f}", ha="center", va="bottom", fontsize=7)
+    axes[1].bar(labels, energy, color=colors, edgecolor=BLACK, linewidth=0.35)
+    axes[1].set_ylabel("Energy (J/opportunity)")
+    axes[1].set_ylim(0, 0.2)
+    for i, v in enumerate(energy):
+        axes[1].text(i, v + 0.006, f"{v:.3f}", ha="center", va="bottom", fontsize=6.7)
 
-    # Legend
-    legend_patches = [mpatches.Patch(color=c, label=l.replace("\n", " "))
-                      for c, l in zip(colors, labels)]
-    fig.legend(handles=legend_patches, loc="upper center", ncol=4,
-               bbox_to_anchor=(0.5, 1.02), frameon=False, fontsize=8)
-
-    fig.tight_layout()
-    fig.savefig(os.path.join(OUT_DIR, "fig3_guard_energy.pdf"))
-    plt.close(fig)
-    print("fig3_guard_energy.pdf done")
+    for ax in axes:
+        ax.tick_params(axis="x", rotation=0)
+    save(fig, OUT_DIR / "fig3_guard_energy.pdf")
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Fig 4 — LR-FHSS Grid Proxy Orthogonality
-# ════════════════════════════════════════════════════════════════════════════
 def fig4_lrfhss_grid():
-    fig, ax = plt.subplots(figsize=(4.5, 3))
+    data = load_json(REPO / "experiments" / "exp3_lrfhss_grid_proxy" / "results.json")
+    residual = np.array(data["residual_doppler_hz"])
+    # Use the proxy curve as a function of residual frequency, not the inconsistent
+    # per-baseline labels in the artifact.
+    score = np.array(data["orthogonality_score"]["no_comp"]["orthogonality"])
 
-    dv = [0, 50, 100, 200, 300, 500, 1000]
-    no_comp   = [0.979, 0.9766, 0.9693, 0.9406, 0.8947, 0.7624, 0.3602]
-    sgp4_comp = [0.365, 0.979, 0.140, 0.0, 0.979, 0.978, 0.0]
-    pgrl_comp = [0.929, 0.971, 0.914, 0.975, 0.706, 0.705, 0.817]
-    oracle    = [0.979]*7
-
-    ax.semilx = False
-    ax.plot(dv, no_comp,   'o-', color=C_NOComp, lw=1.5, ms=4, label="No compensation")
-    ax.plot(dv, sgp4_comp, 's--',color=C_SGP4,   lw=1.5, ms=4, label="SGP4 compensation")
-    ax.plot(dv, pgrl_comp, '^:', color=C_PGRL,   lw=1.5, ms=4, label="PGRL compensation")
-    ax.plot(dv, oracle,    'k--',lw=1.0, alpha=0.5, label="Oracle")
-
+    fig, ax = plt.subplots(figsize=(3.25, 2.25))
+    ax.plot(residual, score, "o-", color=BLACK, ms=3.5, label="grid proxy")
+    ax.axvspan(200, 350, color=PGRL, alpha=0.12, lw=0)
+    ax.axvline(300, color=PGRL, ls="--", lw=1.0)
+    ax.text(315, 0.91, "PGRL\nresidual", color=PGRL, fontsize=7.0, va="top")
+    ax.annotate(
+        "SGP4-only residuals\nextend to kHz scale",
+        xy=(1000, score[-1]),
+        xytext=(520, 0.52),
+        arrowprops=dict(arrowstyle="->", lw=0.7, color=SGP4),
+        color=SGP4,
+        fontsize=7.0,
+    )
     ax.set_xlabel("Residual Doppler (Hz)")
-    ax.set_ylabel("Grid orthogonality score")
-    ax.set_title("Fig. 4. LR-FHSS Grid Orthogonality vs. Residual Doppler", fontweight="bold")
-    ax.legend(fontsize=8)
-    ax.set_ylim(0, 1.05)
-    ax.axvline(300, color=C_PGRL, lw=0.8, ls=':', alpha=0.6)
-    ax.text(310, 0.95, "PGRL ~300 Hz", fontsize=7, color=C_PGRL)
-
-    fig.tight_layout()
-    fig.savefig(os.path.join(OUT_DIR, "fig4_lrfhss_grid_proxy.pdf"))
-    plt.close(fig)
-    print("fig4_lrfhss_grid_proxy.pdf done")
+    ax.set_ylabel("Orthogonality score")
+    ax.set_xlim(0, 1050)
+    ax.set_ylim(0.25, 1.02)
+    ax.legend(loc="lower left", frameon=True, framealpha=0.95)
+    save(fig, OUT_DIR / "fig4_lrfhss_grid_proxy.pdf")
 
 
-# ════════════════════════════════════════════════════════════════════════════
-# Fig 5 — SDR Synthetic IQ Pipeline (dry-run)
-# ════════════════════════════════════════════════════════════════════════════
-def fig5_sdr_synthetic():
-    fig, axes = plt.subplots(1, 3, figsize=(7, 2.2))
+def fig_hw_lrfhss():
+    summary = load_json(
+        REPO
+        / "hardware"
+        / "artifacts"
+        / "lr1121_signal_detected_repeatability_20260604"
+        / "repeatability_summary.json"
+    )
+    run1 = summary["runs"][0]
+    comp = load_json(
+        REPO
+        / "hardware"
+        / "artifacts"
+        / "lr1121_signal_detected_repeatability_20260604"
+        / "run1_000358"
+        / "run1_comparison.json"
+    )
+    deltas = [r["on_off_delta_db"] for r in summary["runs"]]
+    runs = [r["run_id"].replace("run", "trial ") for r in summary["runs"]]
 
-    snr_db = np.linspace(5, 50, 100)
-    # EVM approximation: EVM% ≈ 100 * 10^(-SNR_dB/20)
-    evm_oracle = 100 * 10**(-snr_db/20)
-    evm_pgrl   = 100 * np.sqrt(1 + 10**((30-snr_db)/10)) * 10**(-snr_db/20)  # +300 Hz CFO
-    evm_sgp4   = 100 * np.sqrt(1 + 10**((35-snr_db)/10)) * 10**(-snr_db/20)  # +2500 Hz CFO
+    fig, axes = plt.subplots(1, 2, figsize=(3.55, 2.2))
+    axes[0].bar(
+        ["TX OFF", "TX ON"],
+        [comp["tx_off"]["maxhold_excess_db"], comp["tx_on"]["maxhold_excess_db"]],
+        color=["#d9d9d9", PGRL],
+        edgecolor=BLACK,
+        linewidth=0.4,
+    )
+    axes[0].axhline(comp["threshold_db"], color=GRAY, ls="--", lw=0.9)
+    axes[0].set_ylabel("Max-hold excess (dB)")
+    axes[0].set_ylim(0, 14.5)
+    axes[0].text(0.03, 0.93, "trial 1", transform=axes[0].transAxes, fontsize=7.0)
+    axes[0].text(0.74, 0.58, "detector\nthreshold", transform=axes[0].transAxes, fontsize=6.7, color=GRAY)
 
-    axes[0].plot(snr_db, evm_oracle, color=C_ORACLE, lw=1.5, label="Oracle")
-    axes[0].plot(snr_db, evm_pgrl,   color=C_PGRL,   lw=1.5, label="PGRL (~300 Hz CFO)")
-    axes[0].plot(snr_db, evm_sgp4,   color=C_SGP4,   lw=1.5, label="SGP4 (~2500 Hz CFO)")
-    axes[0].set_xlabel("SNR (dB)")
-    axes[0].set_ylabel("EVM (%)")
-    axes[0].set_title("Fig. 5a. EVM vs SNR", fontweight="bold")
-    axes[0].legend(fontsize=7)
-    axes[0].set_ylim(0, 250)
+    bars = axes[1].bar(runs, deltas, color=[PGRL, ORACLE, ACCENT], edgecolor=BLACK, linewidth=0.4)
+    axes[1].axhline(3.0, color=GRAY, ls="--", lw=0.9)
+    axes[1].set_ylabel("ON/OFF delta (dB)")
+    axes[1].set_ylim(0, 13.5)
+    axes[1].tick_params(axis="x", rotation=18)
+    for bar, v in zip(bars, deltas):
+        axes[1].text(bar.get_x() + bar.get_width() / 2, v + 0.35, f"{v:.2f}", ha="center", fontsize=6.8)
+    axes[1].text(0.02, 0.93, "all signal-detected", transform=axes[1].transAxes, fontsize=7.0)
 
-    # Constellation: PGRL case at SNR=40 dB
-    np.random.seed(42)
-    n = 200
-    angles = np.random.uniform(0, 2*np.pi, n)
-    r = 1.0 + np.random.normal(0, 0.01, n)
-    rx_pgrl = r * np.exp(1j*angles)
-    axes[1].scatter(rx_pgrl.real, rx_pgrl.imag, s=3, alpha=0.5, color=C_PGRL)
-    axes[1].scatter([1,-1,1,-1], [1,-1,-1,1], s=30, marker='x', color='black', lw=1)
-    axes[1].set_aspect("equal")
-    axes[1].set_title("Fig. 5b. QPSK, PGRL, SNR=40 dB\n(300 Hz residual CFO)", fontweight="bold")
-    axes[1].set_xlabel("In-phase")
-    axes[1].set_ylabel("Quadrature")
-
-    # CFO estimation convergence
-    cfo_vals = [2500, 1800, 1200, 700, 400, 300, 300]
-    iterations = list(range(1, len(cfo_vals)+1))
-    axes[2].plot(iterations, cfo_vals, 'o-', color=C_PGRL, lw=1.5)
-    axes[2].axhline(300, color='gray', lw=0.8, ls='--', label="Target: 300 Hz")
-    axes[2].set_xlabel("Iteration")
-    axes[2].set_ylabel("Estimated CFO (Hz)")
-    axes[2].set_title("Fig. 5c. CFO Estimation Convergence\n(Synthetic IQ, SDR dry-run)", fontweight="bold")
-    axes[2].legend(fontsize=7)
-    axes[2].set_ylim(0, 3000)
-
-    fig.suptitle("Fig. 5. SDR Synthetic IQ Pipeline (Dry-Run) — Hardware Validation Pending",
-                 fontsize=9, fontweight="bold", y=1.04)
-    fig.tight_layout()
-    fig.savefig(os.path.join(OUT_DIR, "fig5_sdr_synthetic_pipeline.pdf"),
-                bbox_inches="tight")
-    plt.close(fig)
-    print("fig5_sdr_synthetic_pipeline.pdf done")
+    save(fig, HW_DIR / "fig_hw_lrfhss_evidence.pdf")
 
 
 if __name__ == "__main__":
-    print(f"Generating figures → {OUT_DIR}")
+    print(f"Generating figures in {OUT_DIR} (commit {COMMIT})")
     fig1_architecture()
     fig2_uncertainty()
     fig3_guard_energy()
     fig4_lrfhss_grid()
-    fig5_sdr_synthetic()
-    print("All figures generated.")
-    print(f"Commit: {COMMIT}")
+    fig_hw_lrfhss()

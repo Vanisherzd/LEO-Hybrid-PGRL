@@ -1,0 +1,59 @@
+{
+  "metadata": {
+    "commit": "42915dd9",
+    "generated_at": "2026-06-03T18:21:19Z",
+    "validation_type": "literature-derived / simulation (no hardware)",
+    "description": "Reviewer-facing method comparison. Reuses constants from summary_table.py; no new numbers. '--' = not evaluated / not applicable. Hardware rows excluded (bring-up only, no LR-FHSS signal detected)."
+  },
+  "header": [
+    "Method",
+    "Timing RMSE",
+    "Doppler RMSE/residual (Hz)",
+    "NLL",
+    "Uncertainty calib. (ECE)",
+    "Validation type"
+  ],
+  "rows": [
+    {
+      "method": "SGP4-only",
+      "timing_rmse": "4.14 s",
+      "doppler_rmse_hz": "5537",
+      "nll": "3.01",
+      "uncertainty_ece": "--",
+      "validation_type": "simulation"
+    },
+    {
+      "method": "Pure NN (MLP on orbital elements)",
+      "timing_rmse": "1.17 s",
+      "doppler_rmse_hz": "1758",
+      "nll": "1.72",
+      "uncertainty_ece": "--",
+      "validation_type": "simulation"
+    },
+    {
+      "method": "PGRL w/o uncertainty (SGP4 + deterministic residual)",
+      "timing_rmse": "0.93 s",
+      "doppler_rmse_hz": "969",
+      "nll": "--",
+      "uncertainty_ece": "--",
+      "validation_type": "simulation"
+    },
+    {
+      "method": "PGRL with uncertainty (PGRL full)",
+      "timing_rmse": "0.0164 s",
+      "doppler_rmse_hz": "234",
+      "nll": "0.17",
+      "uncertainty_ece": "0.12\\% (Doppler), 0.28\\% (timing)",
+      "validation_type": "trace-driven / simulation"
+    },
+    {
+      "method": "Oracle / ideal compensation",
+      "timing_rmse": "--",
+      "doppler_rmse_hz": "10",
+      "nll": "--",
+      "uncertainty_ece": "--",
+      "validation_type": "upper bound (ideal)"
+    }
+  ],
+  "note": "All non-hardware values are literature-derived / synthesized baselines or trace-driven simulation outputs (seed=42); they reuse the constants documented in summary_table.py and introduce no new numbers. The 'PGRL w/o uncertainty' row reuses the SGP4+deterministic-residual variant (mean correction, no uncertainty head), so its NLL and ECE columns are marked '--' (not evaluated). The Oracle row reflects ideal pre-compensation; its timing RMSE, NLL, and ECE are not applicable ('--'). Any hardware rows are bring-up only (no LR-FHSS signal detected) and are therefore excluded from this method-comparison table."
+}

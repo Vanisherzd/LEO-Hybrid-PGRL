@@ -81,8 +81,9 @@ LEO-Hybrid-PGRL/              # Project root
 | Guard-band policy | ✅ Complete | Simulation |
 | Doppler pre-compensation | ✅ Complete | Simulation |
 | LR-FHSS grid proxy | ✅ Complete | Simulation |
-| Semtech LR-FHSS TX bring-up | 🟡 Planned | Hardware |
-| SDR HWIL validation | 🟡 Planned | Hardware |
+| Semtech LR1121 TX bring-up | ✅ Complete | hardware-bringup |
+| USRP B210 IQ capture | ✅ Complete | hardware-signal-detected |
+| LR-FHSS decoding / PER | ⛔ Not claimed | Out of scope |
 | GLOBECOM paper skeleton | ✅ Complete | Write-up |
 
 ---
@@ -113,7 +114,7 @@ uv run bash experiments/exp5_sdr_doppler_precomp/run.sh dry-run
 
 ## Key Results
 
-All trace-driven and simulation results. Hardware validation (Semtech + SDR) is the next stage.
+Trace-driven and simulation results, plus preliminary IQ-level hardware signal detection.
 
 | Component           | Metric                    | SGP4-only  | PGRL (this work) | Validation Type      |
 |---------------------|--------------------------:|----------:|----------------:|----------------------|
@@ -122,10 +123,11 @@ All trace-driven and simulation results. Hardware validation (Semtech + SDR) is 
 | Guard-band policy   | Guard overhead            |      64 % |        **< 5 %** | Simulation           |
 | RF quality proxy    | QPSK EVM proxy (40 dB SNR) |   208 %  |      **0.95 %** | Proxy simulation     |
 | LR-FHSS grid proxy  | Grid orthogonality        |    0.587  |      **0.979**  | LR-FHSS-inspired proxy |
-| Semtech TX          | Waterfall / CFO           |         — |     **Planned** | Hardware (pending)    |
-| SDR HWIL            | Residual CFO / EVM        |         — |     **Planned** | Hardware (pending)    |
+| LR1121 + USRP B210  | TX ON/OFF sparse-hop occupancy delta | — | **8.88 / 11.87 / 9.82 dB** | hardware-signal-detected |
 
-> All completed values are from trace-driven simulation or proxy evaluation. The Semtech LR-FHSS TX bring-up (`experiments/exp4_semtech_lrfhss_tx/`) and SDR HWIL validation stage (`experiments/exp5_sdr_doppler_precomp/`) are defined in their respective folders, pending hardware acquisition.
+> Simulation/proxy values are from trace-driven evaluation. The hardware row reports three repeated TX ON/OFF trials (868 MHz, TX/RX, 1 Msps, gain 45 dB), all `signal_detected=true` and `tx_on_stronger_than_off=true`; curated artifacts live in `hardware/artifacts/lr1121_signal_detected_repeatability_20260604/`.
+>
+> **Hardware-signal-detected denotes IQ-level RF evidence only and does not imply LR-FHSS packet decoding or PER.**
 
 ---
 
@@ -137,7 +139,9 @@ This project does **not** claim:
 - Full standard-compliant LR-FHSS gateway implementation
 - Catastrophic link recovery or world-first autonomy
 
-The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-driven evaluation of physical-layer signal quality. Real-world PER requires a standards-compliant LR-FHSS decoder on the satellite side.
+The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-driven evaluation of physical-layer signal quality. Hardware results are **IQ-level signal detection only**; real-world PER requires a standards-compliant LR-FHSS decoder on the satellite side.
+
+> **Scope note:** GRPO/PPO online refinement and ISAC / self-healing directions are **thesis extensions**, not part of the GLOBECOM paper scope. The GLOBECOM submission covers PGRL prediction, uncertainty-aware uplink control, and preliminary IQ-level hardware signal detection.
 
 ---
 
@@ -149,6 +153,6 @@ The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-drive
   author  = {Lai, Zhen-Dong},
   year    = {2026},
   howpublished = {\url{https://github.com/Vanisherzd/LEO-Hybrid-PGRL}},
-  note    = {Research prototype; GLOBECOM submission pending hardware validation}
+  note    = {Research prototype; trace-driven results with preliminary IQ-level hardware signal detection}
 }
 ```
