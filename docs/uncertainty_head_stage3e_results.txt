@@ -1,0 +1,51 @@
+Stage 3E: Calibrated Uncertainty Head Fine-Tuning
+
+Commit:
+1a86294
+
+Summary:
+This stage adds an uncertainty-head-only fine-tuning path for the deterministic PGRL checkpoint.
+The deterministic mean head is frozen, while only log_var_layer is trained.
+
+Key fixes:
+1. Fixed normalized-to-reported-metre conversion:
+   err_m = err_norm * DU
+
+2. Initialized log_var_layer.weight = 0.
+
+3. Initialized log_var_layer.bias:
+   log_var_layer.bias = log((10 / DU)^2)
+   This gives initial per-axis sigma around 10 m.
+
+4. Replaced radial threshold coverage with chi-square Mahalanobis coverage:
+   z2 = sum((err_i / sigma_i)^2)
+
+   Cov68 threshold:
+   z2 <= 3.506
+
+   Cov95 threshold:
+   z2 <= 7.815
+
+5. Added readable axis-sigma summaries.
+
+Validation command:
+python -m pytest -q tests/test_pinn.py
+
+python scripts/train_uncertainty_offline.py --epochs 20 --batch_size 256 --checkpoint artifacts/checkpoints/pgrl_deterministic_retrained.pt --output artifacts/checkpoints/pgrl_uncertainty_stage3e_20ep.pt
+
+Validation results:
+Tests: 12 passed
+RMSE: 5.35 m
+<5 m: 61.3%
+Initial per-axis sigma: approximately 10.0 m
+Epoch 20 axis sigma mean: approximately 3.01 m
+Epoch 20 Cov68: 0.625
+Epoch 20 Cov95: 0.969
+
+Interpretation:
+Because the deterministic mean head is frozen, RMSE and <5 m accuracy are expected to remain unchanged.
+The uncertainty head learns metre-scale uncertainty and produces non-trivial calibration metrics.
+
+Notes:
+This result should be treated as an uncertainty calibration experiment, not as a new deterministic accuracy improvement.
+The paper should not claim improved RMSE from this stage unless the mean head is later unfrozen and retrained.

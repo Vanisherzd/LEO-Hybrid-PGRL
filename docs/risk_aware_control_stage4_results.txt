@@ -1,0 +1,44 @@
+Stage 4: Risk-Aware Control Ablation
+
+Base checkpoint:
+artifacts/checkpoints/pgrl_uncertainty_stage3e_20ep.pt
+
+Script:
+scripts/risk_aware_control_ablation.py
+
+Summary:
+This stage evaluates whether calibrated uncertainty improves LR-FHSS/PGRL control robustness.
+The deterministic mean prediction is unchanged. Uncertainty is used only to adjust the guard margin.
+
+Policy:
+guard_uncertain = guard_base + alpha * radial_sigma_m
+
+Alpha sweep:
+alpha in [0.00, 0.25, 0.50, 0.75, 1.00]
+
+Results:
+alpha=0.00  RMSE=5.35m  guard=9.56m   norm_guard=1.000  outage=0.050  collision=0.000  success=0.9500  reward=0.9500
+alpha=0.25  RMSE=5.35m  guard=10.88m  norm_guard=1.138  outage=0.017  collision=0.000  success=0.9828  reward=0.9690
+alpha=0.50  RMSE=5.35m  guard=12.20m  norm_guard=1.276  outage=0.004  collision=0.000  success=0.9961  reward=0.9685
+alpha=0.75  RMSE=5.35m  guard=13.51m  norm_guard=1.414  outage=0.001  collision=0.000  success=0.9989  reward=0.9575
+alpha=1.00  RMSE=5.35m  guard=14.83m  norm_guard=1.552  outage=0.000  collision=0.000  success=1.0000  reward=0.9448
+
+Best alpha:
+alpha = 0.25
+
+Key findings:
+1. RMSE remains fixed at 5.35 m across all alpha values, confirming that the mean trajectory prediction is unchanged.
+2. The uncertainty-aware policy reduces outage proxy from 5.0% to 1.7% at alpha=0.25.
+3. This gives a 3x outage reduction with only 13.8% guard overhead.
+4. The best risk-adjusted reward occurs at alpha=0.25.
+5. Collision proxy remains 0.000 for all alpha values, so outage is the binding robustness metric in this proxy setup.
+
+Interpretation:
+The calibrated uncertainty head is useful for risk-aware control even though it does not improve deterministic trajectory RMSE.
+Uncertainty-aware guard adaptation improves robustness by trading a small guard overhead for a large reduction in outage proxy.
+
+Claim supported:
+Calibrated uncertainty enables risk-aware LR-FHSS/PGRL control and improves robustness under bounded guard overhead.
+
+Claim not supported:
+This does not show improved deterministic RMSE or real hardware packet delivery.

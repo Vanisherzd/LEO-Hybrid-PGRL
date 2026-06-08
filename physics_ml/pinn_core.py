@@ -70,9 +70,12 @@ class TrajectoryPINN(nn.Module):
     1. Fourier feature embedding on time input (captures orbital periodicity)
     2. Orbital element conditioning via learned embedding
     3. SIREN-based hidden layers (better for periodic/multi-scale functions)
-    4. Output head: 6D state (position + velocity)
+    4. Output head: 6D state (position + velocity) — or 12D when output_uncertainty=True
+       (first 6 = mean, last 6 = log_var)
 
     The network predicts residual correction over Keplerian orbit to achieve <5m RMSE.
+    Uncertainty is Gaussian NLL: first forward pass returns (B,6) mean; when
+    output_uncertainty=True, forward returns (B,12) = [mean(6), log_var(6)].
     """
 
     def __init__(
@@ -84,6 +87,7 @@ class TrajectoryPINN(nn.Module):
         fourier_features: int = 128,
         omega0: float = 30.0,
         use_fourier: bool = True,
+        output_uncertainty: bool = False,
     ):
         super().__init__()
         self.orbital_elem_dim = orbital_elem_dim
@@ -91,8 +95,9 @@ class TrajectoryPINN(nn.Module):
         self.hidden_dim = hidden_dim
         self.num_layers = num_layers
         self.omega0 = omega0
+        self.output_uncertainty = output_uncertainty
 
- # Fourier feature embedding on time
+        # Fourier feature embedding on time
         self.use_fourier = use_fourier
         if use_fourier:
             self.fourier_embed = FourierFeatureEmbedding(time_dim, fourier_features)
@@ -110,14 +115,45 @@ class TrajectoryPINN(nn.Module):
             layers.append(SirenLayer(hidden_dim, hidden_dim, omega0=omega0))
         self.siren_layers = nn.ModuleList(layers)
 
-        # Final layer (no activation — outputs position/velocity)
-        self.final_layer = nn.Linear(hidden_dim, 6)
-
         # Learnable orbital element normalization (affine per parameter)
         self.elem_scale = nn.Parameter(torch.ones(orbital_elem_dim))
         self.elem_bias = nn.Parameter(torch.zeros(orbital_elem_dim))
 
-    def forward(self, t: torch.Tensor, orbital_elems: torch.Tensor) -> torch.Tensor:
+        if output_uncertainty:
+            # Two separate output heads: mean and log_variance
+            self.mean_layer = nn.Linear(hidden_dim, 6)
+            self.log_var_layer = nn.Linear(hidden_dim, 6)
+        else:
+            # Single deterministic output
+            self.final_layer = nn.Linear(hidden_dim, 6)
+
+    def _load_compatible(self, state_dict: dict, strict: bool = True):
+        """
+        Handle loading a deterministic 6-output checkpoint into an
+        output_uncertainty=True model (which has mean_layer + log_var_layer).
+        The 6 weight/bias entries from the saved 'final_layer' are copied to
+        'mean_layer'; 'log_var_layer' is initialised from its own init.
+        """
+        has_final = any(k.startswith("final_layer.") for k in state_dict)
+        needs_expand = self.output_uncertainty and has_final
+
+        if needs_expand:
+            # Rename final_layer.* → mean_layer.* for the 6 output dims
+            import copy
+            expanded = copy.deepcopy(state_dict)
+            for key in list(expanded.keys()):
+                if key.startswith("final_layer."):
+                    expanded[key.replace("final_layer.", "mean_layer.", 1)] = expanded.pop(key)
+            # Log-var heads stay with their random init (small std dev)
+            expanded = {k: v for k, v in expanded.items() if not k.startswith("log_var_layer.")}
+            return super().load_state_dict(expanded, strict=False)
+        return super().load_state_dict(state_dict, strict=strict)
+
+    def forward(
+        self,
+        t: torch.Tensor,
+        orbital_elems: torch.Tensor,
+    ) -> torch.Tensor:
         """
         Forward pass.
 
@@ -126,7 +162,8 @@ class TrajectoryPINN(nn.Module):
             orbital_elems: (batch, 7) — Keplerian elements [a, e, i, Omega, omega, M0, n]
 
         Returns:
-            state: (batch, 6) — [x, y, z, vx, vy, vz] in km, km/s (ECI frame)
+            state: (batch, 6) deterministic OR (batch, 12) when output_uncertainty=True
+                   (first 6 = [x, y, z, vx, vy, vz] mean in km, km/s; last 6 = log_var)
         """
         # Normalize orbital elements
         orbital_elems = orbital_elems * self.elem_scale + self.elem_bias
@@ -142,9 +179,17 @@ class TrajectoryPINN(nn.Module):
         # SIREN forward
         for layer in self.siren_layers:
             x = layer(x)
-        state = self.final_layer(x)
 
-        return state
+        if self.output_uncertainty:
+            mean = self.mean_layer(x)
+            log_var = self.log_var_layer(x)
+            # Clamp log_var to a safe range: exp(log_var) in ~[2.1e-9, 148] km
+            # (log_var in [-20, 5] maps to sigma in ~[4.5e-5, 12.2] normalized units)
+            log_var = torch.clamp(log_var, min=-20.0, max=5.0)
+            return torch.cat([mean, log_var], dim=-1)
+        else:
+            state = self.final_layer(x)
+            return state
 
 
 class MultiScaleTrajectoryPINN(nn.Module):

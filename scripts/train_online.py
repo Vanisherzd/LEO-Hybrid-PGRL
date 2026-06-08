@@ -18,7 +18,7 @@ import torch
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from models.pinn_core import TrajectoryPINN
+from physics_ml.pinn_core import TrajectoryPINN
 from models.grpo_agent import create_grpo_agent, GRPOConfig
 from models.orbital_physics import generate_synthetic_tle, SGP4Propagator
 from protocols.mac_tdma import MACTDMAProtocol, TDMAConfig, CommEvent

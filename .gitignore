@@ -51,6 +51,14 @@ payload_results_realizations/live_usrp/
 *.out
 paper/*.pdf
 
+# Packet-validation run outputs (regenerable; do not commit)
+validation_runs/
+
+# Raw IQ captures (large; keep local)
+*.fc32
+*.cfile
+*.sigmf-data
+
 # Hardware local artifacts (raw IQ + compiled tools never committed)
 hardware/usrp_scripts/rx_capture_to_file_cpp
 hardware/captures/*.fc32
