@@ -37,7 +37,9 @@ def main(argv=None):
     try:
         import serial  # type: ignore
     except ImportError:
-        print("pyserial is required: python -m pip install pyserial", file=sys.stderr)
+        print("pyserial is required. Use: uv add pyserial", file=sys.stderr)
+        print("Temporary one-off: uv run --with pyserial python "
+              "hardware/packet_validation/capture_uart_log.py ...", file=sys.stderr)
         return 2
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)) or ".", exist_ok=True)

@@ -26,14 +26,14 @@ reports "PER unavailable: no receiver-side packet decoding."
 
 ### Dry-run (no hardware)
 ```
-python hardware/packet_validation/run_hardware_experiment.py \
+uv run python hardware/packet_validation/run_hardware_experiment.py \
   --config hardware/packet_validation/templates/dryrun_experiment.yaml \
   --out validation_runs/hw_dryrun_001
 ```
 
 ### IQ-only conducted (requires --armed)
 ```
-python hardware/packet_validation/run_hardware_experiment.py \
+uv run python hardware/packet_validation/run_hardware_experiment.py \
   --config hardware/packet_validation/templates/iq_only_conducted_experiment.yaml \
   --out validation_runs/hw_iq_only_001 --armed
 ```
@@ -41,14 +41,14 @@ python hardware/packet_validation/run_hardware_experiment.py \
 ### Decoded-RX conducted (requires --armed + real decoded RX log)
 ```
 # edit templates/decoded_rx_conducted_experiment.yaml: set rx.rx_log_path
-python hardware/packet_validation/run_hardware_experiment.py \
+uv run python hardware/packet_validation/run_hardware_experiment.py \
   --config hardware/packet_validation/templates/decoded_rx_conducted_experiment.yaml \
   --out validation_runs/hw_decoded_rx_001 --armed
 ```
 
 ### Finalize (classify artifacts)
 ```
-python hardware/packet_validation/finalize_hardware_manifest.py \
+uv run python hardware/packet_validation/finalize_hardware_manifest.py \
   --run-dir validation_runs/hw_decoded_rx_001
 ```
 

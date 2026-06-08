@@ -42,7 +42,7 @@ def main(argv=None):
                   f"product={info.product} serial={info.serial_number}")
     except Exception:  # noqa: BLE001
         print("\n(pyserial not installed; showing globbed paths only. "
-              "Install with: python -m pip install pyserial)")
+              "Install with: uv add pyserial)")
 
     print("\nTip: plug TX board only -> note port; then RX board only -> note "
           "port; then both -> confirm two distinct /dev/cu.* ports.")

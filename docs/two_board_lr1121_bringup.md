@@ -1,5 +1,12 @@
 # Two-Board LR1121/Nucleo Decoded-RX Bring-Up
 
+## Python environment
+This repo uses **uv**. Run project scripts via uv; do not install packages into
+the global system Python.
+- Run a script: `uv run python hardware/packet_validation/<script>.py ...`
+- Persistent dependency: `uv add pyserial`
+- One-off serial capture (no persistent install): `uv run --with pyserial python hardware/packet_validation/capture_uart_log.py ...`
+
 ## 1. Goal
 Move from IQ-level signal detection to **decoded-RX packet-delivery evidence**:
 obtain a receiver-side log with `seq` / `payload` / `crc`, enabling PDR/PER.
@@ -19,7 +26,7 @@ TX RF  ->  coax + attenuator / shielded path  ->  RX RF
 
 ## 4. Serial port discovery
 ```
-python hardware/packet_validation/list_serial_ports.py
+uv run python hardware/packet_validation/list_serial_ports.py
 ls /dev/cu.usbmodem*
 ```
 
@@ -44,21 +51,21 @@ seq + payload + crc are required; RSSI/SNR/CFO/timestamp optional.
 
 ## 8. Capture RX UART
 ```
-python hardware/packet_validation/capture_uart_log.py \
+uv run python hardware/packet_validation/capture_uart_log.py \
   --port /dev/cu.usbmodem<RX> --baud 115200 \
   --out hardware/rx_logs/real_runA_alpha0_decoded_rx.log --duration 60
 ```
 
 ## 9. Check RX log
 ```
-python hardware/packet_validation/check_rx_log_format.py \
+uv run python hardware/packet_validation/check_rx_log_format.py \
   --rx-log hardware/rx_logs/real_runA_alpha0_decoded_rx.log
 ```
 Proceed only if `usable_for_decoded_rx: True`.
 
 ## 10. Prepare local config (do not edit templates)
 ```
-python hardware/packet_validation/prepare_real_run_config.py \
+uv run python hardware/packet_validation/prepare_real_run_config.py \
   --template hardware/packet_validation/real_configs/real_runA_alpha0_decoded_rx.yaml \
   --out validation_runs/real_runA_alpha0_config.yaml \
   --rx-log hardware/rx_logs/real_runA_alpha0_decoded_rx.log \
@@ -67,7 +74,7 @@ python hardware/packet_validation/prepare_real_run_config.py \
 
 ## 11. Run real_runA / real_runB / real_runC (conducted, --armed)
 ```
-python hardware/packet_validation/run_hardware_experiment.py \
+uv run python hardware/packet_validation/run_hardware_experiment.py \
   --config validation_runs/real_runA_alpha0_config.yaml \
   --out validation_runs/real_runA_alpha0 --armed
 # repeat for run B (alpha=0.25) and run C (stress: prepare with --attenuator-db)
@@ -75,7 +82,7 @@ python hardware/packet_validation/run_hardware_experiment.py \
 
 ## 12. Finalize
 ```
-python hardware/packet_validation/finalize_hardware_manifest.py \
+uv run python hardware/packet_validation/finalize_hardware_manifest.py \
   --run-dir validation_runs/real_runA_alpha0
 ```
 
