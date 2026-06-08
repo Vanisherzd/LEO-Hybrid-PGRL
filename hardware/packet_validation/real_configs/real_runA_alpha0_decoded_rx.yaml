@@ -1,0 +1,30 @@
+# Real conducted decoded-RX run A: baseline deterministic guard (alpha=0.00).
+# Conducted/shielded ONLY. No OTA. TX power not raised by tooling.
+# Fails preflight until rx_log_path points at a real decoded RX log (expected).
+# Top-level fields are run metadata; tx/rx/safety blocks drive the runner.
+run_id: real_runA_alpha0
+mode: decoded_rx
+alpha: 0.00
+n_packets: 200
+seed: 42
+center_frequency_hz: 868000000
+tx_power_dbm: 10
+sample_rate_sps: 1000000
+gain_db: 45
+attenuator_db: 30
+duration_s: 10
+operator: REPLACE_WITH_OPERATOR_NAME
+output_dir: validation_runs/real_runA_alpha0
+require_conducted_setup_ack: true
+require_no_ota_ack: true
+safety:
+  conducted_or_shielded: true
+  acknowledged_by: REPLACE_WITH_OPERATOR_NAME
+tx:
+  backend: lr1121_uart
+  freq_hz: 868000000
+  power_dbm: 10
+rx:
+  backend: log_parser
+  rx_log_path: REPLACE_WITH_REAL_RX_LOG_PATH_FOR_RUN_A
+notes: "Baseline deterministic-guard conducted/shielded decoded-RX run. Do not claim PER until decoded RX log is present."

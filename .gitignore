@@ -88,3 +88,7 @@ hardware/captures/**/*.log
 hardware/local_raw_archive/
 
 semtech_validation/lr1121_tx_config_example.json
+
+# Decoded-RX example fixtures are committed (not build logs)
+!hardware/packet_validation/examples/
+!hardware/packet_validation/examples/**

@@ -1,0 +1,5 @@
+RX seq=0 payload=0000a1b2c3d4e5f6 crc=ok rssi=-91.5 snr=7.2 cfo=123.4 timestamp=2026-06-08T12:00:01.234Z
+RX seq=1 payload=000112233445566f crc=fail rssi=-99.1 snr=2.1 cfo=480.0 timestamp=2026-06-08T12:00:01.284Z
+RX seq=2 payload=0002aabbccddeeff crc=ok rssi=-88.0 snr=9.4 cfo=-65.2 timestamp=2026-06-08T12:00:01.334Z
+RX seq=2 payload=0002aabbccddeeff crc=ok rssi=-88.3 snr=9.1 cfo=-60.0 timestamp=2026-06-08T12:00:01.336Z
+RX seq=90001 payload=deadbeefdeadbeef crc=ok rssi=-97.7 snr=1.8 cfo=12.0 timestamp=2026-06-08T12:00:01.400Z
