@@ -36,8 +36,6 @@ packages = [
     "semtech_validation",
     "sdr_hwil",
     "scripts",
-    "models",
-    "protocols",
 ]
 
 [dependency-groups]
