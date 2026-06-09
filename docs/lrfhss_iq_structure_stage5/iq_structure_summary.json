@@ -1,0 +1,80 @@
+{
+  "label": "IQ-structure analysis only; no payload decode; no CRC; no PER.",
+  "n_samples": 3000000,
+  "duration_s": 3.0,
+  "noise_floor_db": -95.793,
+  "threshold_db": 8.0,
+  "peak_maxhold_db": -76.786,
+  "dc_guard_hz": 5000.0,
+  "n_occupied_freq_bins": 19,
+  "total_freq_bins": 1024,
+  "time_occupancy_fraction": 0.1203,
+  "n_candidate_bursts": 101,
+  "burst_duration_s": {
+    "min": 0.000512,
+    "median": 0.001024,
+    "max": 0.022528
+  },
+  "dominant_freq_offsets_hz": [
+    {
+      "freq_offset_hz": 139648.4375,
+      "maxhold_db": -76.7855453491211
+    },
+    {
+      "freq_offset_hz": 215820.3125,
+      "maxhold_db": -76.91346740722656
+    },
+    {
+      "freq_offset_hz": -139648.4375,
+      "maxhold_db": -77.26919555664062
+    },
+    {
+      "freq_offset_hz": -317382.8125,
+      "maxhold_db": -77.3312759399414
+    },
+    {
+      "freq_offset_hz": -140625.0,
+      "maxhold_db": -77.95492553710938
+    },
+    {
+      "freq_offset_hz": 138671.875,
+      "maxhold_db": -78.17117309570312
+    },
+    {
+      "freq_offset_hz": -318359.375,
+      "maxhold_db": -79.31747436523438
+    },
+    {
+      "freq_offset_hz": 214843.75,
+      "maxhold_db": -79.39264678955078
+    }
+  ],
+  "structure_score": 0.845,
+  "interpretation": "higher structure_score = more LR-FHSS-like hopping structure (candidate evidence only, not decode)",
+  "run_id": "stage5_structure",
+  "center_frequency_hz": 868000000.0,
+  "sample_rate_hz": 1000000.0,
+  "source_metadata": {
+    "tx_on": {
+      "maxhold_excess_db": 12.64,
+      "hot_bin_count": 810,
+      "occupied_frequency_bins": 74,
+      "occupied_time_bins": 260,
+      "lr_fhss_candidate_score": 0.7566
+    },
+    "tx_off": {
+      "maxhold_excess_db": 2.82,
+      "hot_bin_count": 2,
+      "occupied_frequency_bins": 2,
+      "occupied_time_bins": 2,
+      "lr_fhss_candidate_score": 0.109
+    },
+    "on_off_delta_db": 9.82,
+    "hot_bin_delta": 808,
+    "freq_occupancy_delta": 72,
+    "tx_on_stronger_than_off": true,
+    "sample_rate_hz": 1000000.0,
+    "threshold_db": 8.0,
+    "note": "ON vs OFF A/B comparison. tx_on_stronger_than_off requires freq_occupancy_delta >= 3 AND on_off_delta_db >= 3.0 dB. Metrics computed via analyze_capture.detect_signal (shared math). DC/LO guard band excluded from all counts."
+  }
+}

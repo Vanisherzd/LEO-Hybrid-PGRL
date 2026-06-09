@@ -44,12 +44,19 @@ def _floats(rows, key):
 
 def main(argv=None):
     ap = argparse.ArgumentParser()
-    ap.add_argument("run_dirs", nargs="+")
+    ap.add_argument("run_dirs", nargs="*", help="run directories")
+    ap.add_argument("--summaries", nargs="+", default=[],
+                    help="packet_validation_summary.json paths (dir is derived)")
     ap.add_argument("--out", default="paper/figures/fig6_packet_delivery.pdf")
     args = ap.parse_args(argv)
 
+    dirs = list(args.run_dirs) + [os.path.dirname(os.path.abspath(p))
+                                  for p in args.summaries]
+    if not dirs:
+        ap.error("provide run_dirs and/or --summaries")
+
     runs = []
-    for d in args.run_dirs:
+    for d in dirs:
         s = _load_json(os.path.join(d, "packet_validation_summary.json"))
         if not s or not s.get("decoding_available") or s.get("packet_error_rate") is None:
             print(f"[skip] {d}: PER unavailable")
