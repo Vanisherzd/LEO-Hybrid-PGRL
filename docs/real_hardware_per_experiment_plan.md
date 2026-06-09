@@ -16,7 +16,7 @@ exists.
 ## Paper build note
 This repo is not a Tectonic "project", so use a direct input file:
 ```
-tectonic paper/globecom_main.tex      # or: cd paper && tectonic globecom_main.tex
+tectonic paper/icc_main.tex      # or: cd paper && tectonic icc_main.tex
 ```
 (`tectonic -X compile` requires a `Tectonic.toml` project, which this repo lacks.)
 

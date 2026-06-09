@@ -61,16 +61,13 @@ def main():
     fig, ax = plt.subplots(figsize=(3.4, 2.5))
     ax.plot(f_off, p_off, color="#7f7f7f", lw=0.8, label="TX off")
     ax.plot(f_on, p_on, color="#1f77b4", lw=0.8, label="TX on")
-    ax.axvspan(-5, 5, color="orange", alpha=0.15)
-    ax.text(0, ax.get_ylim()[1], "DC/LO\nguard", fontsize=6, ha="center", va="top",
-            color="darkorange")
+    ax.axvspan(-5, 5, color="orange", alpha=0.15, label="DC/LO guard")
     ax.set_xlabel("Frequency offset (kHz)")
     ax.set_ylabel("Max-hold power (dB)")
-    lbl = "ON/OFF max-hold"
-    if delta is not None:
-        lbl += f"  ($\\Delta={delta:.2f}$ dB)"
-    ax.set_title(lbl, fontsize=8)
-    ax.legend(fontsize=7, loc="upper right")
+    # legend above the axes so it never covers the max-hold traces;
+    # the ON/OFF delta is stated in the caption, not on the plot.
+    ax.legend(fontsize=6.5, loc="lower center", bbox_to_anchor=(0.5, 1.02),
+              ncol=3, frameon=False, columnspacing=1.0, handletextpad=0.4)
     fig.tight_layout()
     fig.savefig(OUT, bbox_inches="tight")
     print("wrote", os.path.normpath(OUT))

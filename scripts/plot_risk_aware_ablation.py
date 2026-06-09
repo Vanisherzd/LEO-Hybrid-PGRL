@@ -27,9 +27,10 @@ OUT = os.path.join(os.path.dirname(__file__), "..", "paper", "figures",
 
 def main():
     fig, ax1 = plt.subplots(figsize=(3.4, 2.5))
+    # success proxy is reported exactly in the alpha-sweep table; omitted here
+    # to keep the figure uncluttered.
     ax1.plot(ALPHA, OUTAGE, "o-", color="#d62728", label="Outage proxy")
     ax1.plot(ALPHA, REWARD, "s-", color="#1f77b4", label="Risk-adj. reward")
-    ax1.plot(ALPHA, SUCCESS, "^-", color="#2ca02c", label="Success proxy")
     ax1.set_xlabel(r"$\alpha$ (uncertainty guard scale)")
     ax1.set_ylabel("Proxy value")
     ax1.set_ylim(0, 1.05)
@@ -39,12 +40,12 @@ def main():
     ax2.set_ylabel("Normalized guard", color="#7f7f7f")
     ax2.tick_params(axis="y", labelcolor="#7f7f7f")
 
-    ax1.axvline(BEST_ALPHA, color="gray", lw=1.0)
-    ax1.annotate(r"best reward $\alpha=0.25$" + "\noutage 5.0%$\\to$1.7%",
-                 xy=(BEST_ALPHA, 0.45), xytext=(0.30, 0.45), fontsize=7, color="gray")
+    ax1.axvline(BEST_ALPHA, color="gray", lw=1.0, ls=":")
 
-    lines = ax1.get_lines()[:3] + ax2.get_lines()[:1]
-    ax1.legend(lines, [l.get_label() for l in lines], fontsize=6.5, loc="center right")
+    lines = ax1.get_lines()[:2] + ax2.get_lines()[:1]
+    ax1.legend(lines, [l.get_label() for l in lines], fontsize=6.5,
+               loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=3,
+               frameon=False, columnspacing=1.0, handletextpad=0.4)
     fig.tight_layout()
     fig.savefig(OUT, bbox_inches="tight")
     print("wrote", os.path.normpath(OUT))

@@ -213,7 +213,7 @@ rung.
 | `signal_detected` | The analyzer reports `validation_status == "signal_detected"` (DC spike excluded) **and** a waveform figure (waterfall / max-hold) shows the energy. Proves RF energy was received above noise. |
 | `hardware_validated` | `signal_detected` plus the measured RF-quality metrics (CFO, EVM proxy, SNR) are consistent with an LR-FHSS transmission and documented with figures. Highest, most defensible claim. |
 
-For the GLOBECOM workshop paper, keep claims conservative: report only the
+For the ICC paper, keep claims conservative: report only the
 highest rung whose evidence is actually in hand.
 
 ## 9. Artifact organization

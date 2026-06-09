@@ -56,12 +56,12 @@ LEO-Hybrid-PGRL/              # Project root
 │   ├── exp3_lrfhss_grid_proxy/   # LR-FHSS grid proxy evaluation
 │   ├── exp4_semtech_lrfhss_tx/   # Semtech hardware bring-up
 │   └── exp5_sdr_doppler_precomp/ # SDR HWIL Doppler pre-comp
-├── paper/                    # GLOBECOM submission
-│   ├── globecom_main.tex         # IEEEtran skeleton
+├── paper/                    # ICC submission
+│   ├── icc_main.tex         # IEEEtran skeleton
 │   ├── tables/main_results.tex   # Auto-generated tables
 │   └── refs.bib
 ├── docs/
-│   ├── globecom_scope.md         # GLOBECOM paper scope
+│   ├── globecom_scope.md         # ICC paper scope
 │   ├── hardware_claim_checklist.md
 │   ├── thesis_extension.md       # Deferred modules roadmap
 │   └── MAC_DEPLOYMENT_GUIDE.md   # MacBook + USRP B210 setup
@@ -84,7 +84,7 @@ LEO-Hybrid-PGRL/              # Project root
 | Semtech LR1121 TX bring-up | ✅ Complete | hardware-bringup |
 | USRP B210 IQ capture | ✅ Complete | hardware-signal-detected |
 | LR-FHSS decoding / PER | ⛔ Not claimed | Out of scope |
-| GLOBECOM paper skeleton | ✅ Complete | Write-up |
+| ICC paper skeleton | ✅ Complete | Write-up |
 
 ---
 
@@ -141,7 +141,7 @@ This project does **not** claim:
 
 The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-driven evaluation of physical-layer signal quality. Hardware results are **IQ-level signal detection only**; real-world PER requires a standards-compliant LR-FHSS decoder on the satellite side.
 
-> **Scope note:** GRPO/PPO online refinement and ISAC / self-healing directions are **thesis extensions**, not part of the GLOBECOM paper scope. The GLOBECOM submission covers PGRL prediction, uncertainty-aware uplink control, and preliminary IQ-level hardware signal detection.
+> **Scope note:** GRPO/PPO online refinement and ISAC / self-healing directions are **thesis extensions**, not part of the ICC paper scope. The ICC submission covers PGRL prediction, uncertainty-aware uplink control, and preliminary IQ-level hardware signal detection.
 
 ---
 

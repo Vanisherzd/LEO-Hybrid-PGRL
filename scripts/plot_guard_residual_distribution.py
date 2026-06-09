@@ -33,12 +33,12 @@ def main():
     ax.set_ylabel("Outage proxy (%)")
     ax.set_ylim(-0.3, 6)
 
-    ax.axvline(DET_GUARD, color="#7f7f7f", ls="--", lw=1.0)
-    ax.annotate("deterministic\nguard 9.56 m\n(outage 5.0%)",
-                xy=(DET_GUARD, 5.0), xytext=(9.7, 4.0), fontsize=6.5, color="#7f7f7f")
-    ax.axvline(UNC_GUARD, color="#1f77b4", ls="-", lw=1.0)
-    ax.annotate(r"uncertainty-aware ($\alpha=0.25$)" + "\nguard 10.88 m\n(outage 1.7%)",
-                xy=(UNC_GUARD, 1.7), xytext=(11.2, 2.4), fontsize=6.5, color="#1f77b4")
+    # compact markers at the two operating points; details in caption
+    ax.axvline(DET_GUARD, color="#7f7f7f", ls="--", lw=1.0,
+               label=r"$\alpha{=}0$ (9.56 m)")
+    ax.axvline(UNC_GUARD, color="#1f77b4", ls="-", lw=1.0,
+               label=r"$\alpha{=}0.25$ (10.88 m)")
+    ax.legend(fontsize=6.5, loc="upper right", frameon=False)
 
     fig.tight_layout()
     fig.savefig(OUT, bbox_inches="tight")

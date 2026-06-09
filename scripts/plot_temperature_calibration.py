@@ -38,11 +38,11 @@ def main():
     ax2.tick_params(axis="y", labelcolor="#d62728")
 
     ax1.axvline(BEST_T, color="gray", lw=1.0, ls="-")
-    ax1.annotate("best $T=1.0$", xy=(BEST_T, 0.10), xytext=(1.02, 0.18),
-                 fontsize=7, color="gray")
 
     lines = ax1.get_lines()[:2] + ax2.get_lines()[:1]
-    ax1.legend(lines, [l.get_label() for l in lines], fontsize=7, loc="center right")
+    ax1.legend(lines, [l.get_label() for l in lines], fontsize=7,
+               loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=3,
+               frameon=False, columnspacing=1.2, handletextpad=0.4)
     fig.tight_layout()
     fig.savefig(OUT, bbox_inches="tight")
     print("wrote", os.path.normpath(OUT))
