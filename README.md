@@ -1,158 +1,154 @@
-# LEO-PGRL-LRFHSS: PGRL-Assisted LR-FHSS Uplink Control for Direct-to-Satellite IoT
+# PGRL-LRFHSS-D2S: Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT
+
+This repository contains a research prototype for **PGRL-assisted, uncertainty-aware LR-FHSS uplink control** in direct-to-satellite (D2S) IoT. The submission-scope contribution is narrow: convert SGP4-anchored prediction uncertainty into terminal-side LR-FHSS guard, timing, and Doppler pre-compensation decisions.
+
+> Recommended GitHub repository name: `PGRL-LRFHSS-D2S` or `PGRL-LRFHSS-Uplink-Control`.
+>
+> Current GitHub repository settings still show the old repository name until renamed manually in GitHub Settings. The code/package metadata has been retargeted to `pgrl-lrfhss-d2s`.
 
 ---
 
-## Project Overview
+## Submission Scope
 
-This repository implements a **prediction-driven uplink-control framework** for Direct-to-Satellite (D2S) IoT terminals using LR-FHSS modulation. The core is a Physics-Guided Residual Learning (PGRL) predictor that uses SGP4/SDP4 as a physical anchor and learns residual timing and Doppler corrections with **calibrated uncertainty estimates**.
+**Included in the workshop paper:**
 
-PGRL predictions drive three uplink-control decisions:
-1. **Adaptive guard-band scheduling** — k-sigma timing uncertainty widens or tightens guard intervals dynamically
-2. **TX timing selection** — link score, Doppler rate, and idle energy costs balanced via utility maximization
-3. **Doppler pre-compensation** — carrier frequency adjusted before TX using PGRL-predicted mean Doppler
+- SGP4/SDP4-anchored PGRL residual prediction
+- Calibrated heteroscedastic uncertainty head trained with Gaussian NLL
+- Risk-aware LR-FHSS guard adaptation
+- TX timing and Doppler pre-compensation control logic
+- LR-FHSS-inspired frequency-grid and RF-quality proxy evaluation
+- Conducted LR1121 to USRP B210 IQ-level signal detection
+- Offline IQ-structure analysis of sparse-hop-like RF energy
 
-The current release includes:
-- PGRL prediction core (SGP4 anchor + Bayesian residual corrector)
-- Uncertainty-aware guard-band policy
-- Doppler pre-compensation controller
-- LR-FHSS-inspired frequency-grid proxy evaluation
-- Semtech LR1121 / LR11xx LR-FHSS TX validation path (hardware-in-the-loop)
-- SDR-based IQ-level D2S-like testbed (CFO, EVM proxy, waterfall)
+**Not claimed:**
 
-> This is a **research prototype** for trace-driven evaluation and RF-quality validation. The SDR components serve as an IQ-level measurement platform, not a full standard-compliant LR-FHSS gateway.
+- No LR-FHSS packet decoding
+- No packet-error-rate (PER) result
+- No standards-compliant LR-FHSS gateway
+- No full MAC / TDMA protocol contribution
+- No online GRPO/PPO learning claim
+- No ISAC/self-healing claim
+- No semantic-communication claim
+- No production-ready satellite modem
+
+The hardware evidence is **IQ-level RF signal detection only**. It supports the existence of conducted sparse-hop RF energy under the lab setup; it does not prove decoded packet delivery.
 
 ---
 
 ## Repository Structure
 
-```
-LEO-Hybrid-PGRL/              # Project root
-├── controller/               # PGRL → uplink-control interface
-│   ├── pgrl_output_schema.py    # PGRLOutput dataclass
-│   ├── guard_band_policy.py     # adaptive_guard_time()
-│   ├── doppler_precomp.py       # compensated_tx_frequency()
-│   ├── tx_timing_policy.py      # select_tx_time()
-│   └── energy_model.py          # receiver / TX energy accounting
-├── physics_ml/              # PGRL core
-│   ├── pinn_core.py              # Siren/PINN architecture
-│   ├── orbital_physics.py        # SGP4 anchor, Keplerian propagation
-│   ├── losses.py                 # Gaussian NLL, physics residuals
-│   └── grpo_agent.py             # GRPO online training (extension)
-├── semtech_validation/       # LR1121/LR11xx hardware validation
-│   ├── README_bringup.md        # Bring-up guide
-│   ├── tx_config_from_pgrl.py   # PGRL → TX config JSON
-│   ├── lr1121_tx_config_template.json
-│   └── run_lrfhss_tx.sh
-├── sdr_hwil/                # SDR / HWIL IQ-level validation
-│   ├── README.md
-│   ├── estimate_cfo.py           # Phase-derivative CFO estimation
-│   ├── evm_proxy.py              # QPSK EVM as RF-quality proxy
-│   ├── packet_detection_proxy.py # Energy-based detection
-│   ├── capture_iq.py             # IQ capture script
-│   └── plot_waterfall.py         # Waterfall visualization
-├── experiments/             # Reproducible experiment folders
-│   ├── exp1_pgrl_prediction/     # Prediction accuracy + ablation
-│   ├── exp2_guard_band_energy/   # Guard overhead / energy tradeoff
-│   ├── exp3_lrfhss_grid_proxy/   # LR-FHSS grid proxy evaluation
-│   ├── exp4_semtech_lrfhss_tx/   # Semtech hardware bring-up
-│   └── exp5_sdr_doppler_precomp/ # SDR HWIL Doppler pre-comp
-├── paper/                    # ICC submission
-│   ├── icc_main.tex         # IEEEtran skeleton
-│   ├── tables/main_results.tex   # Auto-generated tables
+```text
+PGRL-LRFHSS-D2S/
+├── controller/                 # submission-scope uplink-control logic
+│   ├── pgrl_output_schema.py
+│   ├── guard_band_policy.py
+│   ├── doppler_precomp.py
+│   ├── tx_timing_policy.py
+│   └── energy_model.py
+├── physics_ml/                 # PGRL predictor and uncertainty-related model code
+│   ├── pinn_core.py
+│   ├── orbital_physics.py
+│   ├── losses.py
+│   └── grpo_agent.py           # legacy/thesis extension, not paper scope
+├── semtech_validation/          # LR1121/LR11xx TX configuration and bring-up helpers
+├── sdr_hwil/                    # IQ-level SDR measurement/proxy scripts
+├── experiments/                 # reproducible evaluation folders
+├── hardware/                    # hardware helpers and IQ/packet-validation tooling
+├── paper/                       # IEEE-style manuscript source
+│   ├── icc_main.tex
+│   ├── figures/
+│   ├── tables/
 │   └── refs.bib
-├── docs/
-│   ├── globecom_scope.md         # ICC paper scope
-│   ├── hardware_claim_checklist.md
-│   ├── thesis_extension.md       # Deferred modules roadmap
-│   └── MAC_DEPLOYMENT_GUIDE.md   # MacBook + USRP B210 setup
-├── hardware/usrp_scripts/    # USRP SDR scripts (legacy/HWIL)
-├── data/tle/                 # TLE datasets
-├── plots/paper_final/        # Figure outputs
-└── README.md                 # this file
+├── docs/                        # scope, claim-safety, and hardware notes
+├── scripts/                     # evaluation and plotting utilities
+├── tests/                       # regression tests, including legacy modules
+└── README.md
 ```
 
 ---
 
-## Status Table
+## Submission-Scope Status
 
-| Component | Status | Type |
-|-----------|--------|------|
-| PGRL prediction core | ✅ Complete | Trace-driven |
-| Guard-band policy | ✅ Complete | Simulation |
-| Doppler pre-compensation | ✅ Complete | Simulation |
-| LR-FHSS grid proxy | ✅ Complete | Simulation |
-| Semtech LR1121 TX bring-up | ✅ Complete | hardware-bringup |
-| USRP B210 IQ capture | ✅ Complete | hardware-signal-detected |
-| LR-FHSS decoding / PER | ⛔ Not claimed | Out of scope |
-| ICC paper skeleton | ✅ Complete | Write-up |
+| Component | Status | Validation Type | Submission Claim |
+|---|---:|---|---|
+| PGRL deterministic predictor | Complete | offline / trace-driven | Yes |
+| Uncertainty calibration | Complete | offline evaluation | Yes |
+| Risk-aware guard policy | Complete | control proxy | Yes |
+| Doppler pre-compensation | Complete | simulation / proxy | Yes, as proxy |
+| LR-FHSS grid analysis | Complete | LR-FHSS-inspired proxy | Yes, as proxy |
+| LR1121 + USRP B210 capture | Complete | hardware-signal-detected | Yes, IQ-level only |
+| IQ sparse-hop structure analysis | Complete | offline IQ analysis | Yes, non-decoding only |
+| LR-FHSS decoder / PER | Not available | out of scope | No |
+| TDMA / MAC / GRPO online learning | Legacy extension | simulation only | No |
+| ISAC self-healing | Legacy extension | prototype only | No |
+
+---
+
+## Key Results Used in the Paper
+
+| Result | Reported Meaning | Claim Boundary |
+|---|---|---|
+| Position RMSE remains 5.35 m | Frozen mean head unchanged by uncertainty training | Not a new point-accuracy improvement |
+| Cov68/Cov95 = 0.713 / 0.947 at T = 1.0 | Learned uncertainty is near-calibrated | Position-domain uncertainty only |
+| Outage proxy 5.0% → 1.7% | Risk-aware guard reduces a control proxy | Not measured PER |
+| Guard overhead +13.8% | Energy/control tradeoff at best reward point | Proxy metric |
+| TX-ON/OFF margin 9.82 dB | Conducted IQ signal detection | Not decoding / not PER |
+| 101 candidate bursts / 19 occupied bins / score ≈ 0.845 | Offline sparse-hop-like IQ structure | Not packet validation |
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install dependencies
 uv sync
 
-# Run PGRL prediction evaluation (trace-driven)
+# PGRL prediction evaluation
 uv run python physics_ml/evaluate_prediction.py
 
-# Run guard-band energy experiment (simulation)
+# Guard-band energy/control experiment
 uv run bash experiments/exp2_guard_band_energy/run.sh
 
-# Run LR-FHSS grid proxy (proxy simulation)
+# LR-FHSS grid proxy
 uv run bash experiments/exp3_lrfhss_grid_proxy/run.sh
 
-# Generate Semtech LR-FHSS TX config from PGRL output (dry-run, no hardware required)
-python semtech_validation/tx_config_from_pgrl.py --output-json /tmp/pgrl_tx_config.json
+# Generate Semtech LR-FHSS TX config from PGRL output
+uv run python semtech_validation/tx_config_from_pgrl.py --output-json /tmp/pgrl_tx_config.json
 
-# SDR HWIL synthetic IQ pipeline (dry-run, no hardware required)
+# SDR HWIL synthetic IQ pipeline
 uv run bash experiments/exp5_sdr_doppler_precomp/run.sh dry-run
 ```
 
 ---
 
-## Key Results
+## Legacy / Thesis-Extension Modules
 
-Trace-driven and simulation results, plus preliminary IQ-level hardware signal detection.
+The following code is useful for thesis or journal extension, but should not be presented as part of the workshop paper contribution:
 
-| Component           | Metric                    | SGP4-only  | PGRL (this work) | Validation Type      |
-|---------------------|--------------------------:|----------:|----------------:|----------------------|
-| PGRL predictor      | Pass timing RMSE          |    4.2 s  |     **16 ms**   | Trace-driven         |
-| PGRL predictor      | Residual Doppler          |  > 5 kHz  |    **< 300 Hz** | Trace-driven         |
-| Guard-band policy   | Guard overhead            |      64 % |        **< 5 %** | Simulation           |
-| RF quality proxy    | QPSK EVM proxy (40 dB SNR) |   208 %  |      **0.95 %** | Proxy simulation     |
-| LR-FHSS grid proxy  | Grid orthogonality        |    0.587  |      **0.979**  | LR-FHSS-inspired proxy |
-| LR1121 + USRP B210  | TX ON/OFF sparse-hop occupancy delta | — | **8.88 / 11.87 / 9.82 dB** | hardware-signal-detected |
+- `protocols/mac_tdma.py`
+- `scripts/train_online.py`
+- `scripts/benchmark_tdma.py`
+- `models/grpo_agent.py`
+- `physics_ml/grpo_agent.py`
+- `configs/online_grpo.yaml`
+- `src/sdr/isac_rf_orbit_healing.py`
+- `hardware/packet_validation/`
+- `docs/run_real_hardware_per_experiment.md`
+- `docs/real_hardware_per_experiment_plan.md`
+- `docs/packet_delivery_validation_plan.md`
+- `docs/THE_D2S_REVOLUTION.md`
 
-> Simulation/proxy values are from trace-driven evaluation. The hardware row reports three repeated TX ON/OFF trials (868 MHz, TX/RX, 1 Msps, gain 45 dB), all `signal_detected=true` and `tx_on_stronger_than_off=true`; curated artifacts live in `hardware/artifacts/lr1121_signal_detected_repeatability_20260604/`.
->
-> **Hardware-signal-detected denotes IQ-level RF evidence only and does not imply LR-FHSS packet decoding or PER.**
-
----
-
-## What This Is Not
-
-This project does **not** claim:
-- Commercial-ready autonomous operation
-- Perfect LEO tracking with infinite blind-flight horizon
-- Full standard-compliant LR-FHSS gateway implementation
-- Catastrophic link recovery or world-first autonomy
-
-The SDR and LR-FHSS grid components are **RF-quality proxies** for a trace-driven evaluation of physical-layer signal quality. Hardware results are **IQ-level signal detection only**; real-world PER requires a standards-compliant LR-FHSS decoder on the satellite side.
-
-> **Scope note:** GRPO/PPO online refinement and ISAC / self-healing directions are **thesis extensions**, not part of the ICC paper scope. The ICC submission covers PGRL prediction, uncertainty-aware uplink control, and preliminary IQ-level hardware signal detection.
+These files may remain in the repository for reproducibility, but the clean submission branch should treat them as **non-paper artifacts** unless a later journal version adds the missing receiver/PER or online-learning evidence.
 
 ---
 
 ## Citation
 
 ```bibtex
-@misc{lai2026leopgrllrfhss,
+@misc{lai2026pgrllrfhssd2s,
   title   = {{PGRL-Assisted Uncertainty-Aware LR-FHSS Uplink Control for Direct-to-Satellite IoT}},
   author  = {Lai, Zhen-Dong},
   year    = {2026},
-  howpublished = {\url{https://github.com/Vanisherzd/LEO-Hybrid-PGRL}},
-  note    = {Research prototype; trace-driven results with preliminary IQ-level hardware signal detection}
+  howpublished = {GitHub repository},
+  note    = {Research prototype; trace-driven/proxy evaluation with IQ-level hardware signal detection only}
 }
 ```
