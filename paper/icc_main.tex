@@ -10,7 +10,7 @@
 \usepackage{algpseudocode}
 \usepackage{etoolbox}
 \usepackage{tikz}
-\usetikzlibrary{positioning,arrows.meta,fit,backgrounds}
+\usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc}
 
 % Horizontal justification for table notes
 \patchcmd{\table}{\refstepcounter{table}}{\refstepcounter{table}}{}{}
@@ -71,52 +71,80 @@ This paper's primary contributions are:
 
 \begin{figure}[t]
     \centering
-    \resizebox{0.95\columnwidth}{!}{%
+    \resizebox{0.97\columnwidth}{!}{%
     \begin{tikzpicture}[
-      font=\footnotesize, >=Latex,
-      band/.style={draw, rounded corners, inner sep=0pt},
-      blk/.style={draw, rounded corners, align=center, font=\scriptsize, inner sep=2.5pt, minimum height=5.5mm, fill=white},
-      ttl/.style={font=\scriptsize\bfseries, anchor=north west},
-      ar/.style={->, thick},
-      note/.style={font=\scriptsize\itshape, gray}
+        font=\footnotesize,
+        >=Latex,
+        block/.style={
+            draw,
+            rounded corners=3pt,
+            align=center,
+            minimum height=7.5mm,
+            inner sep=3pt,
+            fill=white
+        },
+        group/.style={
+            draw,
+            rounded corners=5pt,
+            inner sep=4.5pt,
+            fill=#1
+        },
+        arrow/.style={->, thick},
+        keyarrow/.style={->, line width=2.2pt, green!45!black}
     ]
-    % ===== Prediction Layer (top) =====
-    \node[band, fill=blue!4, minimum width=66mm, minimum height=14mm] (P) at (3.3,5.0) {};
-    \node[ttl] at ([xshift=1.5mm,yshift=-1mm]P.north west) {Prediction Layer};
-    \node[blk, fill=blue!10] (tle)  at (0.85,4.6) {TLE /\\SGP4};
-    \node[blk] (pred) at (2.25,4.6) {PGRL\\predictor};
-    \node[blk, fill=blue!8,  minimum width=13mm] (mu) at (3.7,4.6) {$\mu$ frozen};
-    \node[blk, fill=green!10,minimum width=13mm] (sg) at (5.25,4.6) {$\sigma$ calib.};
-    \draw[ar] (tle) -- (pred);
-    \draw[ar] (pred) -- (mu);
-    \draw[ar] (mu) -- (sg);
 
-    % ===== Risk-Aware Control Layer (middle) =====
-    \node[band, fill=orange!5, minimum width=66mm, minimum height=15mm] (C) at (3.3,2.9) {};
-    \node[ttl] at ([xshift=1.5mm,yshift=-1mm]C.north west) {Risk-Aware Control Layer};
-    \node[blk, fill=orange!12] (uw)  at (1.5,2.55) {$U(t)\to$\\TX window};
-    \node[blk, fill=orange!12] (cfo) at (3.3,2.55) {Doppler $\to$\\CFO pre-comp};
-    \node[blk, fill=green!15, very thick, draw=green!40!black] (g) at (5.3,2.55) {$g{=}g_{\text{base}}{+}\alpha\sigma_r$};
+    % ===== Row 1: Prediction & Risk Signal =====
+    \node[block, fill=blue!10, minimum width=14mm] (tle)  at (0.4,0)     {TLE /\\SGP4};
+    \node[block, minimum width=17mm]               (pgrl) at (2.9,0)     {PGRL\\predictor};
+    \node[block, fill=blue!8, minimum width=19mm]  (mu)   at (6.2,0.55)  {$\mu$ state};
+    \node[block, fill=green!14, thick, draw=green!45!black, minimum width=19mm]
+                                                   (sigma) at (6.2,-0.65) {$\sigma_r$ calibrated\\uncertainty};
 
-    % ===== RF Evidence Layer (bottom) =====
-    \node[band, fill=gray!8, minimum width=66mm, minimum height=15mm] (R) at (3.3,0.8) {};
-    \node[ttl] at ([xshift=1.5mm,yshift=-1mm]R.north west) {RF Evidence Layer};
-    \node[blk, fill=gray!12] (cfg)  at (1.3,0.45) {LR1121\\TX config};
-    \node[blk, fill=gray!12] (usrp) at (3.3,0.45) {USRP B210\\IQ capture};
-    \node[blk, fill=gray!12] (evd)  at (5.4,0.45) {ON/OFF margin\\+ hop score};
-    \draw[ar] (cfg) -- (usrp);
-    \draw[ar] (usrp) -- (evd);
+    % ===== Row 2: Terminal-side LR-FHSS Control =====
+    \node[block, fill=orange!12, minimum width=20mm] (txwin) at (1.2,-3.0) {TX window\\$U(t)$};
+    \node[block, fill=green!14, very thick, draw=green!45!black, minimum width=26mm]
+                                                     (guard) at (4.4,-3.0) {$g = g_{\mathrm{base}} + \alpha\,\sigma_r$};
+    \node[block, fill=orange!12, minimum width=20mm] (cfo)   at (7.4,-3.0) {Doppler / CFO\\pre-comp};
 
-    % ===== inter-layer flow =====
-    \draw[->, line width=1.4pt, green!40!black] (sg.south) -- (g.north)
-      node[midway, right, font=\scriptsize\bfseries, green!40!black] {$\sigma_r$};  % uncertainty -> guard (key path)
-    \draw[ar] (mu.south) -- (cfo.north);          % mean -> Doppler/CFO + timing
-    \draw[ar] (C.south) -- (R.north);
+    % ===== Row 3: Conducted IQ Evidence =====
+    \node[block, fill=gray!12, minimum width=20mm] (lr)   at (1.2,-5.5) {LR1121\\TX config};
+    \node[block, fill=gray!12, minimum width=20mm] (usrp) at (4.4,-5.5) {USRP B210\\IQ capture};
+    \node[block, fill=gray!12, minimum width=22mm] (evd)  at (7.4,-5.5) {9.82 dB margin\\hop-like structure};
 
-    % note
-    \node[note, anchor=north] at (3.3,-0.15) {Conducted IQ-level scope; receiver decoding is future work.};
+    % ===== Background group boxes =====
+    \begin{scope}[on background layer]
+        \node[group=blue!5,   fit=(tle)(pgrl)(mu)(sigma),
+              label={[font=\footnotesize\bfseries, anchor=south west]north west:Prediction \& Risk Signal}] (G1) {};
+        \node[group=orange!6, fit=(txwin)(guard)(cfo),
+              label={[font=\footnotesize\bfseries, anchor=south west]north west:Terminal-side LR-FHSS Control}] (G2) {};
+        \node[group=gray!8,   fit=(lr)(usrp)(evd),
+              label={[font=\footnotesize\bfseries, anchor=south west]north west:Conducted IQ Evidence}] (G3) {};
+    \end{scope}
+
+    % ===== Row-1 internal arrows =====
+    \draw[arrow] (tle) -- (pgrl);
+    \draw[arrow] (pgrl.east) -- (mu.west);
+    \draw[arrow] (pgrl.east) -- (sigma.west);
+
+    % ===== Key contribution path =====
+    \draw[keyarrow] (sigma.south) -- node[right, font=\footnotesize\bfseries, green!45!black, xshift=1mm]
+        {$\sigma_r$ risk signal} (guard.north);
+
+    % ===== Secondary control path =====
+    \draw[arrow] (mu.east) .. controls +(11mm,0mm) and +(0mm,13mm) .. (cfo.north);
+
+    % ===== Control to conducted evidence =====
+    \draw[arrow] (G2.south) -- node[right, font=\scriptsize] {LR-FHSS TX configuration} (G3.north);
+    \draw[arrow] (lr) -- (usrp);
+    \draw[arrow] (usrp) -- (evd);
+
+    % ===== Scope note =====
+    \node[font=\scriptsize\itshape, text=gray!70]
+        at ($(G3.south)+(0,-4mm)$)
+        {Conducted IQ-level scope; receiver decoding is future work.};
+
     \end{tikzpicture}}
-    \caption{Three-block cross-layer architecture. The \emph{Prediction Layer} maps TLE/SGP4 through a PGRL residual predictor to a frozen mean $\mu$ and a calibrated uncertainty $\sigma$. The \emph{Risk-Aware Control Layer} converts the radial uncertainty $\sigma_r$ into a guard $g=g_{\text{base}}+\alpha\sigma_r$ (highlighted path), Doppler/CFO pre-compensation, and a transmit window via a utility $U(t)$, producing the LR1121 TX configuration. The \emph{RF Evidence Layer} captures the conducted LR1121-to-USRP B210 signal, reporting the TX-ON/OFF margin and hop-structure score (Fig.~\ref{fig:sdr}).}
+    \caption{Cross-layer terminal-control architecture. The highlighted path maps calibrated position-domain uncertainty $\sigma_r$ into the LR-FHSS guard budget $g=g_{\mathrm{base}}+\alpha\sigma_r$, which is the main control interface studied in this paper. The conducted LR1121/USRP path provides IQ-level transmit-path evidence.}
     \label{fig:architecture}
 \end{figure}
 
@@ -230,7 +258,7 @@ U(t) = w_q\, q(t) - w_f\, |\dot f_D(t)| - w_e\, E_{\mathrm{idle}}(t)
 \end{equation}
 where $q(t)$ is the link-score term and $w_q, w_f, w_e$ are tunable utility weights. The optimizer selects the window with maximum $U(t)$ within a 6-hour planning horizon, balancing link quality, Doppler rate, and energy expenditure. Algorithm~\ref{alg:control} summarizes the end-to-end terminal-side procedure; it is intentionally lightweight so that the terminal-side decision can be implemented without receiver feedback.
 
-\begin{algorithm}[t]
+\begin{algorithm}[H]
 \caption{Uncertainty-Aware LR-FHSS Uplink Control}
 \label{alg:control}
 \begin{algorithmic}[1]
