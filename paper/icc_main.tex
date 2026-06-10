@@ -180,7 +180,7 @@ PGRL augments SGP4 with a SIREN (sinusoidal representation network) residual pre
 \right],
 \label{eq:nll}
 \end{equation}
-where $\mu_{n,i},\sigma_{n,i}$ are the (frozen) mean and learned per-axis standard deviation. The log-variance layer is initialized to $\log((10/\mathrm{DU})^2)$ (an initial per-axis $\sigma\approx 10$~m in reported metres, $\mathrm{DU}$ the distance unit) and converges to a mean axis $\sigma\approx 3.01$~m. Because the mean head is frozen, the point prediction---and therefore the deterministic accuracy---is unchanged by this stage. The learned uncertainty is thus a calibrated \emph{position-domain} ($\sigma$ in metres) estimate, not a directly trained timing (ms) or Doppler (Hz) uncertainty.
+where $\mu_{n,i},\sigma_{n,i}$ are the (frozen) mean and learned per-axis standard deviation. The log-variance layer is initialized to $\log((10/\mathrm{DU})^2)$ (an initial per-axis $\sigma\approx 10$~m in reported metres, $\mathrm{DU}$ the distance unit) and converges to a mean axis $\sigma\approx 3.01$~m. Uncertainty fine-tuning therefore preserves the deterministic predictor: the learned uncertainty is a calibrated \emph{position-domain} ($\sigma$ in metres) estimate, while timing (ms) and Doppler (Hz) uncertainties are derived through the proxy mapping of Sec.~\ref{sec:uplink}.
 
 \emph{Coverage metric.} Calibration is assessed by Mahalanobis chi-square coverage: for each sample $z^2=\sum_i (e_i/\sigma_i)^2$ with per-axis error $e_i$. Under a calibrated $3$-DoF Gaussian, the 68\% and 95\% credible regions correspond to thresholds $z^2\le 3.506$ and $z^2\le 7.815$; the empirical coverage is the fraction of samples below each threshold (Sec.~\ref{sec:eval}).
 
@@ -265,14 +265,14 @@ The Stage~3E/3F/4 results are produced by the offline evaluation scripts under \
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/fig2_temperature_calibration.pdf}
-    \caption{Stage~3F post-hoc temperature calibration. Empirical Cov68/Cov95 and calibration error vs.\ scalar temperature $T$; RMSE is invariant at 5.35~m (frozen mean). Best calibration at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), i.e.\ no post-hoc rescaling needed.}
+    \caption{Stage~3F post-hoc temperature calibration. Empirical Cov68/Cov95 and calibration error vs.\ scalar temperature $T$; RMSE is invariant at 5.35~m. Best calibration at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), i.e.\ no post-hoc rescaling needed.}
     \label{fig:tempcal}
 \end{figure}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/fig3_risk_aware_ablation.pdf}
-    \caption{Stage~4 risk-aware guard ablation over $\alpha$ (Eq.~\ref{eq:riskguard}). Outage/success/reward are control proxies (not PER); RMSE is fixed at 5.35~m and collision proxy is $0.000$ for all $\alpha$. Risk-adjusted reward peaks at $\alpha=0.25$.}
+    \caption{Stage~4 risk-aware guard ablation over $\alpha$ (Eq.~\ref{eq:riskguard}). Outage/success/reward are control proxies; RMSE is fixed at 5.35~m and collision proxy is $0.000$ for all $\alpha$. Risk-adjusted reward peaks at $\alpha=0.25$.}
     \label{fig:risk}
 \end{figure}
 
@@ -283,16 +283,16 @@ The Stage~3E/3F/4 results are produced by the offline evaluation scripts under \
     \label{fig:guardres}
 \end{figure}
 
-\emph{Stage 3E (uncertainty-head fine-tuning).} With the mean head frozen, deterministic accuracy is unchanged: position RMSE remains 5.35~m and the fraction of predictions within 5~m remains 61.3\%. The log-variance head learns a metre-scale uncertainty, with the mean per-axis $\sigma$ moving from an initialized $\approx 10$~m to $\approx 3.01$~m, yielding non-trivial Mahalanobis coverage.
+\emph{Stage 3E (uncertainty-head fine-tuning).} Uncertainty fine-tuning preserves the deterministic predictor (position RMSE 5.35~m, 61.3\% of predictions within 5~m). The log-variance head learns a metre-scale uncertainty, with the mean per-axis $\sigma$ moving from an initialized $\approx 10$~m to $\approx 3.01$~m, yielding non-trivial Mahalanobis coverage.
 
-\emph{Stage 3F (temperature calibration).} Fig.~\ref{fig:tempcal} sweeps a scalar temperature $T$ applied as $\log\sigma^2_T=\log\sigma^2+2\log T$, which is equivalent to scaling the predicted standard deviation by $T$ ($\sigma_T=T\sigma$). RMSE is invariant to $T$ (the mean is frozen). The best calibration error occurs at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), confirming that the learned uncertainty scale is already near-optimal \emph{without} post-hoc rescaling.
+\emph{Stage 3F (temperature calibration).} Fig.~\ref{fig:tempcal} sweeps a scalar temperature $T$ applied as $\log\sigma^2_T=\log\sigma^2+2\log T$, which is equivalent to scaling the predicted standard deviation by $T$ ($\sigma_T=T\sigma$). RMSE is invariant to $T$. The best calibration error occurs at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), confirming that the learned uncertainty scale is already near-optimal \emph{without} post-hoc rescaling.
 
 \emph{Sensitivity to the uncertainty scale.} Table~\ref{tab:sens} reports the coverage and calibration error as the uncertainty scale $T$ (equivalently the $\sigma$ multiplier) is varied around the operating point. Under-scaling ($T<1$) sharply under-covers (e.g.\ $T=0.6$ gives Cov68 $=0.275$), while over-scaling ($T>1$) over-covers; both raise the calibration error monotonically away from $T=1.0$. The control behavior follows directly through Eq.~\ref{eq:riskguard}, since $\sigma_r$ scales with $T$: too small a scale under-sizes the guard (higher outage), too large a scale inflates the guard overhead. The near-unity optimum indicates the learned head needs no manual scale tuning.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Sensitivity to the uncertainty scale $T$ ($\sigma_T=T\sigma$); RMSE $=5.35$~m for all $T$ (frozen mean). Values from the Stage~3F sweep.}
+\caption{Sensitivity to the uncertainty scale $T$ ($\sigma_T=T\sigma$); RMSE $=5.35$~m for all $T$. Values from the Stage~3F sweep.}
 \label{tab:sens}
 \begin{tabular}{cccc}
 \toprule
@@ -312,7 +312,7 @@ scale $T$ & Cov68 & Cov95 & CalErr \\
 \begin{table}[t]
 \centering
 \small
-\caption{Stage~4 risk-aware guard ablation (control proxies, not PER). RMSE $=5.35$~m and collision proxy $=0.000$ for all $\alpha$.}
+\caption{Stage~4 risk-aware guard ablation (control proxies). RMSE $=5.35$~m and collision proxy $=0.000$ for all $\alpha$.}
 \label{tab:alpha}
 \begin{tabular}{cccccc}
 \toprule
@@ -334,7 +334,7 @@ This work evaluates terminal-side prediction and control. The outage, success, r
 \section{Conducted IQ-Level RF Evidence}
 \label{sec:hardware}
 
-This section supports the transmitter-configuration and signal-observability path of Fig.~\ref{fig:architecture}; it characterizes RF signal presence, not receiver performance.
+This section supports the transmitter-configuration and signal-observability path of Fig.~\ref{fig:architecture}; receiver-in-the-loop validation is future work.
 
 \subsection{Semtech LR1121 TX Path}
 A Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} transmits LR-FHSS bursts at 868~MHz, 10~dBm. A configuration script converts the PGRL-driven control output into the TX configuration (center frequency, TX power, hopping-grid parameters, guard time, Doppler pre-compensation flags), and the device UART log confirms bursts were emitted.
@@ -345,7 +345,7 @@ A USRP B210 (1~MHz sample rate, 45~dB gain, $\sim$10~s) connected by coax to the
 \begin{figure}[t]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/fig5_sdr_capture_validation.pdf}
-    \caption{Conducted LR1121$\rightarrow$USRP B210 IQ capture at 868~MHz: TX-ON vs TX-OFF max-hold spectrum from the raw IQ ($\Delta=9.82$~dB; DC/LO guard shaded). IQ-level RF signal detection only --- not decoding, packet delivery, or PER.}
+    \caption{Conducted LR1121$\rightarrow$USRP B210 IQ capture at 868~MHz: TX-ON vs TX-OFF max-hold spectrum from the raw IQ ($\Delta=9.82$~dB; DC/LO guard shaded). Reported at the conducted IQ-signal layer; receiver-in-the-loop validation is future work.}
     \label{fig:sdr}
 \end{figure}
 
