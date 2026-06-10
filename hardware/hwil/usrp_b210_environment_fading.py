@@ -56,8 +56,8 @@ SGP4_DAY3_SKEW_MS = 12000.0   # SGP4 runaway
 K_FACTOR_DB = 10.0             # Ricean K-factor in dB (LoS dominant)
 DOPPLER_SPREAD_HZ = 200.0      # Hz — multipath spread
 
-# Fading sample rate (per TDMA frame)
-FRAME_DURATION_S = 1.0         # 1 second per TDMA frame
+# Fading sample rate (per control frame)
+FRAME_DURATION_S = 1.0         # 1 second per control frame
 NUM_SAMPLES = int(TOTAL_SECONDS / FRAME_DURATION_S)  # 259200 frames
 
 
@@ -66,7 +66,7 @@ NUM_SAMPLES = int(TOTAL_SECONDS / FRAME_DURATION_S)  # 259200 frames
 # ─────────────────────────────────────────────────────────────────────────────
 @dataclass
 class FadingSample:
-    """Single baseband impairment sample for one TDMA frame."""
+    """Single baseband impairment sample for one control frame."""
     frame_index: int
     timestamp_s: float
     timing_skew_ms: float

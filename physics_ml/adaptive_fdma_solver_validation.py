@@ -52,7 +52,7 @@ os.makedirs(os.path.dirname(PLOT_OUT), exist_ok=True)
 N_SUBCARRIERS = 64          # frequency bins (same as LR-FHSS grid)
 N_TIMESLOTS   = 48          # observation window
 N_ENDPOINTS   = 100         # simultaneous IoT endpoints
-T_SYM         = 10e-3       # symbol duration 10 ms (matches TDMA slot)
+T_SYM         = 10e-3       # symbol duration 10 ms (matches control slot)
 F_STEP        = 3.125e3    # bin spacing Hz (200 kHz / 64 bins)
 F_CENTRE      = 436.5e6    # Hz  S-band centre
 

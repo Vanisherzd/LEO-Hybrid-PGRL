@@ -7,7 +7,7 @@ Uses orbital physics-informed architecture with Fourier feature embeddings.
 Key design:
 - Input: (t, orbital_elements) -> Output: (x, y, z, vx, vy, vz)
 - Physics residual: orbital equations of motion as soft constraint
-- GRPO gradient regulation for online RL corrections
+- policy gradient regulation for online RL corrections
 """
 
 from __future__ import annotations

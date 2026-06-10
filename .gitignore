@@ -90,8 +90,6 @@ hardware/local_raw_archive/
 semtech_validation/lr1121_tx_config_example.json
 
 # Decoded-RX example fixtures are committed (not build logs)
-!hardware/packet_validation/examples/
-!hardware/packet_validation/examples/**
 
 # Local-only archive of raw evidence / generated runs / build artifacts
 local_archive/
@@ -100,3 +98,6 @@ local_archive/
 # manifests, and tiny examples under data/ are committed).
 data_raw/
 data_processed/
+
+# Local advisor review package
+advisor_package/

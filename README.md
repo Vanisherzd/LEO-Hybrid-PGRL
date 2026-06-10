@@ -37,7 +37,6 @@ LEO-Hybrid-PGRL/              # Project root
 │   ├── pinn_core.py              # Siren/PINN architecture
 │   ├── orbital_physics.py        # SGP4 anchor, Keplerian propagation
 │   ├── losses.py                 # Gaussian NLL, physics residuals
-│   └── grpo_agent.py             # GRPO online training (extension)
 ├── semtech_validation/       # LR1121/LR11xx hardware validation
 │   ├── README_bringup.md        # Bring-up guide
 │   ├── tx_config_from_pgrl.py   # PGRL → TX config JSON
@@ -158,7 +157,7 @@ This project does **not** claim:
 
 The SDR and LR-FHSS grid components are **RF-quality proxies** for a simulation/proxy evaluation of physical-layer signal quality. Hardware results are **IQ-level signal detection only**; real-world PER requires a standards-compliant LR-FHSS decoder on the satellite side.
 
-> **Scope note:** GRPO/PPO online refinement and ISAC / self-healing directions are **thesis extensions**, not part of the ICC paper scope. The ICC submission covers PGRL prediction, uncertainty-aware uplink control, and preliminary IQ-level hardware signal detection.
+> **Scope note:** This clean submission branch excludes legacy online-refinement, frame-scheduling, self-healing, and decoded-link validation extensions. The repository focuses on PGRL prediction, uncertainty-aware LR-FHSS uplink control, and IQ-level hardware signal detection.
 
 ---
 

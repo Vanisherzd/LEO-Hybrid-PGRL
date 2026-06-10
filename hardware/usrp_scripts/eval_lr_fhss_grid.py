@@ -37,7 +37,7 @@ os.makedirs(OUT_DIR, exist_ok=True)
 # ── LR-FHSS grid parameters ───────────────────────────────────────────────────
 N_FREQS   = 64          # number of frequency bins in hop grid
 N_FRAMES  = 32          # time slots (hop events)
-T_FRAME   = 10e-3      # 10 ms per time slot (matches MAC TDMA slot)
+T_FRAME   = 10e-3      # 10 ms per time slot (matches MAC control slot)
 BW_TOTAL  = 200e3       # total bandwidth 200 kHz
 F_STEP    = BW_TOTAL / N_FREQS   # bin spacing = 3.125 kHz
 F_HOP     = 1 / T_FRAME           # hop rate = 100 hop/s
