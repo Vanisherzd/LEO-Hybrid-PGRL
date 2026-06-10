@@ -56,7 +56,7 @@ LEO-Hybrid-PGRL/              # Project root
 │   ├── exp3_lrfhss_grid_proxy/   # LR-FHSS grid proxy evaluation
 │   ├── exp4_semtech_lrfhss_tx/   # Semtech hardware bring-up
 │   └── exp5_sdr_doppler_precomp/ # SDR HWIL Doppler pre-comp
-├── paper/                    # ICC submission
+├── paper/                    # active conference paper
 │   ├── icc_main.tex         # IEEEtran skeleton
 │   ├── tables/main_results.tex   # Auto-generated tables
 │   └── refs.bib
