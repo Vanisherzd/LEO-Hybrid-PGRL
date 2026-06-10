@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 """
+OBSOLETE legacy benchmark — archived; not current claims. Threshold/target
+numbers here (e.g. timing-lock budgets) are historical and do NOT match the
+current conservative scope. See paper/icc_main.tex and README.md.
+
 WORLD_SCIENCE_VS_US__benchmark.py
 ==================================
 Compares our SGP4+PINN residual Doppler pre-compensation architecture

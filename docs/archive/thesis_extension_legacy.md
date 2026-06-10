@@ -1,6 +1,9 @@
-# Thesis Extension Roadmap
+> **OBSOLETE legacy note — archived; not current claims.**
+> For the current scope and claims see `paper/icc_main.tex` and `README.md`.
 
-This document lists modules developed in the broader LEO-PINN project that are **outside the GLOBECOM submission scope** but intended for thesis or journal extension.
+# Thesis Extension Roadmap (legacy)
+
+This document lists modules developed in the broader LEO-PINN project that are **outside the conference submission scope** but intended for thesis or journal extension.
 
 ## Reserved for Thesis / Journal
 | Module | Status | Notes |
@@ -12,10 +15,10 @@ This document lists modules developed in the broader LEO-PINN project that are *
 | Full LR-FHSS gateway | Planned | Standards-compliant decoder from Semtech; separate project |
 | Long-term autonomous operation (>7 days) | Concept | Requires hardware + field deployment |
 
-## Relationship to GLOBECOM Paper
-The GLOBECOM paper establishes the **PGRL prediction core** and the **LR-FHSS uplink-control** framework. The thesis extends this to:
+## Relationship to the conference paper
+The conference paper establishes the **PGRL prediction core** and the **LR-FHSS uplink-control** framework. The thesis extends this to:
 1. MAC-layer scheduling optimization (PPO/GRPO)
 2. Cyber-physical closed-loop ISAC (residual CFO → model update)
 3. Network-level multi-terminal access
 
-These are **forward references** in the GLOBECOM paper's Conclusion / Future Work section.
+These are **forward references** in the conference paper's Conclusion / Future Work section.

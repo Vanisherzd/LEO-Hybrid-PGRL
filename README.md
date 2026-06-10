@@ -61,10 +61,9 @@ LEO-Hybrid-PGRL/              # Project root
 │   ├── tables/main_results.tex   # Auto-generated tables
 │   └── refs.bib
 ├── docs/
-│   ├── globecom_scope.md         # ICC paper scope
 │   ├── hardware_claim_checklist.md
-│   ├── thesis_extension.md       # Deferred modules roadmap
-│   └── MAC_DEPLOYMENT_GUIDE.md   # MacBook + USRP B210 setup
+│   ├── MAC_DEPLOYMENT_GUIDE.md   # MacBook + USRP B210 setup
+│   └── archive/                  # legacy review notes & deferred roadmap (obsolete)
 ├── hardware/usrp_scripts/    # USRP SDR scripts (legacy/HWIL)
 ├── data/tle/                 # TLE datasets
 ├── plots/paper_final/        # Figure outputs
