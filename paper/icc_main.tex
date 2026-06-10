@@ -83,10 +83,15 @@ This paper's primary contributions are:
     % ---- top band: learning / control ----
     \node[lbl, anchor=west, fill=blue!8, rounded corners, inner xsep=3pt, inner ysep=1.5pt] at (-0.3,3.05) {learning/control};
 
-    % (1) TLE/SGP4
-    \draw[gray,thick] (0.0,2.2) arc (205:335:0.55 and 0.3);
-    \fill[orange] (0.55,2.4) circle (1.6pt);
-    \node[lbl,anchor=north] at (0.3,1.95) {TLE/SGP4};
+    % (1) TLE/SGP4 data registry (database cylinder)
+    \begin{scope}[shift={(0.35,2.25)}]
+      \fill[blue!12] (-0.3,0.3) -- (-0.3,-0.3) arc (180:360:0.3 and 0.09) -- (0.3,0.3) arc (0:180:0.3 and 0.09);
+      \draw[gray] (-0.3,0.3) -- (-0.3,-0.3) arc (180:360:0.3 and 0.09) -- (0.3,0.3);
+      \draw[gray!60,line width=0.3pt] (-0.3,0.1)  arc (180:360:0.3 and 0.09);
+      \draw[gray!60,line width=0.3pt] (-0.3,-0.1) arc (180:360:0.3 and 0.09);
+      \draw[gray,fill=blue!18] (0,0.3) ellipse (0.3 and 0.09);
+    \end{scope}
+    \node[lbl,anchor=north,align=center] at (0.35,1.82) {TLE / SGP4\\states};
 
     % (2) PGRL net
     \begin{scope}[shift={(1.35,1.9)}]
@@ -110,13 +115,13 @@ This paper's primary contributions are:
     \node[pill] (tt) at (5.45,1.95) {timing};
     \node[pill] (dp) at (5.45,1.62) {Doppler/CFO};
 
-    \draw[ar] (0.78,2.1) -- (1.22,2.05);        % TLE -> NN
+    \draw[ar] (0.72,2.2) -- (1.22,2.18);        % TLE -> NN
     \draw[ar] (1.95,2.05) -- (2.45,2.15);        % NN -> heads
     \draw[ar] (mu.east) -- (ctrl.west|-mu);
     \draw[ar] (lv.east) -- (ctrl.west|-lv);
 
     % ---- bottom band: RF / hardware evidence ----
-    \node[lbl, anchor=west, fill=gray!12, rounded corners, inner xsep=3pt, inner ysep=1.5pt] at (-0.3,1.42) {RF/hardware};
+    \node[lbl, anchor=west, fill=gray!12, rounded corners, inner xsep=3pt, inner ysep=1.5pt] at (-0.3,1.25) {RF/hardware};
 
     % (5) LR-FHSS hop grid (time-frequency)
     \begin{scope}[shift={(0.9,0.35)}]
