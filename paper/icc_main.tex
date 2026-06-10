@@ -108,7 +108,7 @@ This paper's primary contributions are:
     % ===== inter-layer flow =====
     \draw[ar] (sg.south) -- (g.north);            % uncertainty -> guard
     \draw[ar] (mu.south) -- (cfo.north);          % mean -> Doppler/CFO + timing
-    \draw[ar] (C.south) -- node[note,right=1pt]{TX config} (R.north);
+    \draw[ar] (C.south) -- (R.north);
 
     % note
     \node[note, anchor=north] at (3.3,-0.15) {IQ-level only; no decoding / no PER.};
@@ -227,16 +227,15 @@ with $T_{\text{burst}}$ the burst duration. Under the simulation assumptions of 
 \subsection{TX Timing Selection}
 The \texttt{select\_tx\_time} function scores candidate transmission windows using a weighted utility:
 \begin{equation}
-U(t) = \alpha \cdot \text{link\_score}(t) - \beta \cdot |f_d'(t)| - \gamma \cdot E_{\text{idle}}(t)
+U(t) = w_q\, q(t) - w_f\, |\dot f_D(t)| - w_e\, E_{\mathrm{idle}}(t)
 \end{equation}
-where the utility weights are tunable (the guard scale $\alpha$ of Eq.~\ref{eq:riskguard} is distinct from these weights). The optimizer selects the window with maximum $U(t)$ within a 6-hour planning horizon, balancing link quality, Doppler rate, and energy expenditure. Algorithm~\ref{alg:control} summarizes the end-to-end terminal-side procedure.
+where $q(t)$ is the link-score term and $w_q, w_f, w_e$ are tunable utility weights. The optimizer selects the window with maximum $U(t)$ within a 6-hour planning horizon, balancing link quality, Doppler rate, and energy expenditure. Algorithm~1 summarizes the end-to-end terminal-side procedure.
 
-\begin{figure}[t]
-\centering
+\begin{center}
 \setlength{\fboxsep}{5pt}
 \fbox{\begin{minipage}{0.92\columnwidth}
 \footnotesize
-\textbf{Algorithm 1:} Uncertainty-Aware LR-FHSS Uplink Control\\[2pt]
+\textbf{Algorithm 1: Uncertainty-Aware LR-FHSS Uplink Control}\\[2pt]
 \textbf{Input:} TLE, query window $\mathcal{T}$, trained PGRL, base guard $g_{\text{base}}$, scale $\alpha$\\
 \textbf{Output:} LR-FHSS TX configuration
 \begin{enumerate}\setlength\itemsep{1pt}\setlength\parskip{0pt}
@@ -249,9 +248,7 @@ where the utility weights are tunable (the guard scale $\alpha$ of Eq.~\ref{eq:r
   \item Select $t^\star=\arg\max_t U(t)$ and configure the LR1121 (center frequency, hop grid, guard $g$, CFO pre-compensation).
 \end{enumerate}
 \end{minipage}}
-\caption{Terminal-side uncertainty-aware uplink control procedure.}
-\label{alg:control}
-\end{figure}
+\end{center}
 
 % ── Evaluation ────────────────────────────────────────────────────────────────
 \section{Evaluation}
