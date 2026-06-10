@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://leo-hybrid-pgrl/schemas/pass_window.schema.json",
+  "title": "Pass Window",
+  "description": "A predicted LEO pass window with Doppler span and recommended guard. Simulation/offline planning proxy; not measured link results.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pass_id",
+    "norad_id",
+    "aos_utc",
+    "tca_utc",
+    "los_utc",
+    "max_elevation_deg",
+    "center_frequency_hz",
+    "predicted_doppler_min_hz",
+    "predicted_doppler_max_hz",
+    "recommended_guard_s",
+    "source"
+  ],
+  "properties": {
+    "pass_id": { "type": "string", "description": "Unique pass identifier." },
+    "norad_id": { "type": "integer", "minimum": 1, "description": "NORAD catalog number." },
+    "aos_utc": { "type": "string", "format": "date-time", "description": "Acquisition of signal (UTC)." },
+    "tca_utc": { "type": "string", "format": "date-time", "description": "Time of closest approach (UTC)." },
+    "los_utc": { "type": "string", "format": "date-time", "description": "Loss of signal (UTC)." },
+    "max_elevation_deg": { "type": "number", "minimum": 0, "maximum": 90, "description": "Maximum elevation during the pass (deg)." },
+    "center_frequency_hz": { "type": "number", "minimum": 0, "description": "Nominal carrier center frequency (Hz)." },
+    "predicted_doppler_min_hz": { "type": "number", "description": "Minimum predicted Doppler over the pass (Hz)." },
+    "predicted_doppler_max_hz": { "type": "number", "description": "Maximum predicted Doppler over the pass (Hz)." },
+    "recommended_guard_s": { "type": "number", "minimum": 0, "description": "Recommended guard interval (s)." },
+    "source": { "type": "string", "description": "Generator/source of the pass prediction." }
+  }
+}

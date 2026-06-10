@@ -1,3 +1,7 @@
+> **OBSOLETE legacy note — archived; not current claims.** Headline numbers below
+> (e.g. timing-lock budgets, collision rates) are historical and do **not** match
+> the current conservative scope. See `paper/icc_main.tex` and `README.md`.
+
 # (Taiwan Space-Payload Ecosystem Contributions Vs Legacy Systems Methods)
 # Why Ours Represents Absolute Edge Generalisations!
 ## PhD Research Thesis Outline — LEO-PINN / LR-FHSS Pre-Compensation Architecture

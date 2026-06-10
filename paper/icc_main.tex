@@ -70,35 +70,84 @@ This paper's primary contributions are:
 
 \begin{figure}[t]
     \centering
-    \resizebox{\linewidth}{!}{%
+    \resizebox{0.95\columnwidth}{!}{%
     \begin{tikzpicture}[
-      font=\scriptsize, >=Latex, node distance=4mm and 5mm,
-      box/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2.5pt, fill=blue!4},
-      ctrl/.style={draw, rounded corners, align=center, minimum height=7mm, inner sep=2.5pt, fill=orange!8},
-      hw/.style={draw, dashed, rounded corners, align=center, minimum height=7mm, inner sep=2.5pt, fill=gray!8},
-      ar/.style={->, thick}
+      font=\footnotesize, >=Latex,
+      grp/.style={draw, rounded corners, fill=orange!5},
+      blk/.style={draw, rounded corners, align=center, inner sep=2pt, font=\scriptsize, minimum height=5mm},
+      pill/.style={draw, rounded corners=2pt, align=center, inner sep=1.5pt, fill=orange!12, font=\tiny},
+      nn/.style={circle, draw, minimum size=3mm, inner sep=0pt, fill=blue!20},
+      ar/.style={->, thick},
+      lbl/.style={font=\tiny}
     ]
-    % Band 1: orbital prediction
-    \node[box] (tle) {TLE /\\SGP4--SDP4};
-    \node[box, right=of tle, fill=blue!10] (pgrl) {PGRL predictor\\frozen mean +\\calibrated log-var head};
-    \node[box, right=of pgrl] (out) {PGRL output\\mean state + per-axis $\sigma$};
-    \draw[ar] (tle)--(pgrl);
-    \draw[ar] (pgrl)--(out);
-    % Band 2: risk-aware uncertainty-aware control
-    \node[ctrl, below=8mm of pgrl] (guard) {risk-aware guard\\$g_{\text{base}}+\alpha\sigma_r$};
-    \node[ctrl, right=of guard] (txt) {TX timing\\selection};
-    \node[ctrl, right=of txt] (dop) {Doppler\\pre-comp};
-    \draw[ar] (out.south) |- (dop.east);
-    \draw[ar] (dop)--(txt);
-    \draw[ar] (txt)--(guard);
-    % Band 3: conducted IQ evidence (no decode / no PER)
-    \node[hw, below=8mm of guard] (lr) {LR1121 TX};
-    \node[hw, right=of lr] (usrp) {USRP B210\\IQ capture};
-    \node[align=left, right=5mm of usrp, font=\scriptsize\itshape] (plan) {conducted IQ\\capture only;\\no decode / no PER};
-    \draw[ar] (guard.south) -- (lr.north);
-    \draw[ar, dashed] (lr)--(usrp);
+    % ---- top band: learning / control ----
+    \node[lbl, anchor=west, fill=blue!8, rounded corners, inner xsep=3pt, inner ysep=1.5pt] at (-0.3,3.05) {learning/control};
+
+    % (1) TLE/SGP4 data registry (database cylinder)
+    \begin{scope}[shift={(0.35,2.25)}]
+      \fill[blue!12] (-0.3,0.3) -- (-0.3,-0.3) arc (180:360:0.3 and 0.09) -- (0.3,0.3) arc (0:180:0.3 and 0.09);
+      \draw[gray] (-0.3,0.3) -- (-0.3,-0.3) arc (180:360:0.3 and 0.09) -- (0.3,0.3);
+      \draw[gray!60,line width=0.3pt] (-0.3,0.1)  arc (180:360:0.3 and 0.09);
+      \draw[gray!60,line width=0.3pt] (-0.3,-0.1) arc (180:360:0.3 and 0.09);
+      \draw[gray,fill=blue!18] (0,0.3) ellipse (0.3 and 0.09);
+    \end{scope}
+    \node[lbl,anchor=north,align=center] at (0.35,1.82) {TLE / SGP4\\states};
+
+    % (2) PGRL net
+    \begin{scope}[shift={(1.35,1.9)}]
+      \foreach \y [count=\i] in {0,0.35,0.7} \node[nn] (i\i) at (0,\y) {};
+      \foreach \y [count=\j] in {0.1,0.45,0.8} \node[nn] (h\j) at (0.5,\y) {};
+      \foreach \i in {1,2,3}\foreach \j in {1,2,3}
+        \draw[gray!55,line width=0.2pt] (i\i) -- (h\j);
+      \node[lbl,anchor=north] at (0.25,-0.15) {PGRL net};
+    \end{scope}
+
+    % (3) heads
+    \node[blk, fill=blue!8]  (mu) at (3.05,2.45) {$\mu$ frozen};
+    \node[blk, fill=green!10](lv) at (3.05,1.75) {$\log\sigma^2$ calib.};
+    \draw[gray!55,line width=0.2pt] (2.0,2.25) -- (mu.west);
+    \draw[gray!55,line width=0.2pt] (2.0,2.0)  -- (lv.west);
+
+    % (4) controller
+    \node[grp, minimum width=18mm, minimum height=13.5mm] (ctrl) at (5.45,2.1) {};
+    \node[font=\tiny\bfseries,anchor=north] at (ctrl.north) {controller};
+    \node[pill] (g)  at (5.45,2.28) {$g_{\text{base}}{+}\alpha\sigma_r$};
+    \node[pill] (tt) at (5.45,1.95) {timing};
+    \node[pill] (dp) at (5.45,1.62) {Doppler/CFO};
+
+    \draw[ar] (0.72,2.2) -- (1.22,2.18);        % TLE -> NN
+    \draw[ar] (1.95,2.05) -- (2.45,2.15);        % NN -> heads
+    \draw[ar] (mu.east) -- (ctrl.west|-mu);
+    \draw[ar] (lv.east) -- (ctrl.west|-lv);
+
+    % ---- bottom band: RF / hardware evidence ----
+    \node[lbl, anchor=west, fill=gray!12, rounded corners, inner xsep=3pt, inner ysep=1.5pt] at (-0.3,1.25) {RF/hardware};
+
+    % (5) LR-FHSS hop grid (time-frequency)
+    \begin{scope}[shift={(0.9,0.35)}]
+      \foreach \c in {(0,0.6),(0.2,0.2),(0.4,0.7),(0.6,0.4),(0.8,0.1),(0.2,0.5)}
+        \fill[blue!55] \c rectangle ++(0.2,0.2);
+      \draw[gray!70,line width=0.2pt] (0,0) grid[step=0.2] (1.0,0.8);
+      \draw[->,gray!80,line width=0.4pt] (-0.07,0) -- (-0.07,0.92);
+      \draw[->,gray!80,line width=0.4pt] (0,-0.07) -- (1.12,-0.07);
+      \node[lbl,gray,rotate=90,anchor=south] at (-0.22,0.4) {freq};
+      \node[lbl,gray,anchor=north] at (0.5,-0.12) {time};
+      \node[lbl,anchor=north] at (0.5,-0.4) {LR-FHSS hops};
+    \end{scope}
+
+    % (6) LR1121 -> coax -> USRP
+    \node[blk, fill=gray!10] (lr)   at (3.15,0.5) {LR1121 TX};
+    \node[blk, fill=gray!10] (usrp) at (5.1,0.5) {USRP IQ};
+    \draw[ar] (lr.east) -- node[lbl,above]{coax} (usrp.west);
+    \draw[ar] (2.15,0.5) -- (lr.west);           % hops -> LR1121
+
+    % controller -> LR1121 (TX config), downward
+    \draw[ar] (ctrl.south) -- (5.45,1.0) -| (lr.north);
+
+    % footer
+    \node[lbl,anchor=north] at (2.7,-0.6) {IQ only; no decode / CRC / PER.};
     \end{tikzpicture}}
-    \caption{System architecture: TLE source $\rightarrow$ SGP4/SDP4 propagator $\rightarrow$ PGRL uncertainty-aware corrector (frozen mean head + calibrated log-variance head) $\rightarrow$ risk-aware uplink controller (guard-band, TX timing, Doppler pre-comp). The LR1121/USRP path is exercised at the conducted IQ signal-detection layer; packet decoding and PER are not claimed.}
+    \caption{Compact cross-layer architecture. TLE/SGP4 anchors the PGRL residual predictor; a frozen mean head and calibrated log-variance head provide the corrected state and position uncertainty; the controller maps uncertainty into guard, timing, and Doppler pre-compensation. The LR1121/USRP path is evaluated only at the conducted IQ layer (TX-ON/OFF margin reported in Fig.~\ref{fig:sdr}); packet decoding, CRC validation, and PER are not claimed.}
     \label{fig:architecture}
 \end{figure}
 
@@ -170,15 +219,13 @@ where $\mu_{n,i},\sigma_{n,i}$ are the (frozen) mean and learned per-axis standa
 \section{PGRL Orbital Predictor}
 \label{sec:pgrl}
 
-The PGRL predictor receives a TLE epoch and outputs a \texttt{PGRLOutput} dataclass containing:
+The PGRL predictor receives a TLE epoch and exposes a structured output with:
 \begin{itemize}
-  \item \texttt{pass\_start\_error\_s}: predicted timing error relative to SGP4-estimated AOS;
-  \item \texttt{doppler\_error\_Hz}: predicted residual Doppler after SGP4 compensation;
-  \item \texttt{doppler\_rate\_error\_Hz\_per\_s}: predicted residual Doppler rate;
-  \item \texttt{timing\_uncertainty\_sigma\_s}: one-sigma timing uncertainty;
-  \item \texttt{doppler\_uncertainty\_sigma\_Hz}: one-sigma Doppler uncertainty;
-  \item \texttt{link\_opportunity\_score}: composite score balancing Doppler, timing, and energy cost;
-  \item \texttt{recommended\_guard\_time\_s}: minimum guard interval at $3.5\sigma$.
+  \item pass-start timing error (relative to SGP4-estimated AOS);
+  \item residual Doppler and Doppler-rate error (after SGP4 compensation);
+  \item one-sigma timing and Doppler uncertainty;
+  \item a link-opportunity score (Doppler, timing, and energy cost); and
+  \item a recommended guard time (minimum guard interval at $3.5\sigma$).
 \end{itemize}
 
 The trained uncertainty head emits a per-axis \emph{position-domain} standard deviation (in metres); the timing- and Doppler-domain $\sigma$ fields above are schema conveniences derived under the simulation mapping of Sec.~\ref{sec:uplink} and are not directly trained quantities. The uncertainty head maintains a near-calibrated scale without post-hoc rescaling (Sec.~\ref{sec:eval}); online/continual refinement is out of scope for this paper.
@@ -220,7 +267,7 @@ where $\alpha, \beta, \gamma$ are tunable weights. The optimizer selects the win
 \label{sec:eval}
 
 \subsection{Experimental Setup}
-The uncertainty and control results (Stages 3E/3F/4) are produced by the offline evaluation scripts in the repository (\texttt{scripts/train\_uncertainty\_offline.py}, \texttt{calibrate\_uncertainty\_temperature.py}, \texttt{risk\_aware\_control\_ablation.py}) applied to the deterministic checkpoint, with seed~$=42$; trained checkpoints reside on the training machine and are not included in the repository. Reported metres use $e_m = e_{\text{norm}}\cdot\mathrm{DU}$. The risk-aware ablation (Eq.~\ref{eq:riskguard}) defines the outage proxy as the fraction of samples with $e_r>g_{\text{uncertain}}$, the success proxy as its complement, and the reward as $\text{success}-\lambda(\,\overline{g}-1)$ with energy weight $\lambda=0.1$ and $\overline{g}$ the guard normalized to the $\alpha{=}0$ baseline. As \emph{separate control-framework simulation proxies} (Monte Carlo, seed~42; not Stage~3E/3F/4 trained-model evidence) we additionally report an LR-FHSS 64-bin grid-orthogonality proxy and a QPSK EVM proxy at SNR$=40$~dB; these are RF-quality indicators only and are not LR-FHSS PER.
+The Stage~3E/3F/4 results are produced by the offline evaluation scripts under \url{scripts/} (uncertainty-head fine-tuning, temperature calibration, and risk-aware control ablation) applied to the deterministic checkpoint, with seed~$=42$; trained checkpoints reside on the training machine and are not included in the repository. Reported metres use $e_m = e_{\text{norm}}\cdot\mathrm{DU}$. The risk-aware ablation (Eq.~\ref{eq:riskguard}) defines the outage proxy as the fraction of samples with $e_r>g_{\text{uncertain}}$, the success proxy as its complement, and the reward as $\text{success}-\lambda(\,\overline{g}-1)$ with energy weight $\lambda=0.1$ and $\overline{g}$ the guard normalized to the $\alpha{=}0$ baseline. As \emph{separate control-framework simulation proxies} (Monte Carlo, seed~42; not Stage~3E/3F/4 trained-model evidence) we additionally report an LR-FHSS 64-bin grid-orthogonality proxy and a QPSK EVM proxy at SNR$=40$~dB; these are RF-quality indicators only and are not LR-FHSS PER.
 
 \subsection{Calibrated Uncertainty and Risk-Aware Control}
 
@@ -280,7 +327,7 @@ This work does not claim improved deterministic trajectory RMSE from uncertainty
 \label{sec:hardware}
 
 \subsection{Semtech LR1121 TX Path}
-A Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} transmits LR-FHSS bursts at 868~MHz, 10~dBm. The \texttt{semtech\_validation/tx\_config\_from\_pgrl.py} script converts a \texttt{PGRLOutput} into the TX configuration (center frequency, TX power, hopping-grid parameters, guard time, Doppler pre-compensation flags); the device UART log confirms packets were emitted. This is transmitter-side activity only; we do \emph{not} decode at a receiver and report no packet-error rate.
+A Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} transmits LR-FHSS bursts at 868~MHz, 10~dBm. A Semtech-validation configuration script converts the PGRL output into the TX configuration (center frequency, TX power, hopping-grid parameters, guard time, Doppler pre-compensation flags); the device UART log confirms packets were emitted. This is transmitter-side activity only; we do \emph{not} decode at a receiver and report no packet-error rate.
 
 \subsection{Conducted USRP IQ Capture}
 A USRP B210 (1~MHz sample rate, 45~dB gain, $\sim$10~s) connected by coax to the LR1121 captures raw IQ under a TX-ON/TX-OFF differential protocol. Fig.~\ref{fig:sdr} shows the max-hold spectra computed from the raw IQ: the TX-ON capture exceeds the TX-OFF reference by 9.82~dB with discrete hop tones, passing the shared signal-detection test (LR-FHSS-candidate score 0.76, status \emph{signal-detected}; DC/LO guard band excluded). This is \emph{IQ-level RF signal detection only}: it is consistent with an LR-FHSS-configured transmission under conducted capture, and is not symbol decoding, packet delivery, or PER. Per the repository hardware-claim checklist this is a conducted capture (hardware acquired); the raw IQ is held locally and is not committed, so the result is not labeled fully ``hardware-validated.''
@@ -293,7 +340,7 @@ A USRP B210 (1~MHz sample rate, 45~dB gain, $\sim$10~s) connected by coax to the
 \end{figure}
 
 \subsection{Offline IQ-Structure Analysis}
-As additional \emph{structural} evidence (not a decoder), an offline analysis of the same conducted capture (\texttt{scripts/analyze\_lrfhss\_iq\_structure.py}; summary committed under \texttt{docs/lrfhss\_iq\_structure\_stage5/}) detects sparse, multi-frequency candidate bursts: 101 candidate bursts across 19 occupied frequency bins at $\approx$12\% time occupancy, with a bounded heuristic structure score of $\approx$0.845. This pattern is consistent with LR-FHSS-like frequency hopping. The analysis performs \emph{no payload decoding, no CRC validation, and no PER measurement}, and makes \emph{no packet-delivery claim}; it only strengthens the IQ-level signal-detection evidence. Receiver-side decoding---a dedicated gateway-class or software-receiver problem~\cite{bukhari2023lrfhss}---and any PER measurement remain future work.
+As additional \emph{structural} evidence (not a decoder), an offline IQ-structure analysis script (\url{scripts/analyze_lrfhss_iq_structure.py}; summary committed under \url{docs/lrfhss_iq_structure_stage5/}) detects sparse, multi-frequency candidate bursts on the same conducted capture: 101 candidate bursts across 19 occupied frequency bins at $\approx$12\% time occupancy, with a bounded heuristic structure score of $\approx$0.845. This pattern is consistent with LR-FHSS-like frequency hopping. The analysis performs \emph{no payload decoding, no CRC validation, and no PER measurement}, and makes \emph{no packet-delivery claim}; it only strengthens the IQ-level signal-detection evidence. Receiver-side decoding---a dedicated gateway-class or software-receiver problem~\cite{bukhari2023lrfhss}---and any PER measurement remain future work.
 
 % ── Conclusion ────────────────────────────────────────────────────────────────
 \section{Conclusion}

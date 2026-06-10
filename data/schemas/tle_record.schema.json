@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://leo-hybrid-pgrl/schemas/tle_record.schema.json",
+  "title": "TLE Record",
+  "description": "A single Two-Line Element set record used as an orbital propagation input. Source/catalog metadata only; not hardware evidence.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "norad_id",
+    "satellite_name",
+    "epoch_utc",
+    "tle_line1",
+    "tle_line2",
+    "source",
+    "retrieved_at_utc",
+    "checksum_valid"
+  ],
+  "properties": {
+    "norad_id": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "NORAD catalog number."
+    },
+    "satellite_name": {
+      "type": "string",
+      "description": "Human-readable satellite name."
+    },
+    "epoch_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "TLE epoch in UTC (ISO 8601)."
+    },
+    "tle_line1": {
+      "type": "string",
+      "minLength": 69,
+      "maxLength": 69,
+      "description": "TLE line 1 (69 characters)."
+    },
+    "tle_line2": {
+      "type": "string",
+      "minLength": 69,
+      "maxLength": 69,
+      "description": "TLE line 2 (69 characters)."
+    },
+    "source": {
+      "type": "string",
+      "description": "Origin of the TLE (e.g., external catalog name or operator feed)."
+    },
+    "retrieved_at_utc": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this record was retrieved (UTC, ISO 8601)."
+    },
+    "checksum_valid": {
+      "type": "boolean",
+      "description": "Whether both TLE lines pass the modulo-10 checksum."
+    }
+  }
+}

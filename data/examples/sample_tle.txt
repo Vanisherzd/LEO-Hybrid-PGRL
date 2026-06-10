@@ -1,0 +1,7 @@
+# EXAMPLE / PLACEHOLDER TLE -- illustrative only, NOT a real satellite.
+# Do not rely on this for any real propagation or result. NORAD id 99999 is a
+# reserved example. Checksum digits are illustrative and may not validate.
+# Real TLE archives are local-only (data_raw/tle/, git-ignored).
+EXAMPLE-SAT
+1 99999U 24001A   24010.50000000  .00001000  00000-0  10000-3 0  9991
+2 99999  53.0000 100.0000 0001000  90.0000 270.0000 15.50000000 100010

@@ -95,3 +95,8 @@ semtech_validation/lr1121_tx_config_example.json
 
 # Local-only archive of raw evidence / generated runs / build artifacts
 local_archive/
+
+# Data registry: raw + processed datasets are local-only (only schemas,
+# manifests, and tiny examples under data/ are committed).
+data_raw/
+data_processed/
