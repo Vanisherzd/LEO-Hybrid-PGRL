@@ -322,7 +322,7 @@ static inline float compute_tx_time(float t_sgp4_s, uint32_t idx) {{
   // ── Example: Arduino / PlatformIO Lookup ──────────────────
   // Assumes edge_lut[] is in flash memory (PROGMEM / const)
 
-  // ISR called at start of each TDMA frame
+  // ISR called at start of each control frame
   void apply_neural_correction(uint32_t lut_idx, float t_sgp4) {{
       float delta_ms;
       int32_t doppler_hz;

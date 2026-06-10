@@ -33,4 +33,3 @@ Complete EVERY item before an `--armed` decoded-RX run.
 ## Do NOT
 - [ ] Do not modify paper claims based on a single unverified run.
 - [ ] Do not claim measured PER until a decoded RX log with payload/CRC matching
-      exists and `packet_validation_summary.json` reports it.

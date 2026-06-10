@@ -5,7 +5,7 @@ Base Controller — Abstract Interface for PGRL Training
 Defines the contract that all controller implementations must satisfy:
   - reset()          : Initialize/reset environment and agent state
   - step(action)     : Execute action, return (obs, reward, done, info)
-  - update_policy()  : Trigger GRPO/PPO policy gradient update
+  - update_policy()  : Trigger policy policy gradient update
   - get_doppler()    : Return predicted Δf for pre-compensation
   - get_timing()     : Return predicted Δt for slot synchronization
 
@@ -42,7 +42,7 @@ class BaseController(ABC):
     Abstract base class for all PGRL controllers.
 
     Subclasses must implement the core RL loop: reset, step, update_policy.
-    Supports both online GRPO and offline PPO training modes.
+    Supports both online policy and offline policy training modes.
     """
 
     def __init__(
@@ -55,7 +55,7 @@ class BaseController(ABC):
     ) -> None:
         """
         Args:
-            num_slots:       Number of TDMA slots per superframe
+            num_slots:       Number of control slots per superframe
             slot_duration_ms: Duration of each LR-FHSS hop/slot in ms
             carrier_freq_hz:  Carrier frequency in Hz (S-band default)
             device_id:        USRP device identifier for HWIL (None = simulation)
@@ -106,7 +106,7 @@ class BaseController(ABC):
     @abstractmethod
     def update_policy(self, **kwargs) -> Dict[str, float]:
         """
-        Perform one GRPO/PPO policy gradient update.
+        Perform one policy policy gradient update.
 
         Returns:
             metrics: Dict of training metrics (policy_loss, value_loss, entropy, etc.)
