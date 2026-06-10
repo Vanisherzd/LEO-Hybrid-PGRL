@@ -1,0 +1,59 @@
+# Logical data registry for the PGRL / LR-FHSS pipeline.
+# This is a catalog of datasets, NOT the data itself. Raw/processed data is
+# local-only; only schemas, manifests, and tiny examples are committed.
+# `committed: false` means the dataset lives at `storage:` on the local machine
+# and is git-ignored.
+
+version: 1
+
+datasets:
+
+  tle_catalog:
+    description: "TLE source records used as orbital propagation inputs."
+    schema: data/schemas/tle_record.schema.json
+    committed: false
+    storage: data_raw/tle/
+    examples: data/examples/sample_tle.txt
+    generated_by: external TLE source
+    consumed_by: SGP4 feature generation
+    claim_scope: "orbital input only; not hardware evidence"
+
+  sgp4_states:
+    description: "SGP4/SDP4 propagated Cartesian state and derived features."
+    schema: data/schemas/sgp4_state.schema.json
+    committed: false
+    storage: data_processed/sgp4_states/
+    examples: data/examples/sample_sgp4_states.csv
+    generated_by: SGP4 propagation scripts
+    consumed_by: PGRL training/evaluation
+    claim_scope: "simulation/offline feature input"
+
+  pass_windows:
+    description: "Predicted LEO pass windows (AOS/TCA/LOS, elevation, Doppler span, guard)."
+    schema: data/schemas/pass_window.schema.json
+    committed: false
+    storage: data_processed/pass_windows/
+    examples: null
+    generated_by: SGP4 pass-prediction scripts
+    consumed_by: LR-FHSS uplink control (timing / guard selection)
+    claim_scope: "simulation/offline planning proxy; not measured link results"
+
+  pgrl_features:
+    description: "Normalized SGP4-derived state/elements + query time consumed by PGRL."
+    schema: data/schemas/sgp4_state.schema.json
+    committed: false
+    storage: data_processed/pgrl_features/
+    examples: data/examples/sample_sgp4_states.csv
+    generated_by: feature-normalization step (DU/VU scaling) over sgp4_states
+    consumed_by: PGRL residual predictor (mean + log-variance heads)
+    claim_scope: "simulation/offline model input; normalized features only"
+
+  hardware_iq_summaries:
+    description: "Committed summaries of conducted LR1121->USRP IQ captures (no raw IQ)."
+    schema: null
+    committed: true
+    storage: docs/hardware_iq_capture_stage5/, docs/lrfhss_iq_structure_stage5/
+    examples: null
+    generated_by: SDR capture + offline IQ-structure analysis scripts
+    consumed_by: paper hardware section (Fig. reference + tables)
+    claim_scope: "IQ-level signal-detection evidence only; no decode / CRC / PER"

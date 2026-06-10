@@ -1,0 +1,47 @@
+# Manifest of SGP4/SDP4-derived features consumed by the PGRL pipeline.
+# Describes how raw SGP4 states are turned into normalized PGRL features.
+# Processed feature files are git-ignored (data_processed/, git-ignored).
+
+version: 1
+schema: data/schemas/sgp4_state.schema.json
+
+# Local storage roots (git-ignored).
+raw_states_storage: data_processed/sgp4_states/
+pgrl_features_storage: data_processed/pgrl_features/
+
+generator:
+  name: sgp4-feature-generator
+  version: "0.1.0-example"
+  propagator: "SGP4/SDP4"
+  note: "Replace version with the actual generator tag locally."
+
+# Normalization applied before PGRL ingestion (must match the model's units).
+normalization:
+  distance_unit_m: 10000.0      # DU = 1e4 m
+  velocity_unit_mps: 10.0       # VU = 10 m/s
+  position_fields: [x_m, y_m, z_m]
+  velocity_fields: [vx_mps, vy_mps, vz_mps]
+  time_field: dt_since_epoch_s
+
+# Features exposed to PGRL (normalized state/elements + query time).
+pgrl_input_features:
+  - dt_since_epoch_s
+  - x_m
+  - y_m
+  - z_m
+  - vx_mps
+  - vy_mps
+  - vz_mps
+
+# Derived RF/geometry features carried alongside (not direct PGRL training targets).
+derived_features:
+  - radial_velocity_mps
+  - doppler_hz
+  - doppler_rate_hz_per_s
+  - latitude_deg
+  - longitude_deg
+  - altitude_m
+
+committed: false
+example: data/examples/sample_sgp4_states.csv
+claim_scope: "simulation/offline feature input; normalized features only"

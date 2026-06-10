@@ -1,0 +1,24 @@
+# Manifest of TLE sources used as orbital inputs.
+# Catalog metadata only -- no TLE archives are committed. Raw TLE files live
+# local-only under data_raw/tle/ (git-ignored).
+
+version: 1
+schema: data/schemas/tle_record.schema.json
+
+# Local storage root for raw TLE archives (git-ignored).
+local_storage: data_raw/tle/
+
+sources:
+  - name: example_source
+    description: "Placeholder TLE source entry for documentation."
+    provider: "external TLE source (name redacted in committed manifest)"
+    cadence: "daily"
+    format: "3-line (name + TLE line1 + line2)"
+    committed: false
+    local_path: data_raw/tle/example_source/
+    example: data/examples/sample_tle.txt
+    claim_scope: "orbital input only; not hardware evidence"
+    notes: >
+      Real provider details and downloaded archives are kept local-only.
+      Replace this placeholder with the actual source metadata locally; do not
+      commit the downloaded TLE archive.
