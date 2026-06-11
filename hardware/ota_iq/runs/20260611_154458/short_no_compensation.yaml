@@ -1,0 +1,17 @@
+mode: no_compensation
+compensation_mode: none
+nominal_center_freq_hz: 868.0e6
+sample_rate_hz: 1.0e6
+rx_gain_db: 20
+lo_offset_hz: 200.0e3
+replay_window_s: 20
+burst_interval_s: 2.0
+burst_duration_ms: 200
+doppler_profile_csv: null
+compensation_csv: null
+grid_spacing_hz: 25391
+notes: 'Mode A baseline. The carrier offset from F0 equals the full emulated Doppler.
+  Used to bound the dynamic range and to show that uncompensated open-loop emission
+  walks off the grid.
+
+  '

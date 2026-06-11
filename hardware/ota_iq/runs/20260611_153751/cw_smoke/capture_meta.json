@@ -1,0 +1,16 @@
+{
+  "kind": "cw_smoke",
+  "rx_center_freq_hz": 868200000,
+  "nominal_center_freq_hz": 868000000,
+  "lo_offset_hz": 200000,
+  "sample_rate_hz": 1000000,
+  "rx_gain_db": 20,
+  "duration_s": 10,
+  "peak_abs": 0.0008418903453275561,
+  "clipping_warning": false,
+  "n_carrier_done": 6,
+  "dominant_tone_offset_from_f0_hz": -2739.715576171875,
+  "tx_power_dbm": 10,
+  "firmware": "arduino_host_replay_cw",
+  "measurement_type": "short_range_ota_iq"
+}

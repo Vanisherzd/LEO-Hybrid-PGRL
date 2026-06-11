@@ -1,0 +1,18 @@
+{
+  "kind": "ablr_summary",
+  "mode": "pgrl_corrected",
+  "compensation_mode": "pgrl",
+  "grid_spacing_hz": 25391.0,
+  "lo_offset_hz": 200000.0,
+  "integration_half_bw_hz": 12695.5,
+  "n_bursts": 20,
+  "median_ablr_db": -31.104,
+  "p95_ablr_db": -29.977,
+  "max_ablr_db": -29.945,
+  "mean_ablr_db": -30.798,
+  "iq_source": "capture_iq.fc32",
+  "measurement_type": "short_range_ota_iq",
+  "validation_scope": "short_range_ota_iq_proxy",
+  "commit": "6c9908c",
+  "analyzed_utc": "2026-06-11T07:25:44Z"
+}

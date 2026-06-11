@@ -1,0 +1,18 @@
+{
+  "kind": "ota_iq_rf_diag",
+  "rx_center_freq_hz": 868200000,
+  "nominal_center_freq_hz": 868000000,
+  "lo_offset_hz": 200000,
+  "sample_rate_hz": 1000000,
+  "rx_gain_db": 20,
+  "duration_s": 10,
+  "peak_abs": 0.0032982584089040756,
+  "clipping_warning": false,
+  "n_burst_done": 6,
+  "n_commanded": 6,
+  "tx_power_dbm": 10,
+  "iq_file": "capture_iq.fc32",
+  "device_args": "serial=8000304",
+  "firmware": "arduino_host_replay",
+  "measurement_type": "short_range_ota_iq"
+}

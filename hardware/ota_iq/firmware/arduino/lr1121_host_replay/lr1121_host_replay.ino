@@ -65,6 +65,18 @@ static uint8_t payload[19] = {
 static bool    radio_ready = false;
 static int16_t init_code   = 0;   // last beginLRFHSS() result, for diagnostics
 
+// Bring the LR1121 up if it is not already; report the code on failure.
+static bool ensure_radio_ready() {
+  if (radio_ready) return true;
+  init_code = radio.beginLRFHSS(868.0f, LRFHSS_BW, LRFHSS_CR, NARROW_GRID, 10, TCXO_V);
+  radio.setRfSwitchTable(rfswitch_dio_pins, rfswitch_table);
+  radio_ready = (init_code == RADIOLIB_ERR_NONE);
+  if (!radio_ready) {
+    Serial.print(F("ERR radio_not_ready code ")); Serial.println(init_code);
+  }
+  return radio_ready;
+}
+
 static bool configure_burst(uint32_t rf_freq_hz, int8_t power_dbm) {
   // Re-init LR-FHSS at the commanded frequency + power for this burst.
   float freq_mhz = (float)((double)rf_freq_hz / 1.0e6);
@@ -103,45 +115,73 @@ void loop() {
   if (line.length() == 0) {
     return;  // re-prompt
   }
-  if (line.charAt(0) != 'B') {
+  char op = line.charAt(0);
+  if (op != 'B' && op != 'C') {
     return;  // ignore non-command lines, re-prompt
   }
+  if (!ensure_radio_ready()) {
+    return;  // ensure_radio_ready already reported the code
+  }
 
-  // parse: B <idx> <freq_hz> <pwr_dbm> <delay_ms>
-  long idx = 0, freq = 0, pwr = 0, delay_ms = 0;
-  int n = sscanf(line.c_str(), "B %ld %ld %ld %ld", &idx, &freq, &pwr, &delay_ms);
-  if (n < 3) {
-    Serial.println(F("ERR parse"));
+  if (op == 'B') {
+    // ---- LR-FHSS hopping burst: B <idx> <freq_hz> <pwr_dbm> <delay_ms> ----
+    long idx = 0, freq = 0, pwr = 0, delay_ms = 0;
+    if (sscanf(line.c_str(), "B %ld %ld %ld %ld", &idx, &freq, &pwr, &delay_ms) < 3) {
+      Serial.println(F("ERR parse")); return;
+    }
+    if (delay_ms > 0) delay((uint32_t)delay_ms);
+    if (!configure_burst((uint32_t)freq, (int8_t)pwr)) return;
+    int16_t tx = radio.transmit(payload, sizeof(payload));
+    if (tx == RADIOLIB_ERR_NONE) {
+      Serial.println(F("Packet sent!"));
+      Serial.print(F("BURST_DONE ")); Serial.print(idx); Serial.print(' ');
+      Serial.print(freq); Serial.print(' '); Serial.println(pwr);
+    } else {
+      Serial.print(F("ERR transmit code ")); Serial.println(tx);
+    }
     return;
   }
 
-  if (!radio_ready) {
-    // retry init once so the LR1121 can be brought up live, report the code
-    init_code = radio.beginLRFHSS(868.0f, LRFHSS_BW, LRFHSS_CR, NARROW_GRID, 10, TCXO_V);
-    radio.setRfSwitchTable(rfswitch_dio_pins, rfswitch_table);
-    radio_ready = (init_code == RADIOLIB_ERR_NONE);
-    if (!radio_ready) {
-      Serial.print(F("ERR radio_not_ready code ")); Serial.println(init_code);
+  // ---- C: non-hopping fixed-channel GFSK diagnostic -----------------------
+  //   C <idx> <freq_hz> <pwr_dbm> <duration_ms> <delay_ms>
+  // True CW (transmitDirect()->setTxCw()) returned OK but did NOT radiate on
+  // this board (USRP saw only noise floor), so the C command uses the narrow
+  // FIXED-CHANNEL GFSK path (no hopping) over the known-good transmit() RF
+  // path: back-to-back GFSK packets at rf_freq_hz for ~duration_ms. For
+  // IQ-level CFO / feedforward validation only; NOT LR-FHSS / PER / decoding.
+  long cidx = 0, cfreq = 0, cpwr = 0, cdur = 0, cdelay = 0;
+  if (sscanf(line.c_str(), "C %ld %ld %ld %ld %ld", &cidx, &cfreq, &cpwr, &cdur, &cdelay) < 4) {
+    Serial.println(F("ERR parse")); return;
+  }
+  if (cdelay > 0) delay((uint32_t)cdelay);
+
+  float cfreq_mhz = (float)((double)cfreq / 1.0e6);
+  // beginGFSK(freq, br=4.8kbps, freqDev=5kHz, rxBw=156.2kHz, power, preamble=16, tcxo)
+  int16_t gs = radio.beginGFSK(cfreq_mhz, 4.8, 5.0, 156.2, (int8_t)cpwr, 16, TCXO_V);
+  radio.setRfSwitchTable(rfswitch_dio_pins, rfswitch_table);
+  if (gs != RADIOLIB_ERR_NONE) {
+    Serial.print(F("ERR cw_cfg beginGFSK code ")); Serial.println(gs);
+    return;
+  }
+  // beginGFSK has configured PA + RF switch + freq; now emit a TRUE CW carrier
+  // (setTxCw) which is a single narrow tone — needed to resolve sub-kHz offsets
+  // that GFSK deviation would smear. Falls back to GFSK packets if CW fails.
+  int16_t cw = radio.transmitDirect();   // setTxCw() -> CW at configured freq/power
+  if (cw == RADIOLIB_ERR_NONE) {
+    delay((uint32_t)(cdur > 0 ? cdur : 50));
+    radio.standby();
+  } else {
+    uint32_t t_end = millis() + (uint32_t)(cdur > 0 ? cdur : 50);
+    int16_t tx = RADIOLIB_ERR_NONE;
+    do { tx = radio.transmit(payload, sizeof(payload)); }
+    while ((int32_t)(millis() - t_end) < 0 && tx == RADIOLIB_ERR_NONE);
+    if (tx != RADIOLIB_ERR_NONE) {
+      Serial.print(F("ERR cw_tx code ")); Serial.println(tx);
       return;
     }
   }
-
-  if (delay_ms > 0) {
-    delay((uint32_t)delay_ms);
-  }
-
-  if (!configure_burst((uint32_t)freq, (int8_t)pwr)) {
-    return;
-  }
-
-  int16_t tx = radio.transmit(payload, sizeof(payload));
-  if (tx == RADIOLIB_ERR_NONE) {
-    Serial.println(F("Packet sent!"));
-    Serial.print(F("BURST_DONE "));
-    Serial.print(idx);  Serial.print(' ');
-    Serial.print(freq); Serial.print(' ');
-    Serial.println(pwr);
-  } else {
-    Serial.print(F("ERR transmit code ")); Serial.println(tx);
-  }
+  Serial.println(F("Carrier sent!"));
+  Serial.print(F("CARRIER_DONE ")); Serial.print(cidx); Serial.print(' ');
+  Serial.print(cfreq); Serial.print(' '); Serial.print(cpwr); Serial.print(' ');
+  Serial.println(cdur);
 }
