@@ -1,0 +1,43 @@
+# Replay config — Mode B: SGP4-ONLY OPEN-LOOP FEEDFORWARD
+# ----------------------------------------------------------------------------
+# The LR1121 terminal pre-compensates each burst with an SGP4-only Doppler
+# prediction c_sgp4(t). The residual carrier offset measured at the USRP equals
+# the emulated channel Doppler minus the SGP4 feedforward, i.e. the SGP4 open-
+# loop pointing error on the frequency grid.
+#
+# SCOPE: short-range room OTA / near-field IQ capture only. NOT conducted.
+# NOT PER / decoding / receiver validation. See docs/ota_iq_validation_scope.md.
+
+mode: sgp4_only
+compensation_mode: sgp4        # c(t) = SGP4-predicted Doppler feedforward
+
+# --- USRP B210 RX front-end (RX ONLY) ---------------------------------------
+nominal_center_freq_hz: 868.0e6
+sample_rate_hz: 1.0e6
+rx_gain_db: 20
+lo_offset_hz: 200.0e3             # USRP RX offset-tunes to F0+lo_offset so the on-grid
+                                  # burst does NOT sit on the LO/DC spike at F0; analysis
+                                  # re-references peaks to F0. 0 disables offset tuning.
+
+# --- Replay window / burst schedule -----------------------------------------
+replay_window_s: 240
+burst_interval_s: 2.0
+burst_duration_ms: 200
+
+# --- Emulated channel Doppler d(t) (truth) ----------------------------------
+# Same real SGP4-propagated LEO-pass truth profile used across all three modes.
+doppler_profile_csv: null         # e.g. hardware/ota_iq/inputs/pass_doppler_truth.csv
+
+# --- Feedforward compensation c(t) = SGP4-only prediction -------------------
+# CSV columns: t_s,comp_hz. Must be the actual SGP4 open-loop prediction from
+# the prediction pipeline (it differs from truth by SGP4 staleness/model error).
+# Residual = doppler_profile - compensation. Do NOT fabricate.
+compensation_csv: null            # e.g. hardware/ota_iq/inputs/feedforward_sgp4.csv
+
+# --- LR-FHSS frequency grid (for adjacent-bin leakage only) -----------------
+grid_spacing_hz: 25391            # verified from firmware LR_FHSS_V1_GRID_25391_HZ (SWDM001 ping demo)
+
+# --- Provenance --------------------------------------------------------------
+notes: >
+  Mode B. Residual CFO reflects SGP4 open-loop error. Compared head-to-head
+  with Mode C (pgrl_corrected) under an identical doppler_profile_csv.

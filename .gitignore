@@ -59,6 +59,11 @@ validation_runs/
 *.cfile
 *.sigmf-data
 
+# OTA IQ replay raw captures (large; keep local). Curated CSV/JSON/figures stay tracked.
+hardware/ota_iq/runs/**/*.npy
+hardware/ota_iq/runs/**/capture_iq.*
+hardware/ota_iq/inputs/
+
 # Hardware local artifacts (raw IQ + compiled tools never committed)
 hardware/usrp_scripts/rx_capture_to_file_cpp
 hardware/captures/*.fc32
