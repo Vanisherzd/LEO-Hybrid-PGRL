@@ -49,6 +49,9 @@ import sys
 import time
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from ota_common import require_valid_nominal_center_freq  # noqa: E402
+
 
 def _read_schedule(path: Path) -> list[dict]:
     with open(path) as f:
@@ -114,7 +117,7 @@ def main() -> int:
 
     for r in rows:
         idx = int(r["burst_index"])
-        f0 = float(r["nominal_center_freq_hz"])
+        f0 = require_valid_nominal_center_freq(r, context=f"replay_driver schedule row {r.get('burst_index', '?')}")
         off = float(r.get("commanded_offset_hz", 0.0) or 0.0)
         rf = int(round(f0 + off))
         # pace to scheduled time (skipped in dry-run, which only prints commands)

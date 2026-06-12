@@ -51,7 +51,7 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from ota_common import git_commit, load_config, load_iq, write_json  # noqa: E402
+from ota_common import require_valid_nominal_center_freq, git_commit, load_config, load_iq, write_json  # noqa: E402
 
 # Prebuilt USRP B210 capture backend shipped in the repo (arm64/x86 Mach-O/ELF).
 _RX_CPP = (Path(__file__).resolve().parents[1] / "usrp_scripts" / "rx_capture_to_file_cpp")
@@ -146,6 +146,7 @@ def build_schedule(cfg: dict, demo_synthetic: bool) -> list[dict]:
 
 def cmd_plan(args) -> int:
     cfg = load_config(args.config)
+    require_valid_nominal_center_freq(cfg, context="usrp_capture_ota_iq plan config")
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -193,7 +194,7 @@ def cmd_capture(args) -> int:
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    f0 = cfg["nominal_center_freq_hz"]
+    f0 = require_valid_nominal_center_freq(cfg, context="usrp_capture_ota_iq config")
     lo_off = cfg.get("lo_offset_hz") or 0.0
     fc = f0 + lo_off                     # USRP RX center = F0 + offset (avoid LO on signal)
     fs = cfg["sample_rate_hz"]

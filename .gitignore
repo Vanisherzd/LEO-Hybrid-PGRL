@@ -106,3 +106,13 @@ data_processed/
 
 # Local advisor review package
 advisor_package/
+
+# local secrets
+.env
+.env.*
+*.env
+*.secret
+*.secrets
+
+# raw/local-only orbital data
+dataraw/

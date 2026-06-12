@@ -36,12 +36,37 @@ def git_commit() -> str:
 
 
 # ── config ────────────────────────────────────────────────────────────────────
+
+def require_valid_nominal_center_freq(cfg, context="hardware/ota_iq"):
+    """Fail fast if nominal_center_freq_hz is unset or invalid.
+
+    Frequency must be explicitly provided after local frequency-plan confirmation.
+    This prevents placeholder values such as 0 from reaching replay/capture paths.
+    """
+    try:
+        f0 = float(cfg.get("nominal_center_freq_hz", 0))
+    except Exception as exc:
+        raise SystemExit(
+            f"{context}: nominal_center_freq_hz must be numeric and explicitly set "
+            "after local frequency-plan confirmation."
+        ) from exc
+
+    if f0 <= 0:
+        raise SystemExit(
+            f"{context}: nominal_center_freq_hz must be explicitly set to a positive "
+            "carrier frequency after NCC/local/gateway frequency-plan confirmation. "
+            "No default carrier is used, and OTA must remain disabled until confirmed."
+        )
+
+    return f0
+
+
 def load_config(path: str | Path) -> dict:
     """Load a replay YAML config and normalise numeric fields."""
     import yaml
     with open(path) as f:
         cfg = yaml.safe_load(f)
-    # YAML may parse 868.0e6 as str on some loaders; coerce known numerics.
+    # YAML may parse scientific notation as str on some loaders; coerce known numerics.
     for k in ("nominal_center_freq_hz", "sample_rate_hz", "rx_gain_db",
               "replay_window_s", "burst_interval_s", "burst_duration_ms",
               "grid_spacing_hz", "lo_offset_hz"):

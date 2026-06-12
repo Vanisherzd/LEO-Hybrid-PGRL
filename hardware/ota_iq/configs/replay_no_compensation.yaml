@@ -13,7 +13,10 @@ mode: no_compensation          # one of: no_compensation | sgp4_only | pgrl_corr
 compensation_mode: none        # none => c(t)=0 (full Doppler passes through)
 
 # --- USRP B210 RX front-end (RX ONLY) ---------------------------------------
-nominal_center_freq_hz: 868.0e6   # F0 = LR1121 nominal channel center (EU868 ISM)
+nominal_center_freq_hz: 0  # MUST be overridden after confirming local frequency plan. 868 MHz is not a Taiwan default.
+frequency_plan: "TAIWAN_AS923_REVIEW_REQUIRED"
+ota_transmission_allowed: false
+frequency_safety_note: "Do not transmit OTA until NCC/local regulation and gateway channel plan are confirmed. Historical 868 MHz conducted results are lab diagnostics only, not Taiwan deployment frequencies."
 sample_rate_hz: 1.0e6             # 1 MS/s
 rx_gain_db: 20                    # start 20 dB, raise only until just below clipping
 lo_offset_hz: 200.0e3             # USRP RX offset-tunes to F0+lo_offset so the on-grid
