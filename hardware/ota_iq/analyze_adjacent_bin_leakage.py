@@ -94,8 +94,45 @@ def main() -> int:
     bursts = detect_bursts(iq, fs, nfft=args.nfft, hop=args.hop,
                            snr_gate_db=args.snr_gate_db)
     print(f"[ablr] detected {len(bursts)} bursts")
+    # --- no-burst path: write stub summary, exit 0 (TX-OFF / noise-floor check) ---
     if not bursts:
-        raise SystemExit("ERROR: no bursts detected; no ABLR emitted.")
+        stub_fields = [
+            "burst_index", "t_start_s", "target_grid_hz",
+            "p_target", "p_adjacent", "ablr", "ablr_db",
+            "intended_bin_energy_fraction", "snr_db",
+        ]
+        per_csv = run_dir / "ablr_per_burst.csv"
+        with open(per_csv, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=stub_fields, extrasaction="ignore")
+            w.writeheader()   # header-only; no data rows
+
+        summary = dict(
+            kind="ablr_summary",
+            mode=cfg.get("mode"),
+            compensation_mode=cfg.get("compensation_mode"),
+            grid_spacing_hz=grid,
+            lo_offset_hz=lo_off,
+            integration_half_bw_hz=half_bw,
+            n_bursts=0,
+            status="no_bursts_detected",
+            median_ablr_db=None,
+            p95_ablr_db=None,
+            max_ablr_db=None,
+            mean_ablr_db=None,
+            median_intended_bin_energy_fraction=None,
+            p05_intended_bin_energy_fraction=None,
+            mean_intended_bin_energy_fraction=None,
+            iq_source=iq_path.name,
+            measurement_type="short_range_ota_iq",
+            validation_scope="short_range_ota_iq_proxy",
+            commit=git_commit(),
+            analyzed_utc=time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        )
+        write_json(run_dir / "ablr_summary.json", summary)
+        print("[ablr] no bursts detected; stub summary written (TX-OFF / noise-floor check)")
+        print(f"[ablr] per-burst → {per_csv}")
+        print(f"[ablr] summary   → {run_dir / 'ablr_summary.json'}")
+        return 0
 
     rows = []
     ablr_db_all = []
@@ -108,8 +145,10 @@ def main() -> int:
         p_lo = band_power(spec, f_hz, g0_bb - grid, half_bw)
         p_hi = band_power(spec, f_hz, g0_bb + grid, half_bw)
         p_adj = p_lo + p_hi
-        ratio = p_adj / (p_target + 1e-20)
-        ablr_db = 10.0 * np.log10(ratio + 1e-20)
+        eps = 1e-20
+        ratio = p_adj / (p_target + eps)
+        intended_frac = p_target / (p_target + p_adj + eps)
+        ablr_db = 10.0 * np.log10(ratio + eps)
         rows.append(dict(
             burst_index=b.index,
             t_start_s=round(b.t_start_s, 4),
@@ -118,6 +157,7 @@ def main() -> int:
             p_adjacent=p_adj,
             ablr=round(float(ratio), 6),
             ablr_db=round(float(ablr_db), 3),
+            intended_bin_energy_fraction=round(float(intended_frac), 6),
             snr_db=round(b.snr_db, 2),
         ))
         ablr_db_all.append(ablr_db)
@@ -141,6 +181,9 @@ def main() -> int:
         p95_ablr_db=round(float(np.percentile(ablr_db_all, 95)), 3),
         max_ablr_db=round(float(np.max(ablr_db_all)), 3),
         mean_ablr_db=round(float(np.mean(ablr_db_all)), 3),
+        median_intended_bin_energy_fraction=round(float(np.median([r["intended_bin_energy_fraction"] for r in rows])), 6),
+        p05_intended_bin_energy_fraction=round(float(np.percentile([r["intended_bin_energy_fraction"] for r in rows], 5)), 6),
+        mean_intended_bin_energy_fraction=round(float(np.mean([r["intended_bin_energy_fraction"] for r in rows])), 6),
         iq_source=iq_path.name,
         measurement_type="short_range_ota_iq",
         validation_scope="short_range_ota_iq_proxy",

@@ -18,22 +18,40 @@ near-field** capture.
 | 2. Adjacent-bin leakage | ABLR_dB = 10·log10(P_adjacent / P_target), per burst | `ablr_per_burst.csv`, `ablr_summary.json`, `fig_ablr_histogram.*`, `fig_ablr_cdf.*` |
 | 3. Two-node waterfall (optional, qualitative) | spectrogram only, fixed vs risk-aware guard | `fig_two_node_waterfall_fixed.*`, `fig_two_node_waterfall_riskaware.*` |
 
-Three compensation modes are compared under an **identical** Doppler-replay
-profile: `no_compensation` (A), `sgp4_only` (B), `pgrl_corrected` (C).
+Three compensation modes are compared under an **identical** reference-Doppler
+profile (model-derived, **not measured on-air truth**):
+`no_compensation` (A), `sgp4_only` (B), `pgrl_corrected` (C).
 
-## Hardware setup (current room conditions)
+## Frequency configuration
+
+**The carrier frequency is explicit and configurable.** Every config must set a
+positive `nominal_center_freq_hz` — no default is supplied.  `nominal_center_freq_hz`
+must be set only after NCC, local regulations, and gateway/channel-plan
+confirmation are verified for the target region.
+
+Historical firmware fixed-frequency references from vendor demos are **not** deployment defaults and must not be used as-is.
+
+## Hardware setup
 
 - 2× NUCLEO-L476RG + Semtech LR1121 (SWDM001). **Do not change pin wiring.**
-- 1× USRP B210 over USB 3.0, **RX only**.
-- No SMA coax / no calibrated attenuator → captures are **room OTA / near-field**.
-- EU868 ISM band, lowest practical LR1121 TX power, short controlled bursts.
+- 1× USRP B210 over USB 3.0, **RX only** — never enable its TX path.
+- LR1121 TX is activated only after explicit RF safety approval.
+- **Prefer conducted/coax with attenuator (≥30 dB) or 50-ohm RF load.**
+  Room OTA / near-field captures are valid **uncalibrated diagnostics** only;
+  they are **not** conducted validation and must not be labeled as such.
 
-## Safety (before any TX)
+## Safety warnings (before any TX)
 
-1. Attach an antenna **or** a 50-ohm load to the LR1121 RF output before keying.
-2. Use the lowest practical LR1121 TX power.
-3. USRP B210 is **RX only** in these experiments — never enable its TX.
-4. Use only locally permitted ISM/lab frequencies; keep bursts short.
+> **WARNING — hardware entrypoints carry real RF risk.**
+>
+> - `usrp_capture_ota_iq.py capture` — starts UHD RX stream; do not run until
+>   USRP is connected, RF path is terminated with attenuator/50-ohm load, and
+>   `nominal_center_freq_hz` is explicitly confirmed in the config.
+> - `replay_driver.py` without `--dry-run` — sends real LR1121 serial commands;
+>   do not run until UART serial port is confirmed, `nominal_center_freq_hz`
+>   is set, RF path is protected, and local frequency plan is verified.
+> - Never operate without positive confirmation of: F0, RF path protection,
+>   attenuator/50-ohm load, UART serial port, and permitted frequency plan.
 
 ## How residual CFO is defined (replay logic)
 
@@ -46,12 +64,13 @@ from the nominal grid `F0`:
 residual_cfo = measured_carrier_offset_from_F0  (referenced to nearest grid bin)
 ```
 
-- Mode A (`none`):  `c = 0`            → residual ≈ full Doppler (off grid).
+Doppler inputs to `d(t)` come from **reference CSVs** you supply (see configs).
+These are model-derived reference Doppler profiles, **not measured on-air truth**.
+The harness never invents them; the only results come from real USRP IQ captures.
+
+- Mode A (`none`):  `c = 0`            → residual ≈ full emulated Doppler (off grid).
 - Mode B (`sgp4`):  `c = SGP4 pred.`   → residual ≈ SGP4 open-loop error.
 - Mode C (`pgrl`):  `c = PGRL pred.`   → residual ≈ PGRL open-loop error (tightest).
-
-`d(t)` and `c(t)` come from **real** prediction CSVs you supply (see configs).
-The harness never invents them; the only results come from real USRP IQ.
 
 ### Offset tuning (`lo_offset_hz`)
 
@@ -69,12 +88,13 @@ the configs ship with `grid_spacing_hz: 25391` (verified from firmware source).
 
 ## Per-burst replay requires host-replay firmware
 
-The stock SWDM001 firmware free-runs at a fixed `RF_FREQUENCY = 868000000` and
-**cannot** distinguish the three modes — every burst would be identical. The
-per-burst Doppler/CFO command interface is added by the minimal firmware patch in
+The stock SWDM001 firmware free-runs at a fixed frequency and **cannot**
+distinguish the three modes — every burst would be identical. The per-burst
+Doppler/CFO command interface is added by the minimal firmware patch in
 [`firmware/`](firmware/) (host sets freq + power before each burst over UART).
 
-Execution (two terminals, after flashing the host-replay firmware):
+Execution — two terminals, after flashing the host-replay firmware
+**and after confirming all safety items above**:
 
 ```bash
 # T1 — USRP capture over the full replay window (RX only):
@@ -95,11 +115,13 @@ do not claim any replay result. Then analyze each run as below.
 ## Operator procedure
 
 ```bash
-# 0) supply real Doppler truth + feedforward CSVs, then point the configs at them:
-#    doppler_profile_csv: hardware/ota_iq/inputs/pass_doppler_truth.csv   (t_s,doppler_hz)
-#    compensation_csv:    hardware/ota_iq/inputs/feedforward_sgp4.csv      (t_s,comp_hz)
-#                         hardware/ota_iq/inputs/feedforward_pgrl.csv      (t_s,comp_hz)
-#    grid_spacing_hz:     <verified LR-FHSS grid spacing>
+# 0) supply reference-Doppler CSVs (model-derived, NOT measured truth), then
+#    point the configs at them:
+#    doppler_profile_csv:  hardware/ota_iq/inputs/pass_doppler_reference.csv  (t_s, doppler_hz)
+#    compensation_csv:     hardware/ota_iq/inputs/feedforward_sgp4.csv         (t_s, comp_hz)
+#                          hardware/ota_iq/inputs/feedforward_pgrl.csv          (t_s, comp_hz)
+#    grid_spacing_hz:      <verified LR-FHSS grid spacing>
+#    nominal_center_freq_hz: <explicit, NCC/gateway-verified>
 
 # 1) build the burst schedule the LR1121 firmware emits (per mode):
 uv run python hardware/ota_iq/usrp_capture_ota_iq.py plan \

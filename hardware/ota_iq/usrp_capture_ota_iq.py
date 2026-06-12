@@ -112,7 +112,7 @@ def build_schedule(cfg: dict, demo_synthetic: bool) -> list[dict]:
         if not dop_csv:
             raise SystemExit(
                 "ERROR: doppler_profile_csv is null. Supply a real SGP4-propagated "
-                "LEO-pass Doppler truth CSV (t_s,doppler_hz) or pass --demo-synthetic "
+                "LEO-pass reference Doppler CSV (t_s,doppler_hz) or pass --demo-synthetic "
                 "for a wiring dry-run. This tool does not invent Doppler profiles."
             )
         td, d_full = _load_profile_csv(dop_csv)
