@@ -116,3 +116,9 @@ advisor_package/
 
 # raw/local-only orbital data
 dataraw/
+# Local secrets
+.env
+.env.*
+*.env
+.env.spacetrack
+
