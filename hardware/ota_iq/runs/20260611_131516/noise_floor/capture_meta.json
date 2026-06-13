@@ -1,0 +1,21 @@
+{
+  "kind": "ota_iq_capture",
+  "nominal_center_freq_hz": 868000000.0,
+  "rx_center_freq_hz": 868200000.0,
+  "lo_offset_hz": 200000.0,
+  "sample_rate_hz": 1000000.0,
+  "rx_gain_db": 20.0,
+  "duration_s": 10.0,
+  "n_samples": 10000000,
+  "peak_abs": 0.0008239995804615319,
+  "clipping_warning": false,
+  "capture_backend": "rx_capture_to_file_cpp",
+  "iq_file": "capture_iq.fc32",
+  "device_args": "serial=8000304",
+  "device": "USRP B210 (RX only)",
+  "antenna": "room OTA / near-field probe (uncalibrated)",
+  "measurement_type": "short_range_ota_iq",
+  "validation_scope": "short_range_ota_iq_proxy",
+  "commit": "13f1cad",
+  "capture_utc": "2026-06-11T05:15:38Z"
+}

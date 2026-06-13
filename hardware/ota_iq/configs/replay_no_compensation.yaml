@@ -1,0 +1,52 @@
+# Replay config — Mode A: NO COMPENSATION
+# ----------------------------------------------------------------------------
+# The LR1121 terminal emits each short LR-FHSS burst with NO Doppler
+# feedforward applied. The emulated channel Doppler d(t) therefore appears in
+# full as the carrier offset from the nominal grid. This is the worst-case
+# baseline against which SGP4-only and PGRL-corrected feedforward are compared.
+#
+# SCOPE: short-range room OTA / near-field IQ capture only. NOT a conducted
+# (coax/attenuator) measurement. NOT PER / decoding / receiver validation.
+# See docs/ota_iq_validation_scope.md before reporting anything from this run.
+
+mode: no_compensation          # one of: no_compensation | sgp4_only | pgrl_corrected
+compensation_mode: none        # none => c(t)=0 (full Doppler passes through)
+
+# --- USRP B210 RX front-end (RX ONLY) ---------------------------------------
+nominal_center_freq_hz: 0  # MUST be overridden after confirming local frequency plan. 868 MHz is not a Taiwan default.
+frequency_plan: "TAIWAN_AS923_REVIEW_REQUIRED"
+ota_transmission_allowed: false
+frequency_safety_note: "Do not transmit OTA until NCC/local regulation and gateway channel plan are confirmed. Historical 868 MHz conducted results are lab diagnostics only, not Taiwan deployment frequencies."
+sample_rate_hz: 1.0e6             # 1 MS/s
+rx_gain_db: 20                    # start 20 dB, raise only until just below clipping
+lo_offset_hz: 200.0e3             # USRP RX offset-tunes to F0+lo_offset so the on-grid
+                                  # burst does NOT sit on the LO/DC spike at F0; analysis
+                                  # re-references peaks to F0. 0 disables offset tuning.
+
+# --- Replay window / burst schedule -----------------------------------------
+replay_window_s: 240              # total capture/replay window (120-300 s)
+burst_interval_s: 2.0             # nominal spacing between burst onsets
+burst_duration_ms: 200            # on-air duration of each short burst
+# burst count is derived: floor(replay_window_s / burst_interval_s)
+
+# --- Emulated channel Doppler d(t) ------------------------------------------
+# Operator must supply a real SGP4-propagated LEO-pass Doppler profile.
+# CSV columns: t_s,doppler_hz  (time relative to pass start, carrier Doppler in Hz).
+# Generate from the existing prediction pipeline; do NOT invent values.
+doppler_profile_csv: null         # e.g. hardware/ota_iq/inputs/pass_doppler_truth.csv
+
+# --- Feedforward compensation c(t) ------------------------------------------
+# For no_compensation this MUST be null (c(t)=0).
+compensation_csv: null
+
+# --- LR-FHSS frequency grid (for adjacent-bin leakage only) -----------------
+# Set ONLY from the verified LR1121 LR-FHSS configuration (datasheet/firmware).
+# Leave null until verified; analyze_adjacent_bin_leakage.py will refuse to run
+# rather than assume a spacing. Do NOT hard-code 137 Hz.
+grid_spacing_hz: 25391            # verified from firmware LR_FHSS_V1_GRID_25391_HZ (SWDM001 ping demo)
+
+# --- Provenance --------------------------------------------------------------
+notes: >
+  Mode A baseline. The carrier offset from F0 equals the full emulated Doppler.
+  Used to bound the dynamic range and to show that uncompensated open-loop
+  emission walks off the grid.

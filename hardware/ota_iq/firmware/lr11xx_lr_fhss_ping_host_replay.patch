@@ -1,0 +1,144 @@
+REPRESENTATIVE PATCH — host-commanded per-burst LR-FHSS replay
+==============================================================
+Apply BY HAND in Keil against the vendor checkout (do NOT auto-patch):
+  ~/Desktop/SWDM001/src/demos/lr11xx_lr_fhss_ping/
+
+Also: copy replay_cmd.h + replay_cmd.c into the same demo dir, add replay_cmd.c
+to the Keil build, and provide replay_uart_getchar() bound to the ST-LINK VCP
+UART (the same UART SXLIB_LOG prints on). See firmware/README.md.
+
+The diff targets the SYNCHRONOUS demo (lr11xx_lr_fhss_ping_sync.c), which is the
+variant currently flashed. If CONFIG_SMTC_DEMO_ASYNCHRONOUS is used, mirror the
+loop change in lr11xx_lr_fhss_ping_async.c.
+
+--- a/src/demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping.h
++++ b/src/demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping.h
+@@ typedef struct lr11xx_lr_fhss_ping_state_s
+     const lr11xx_lr_fhss_ping_config_t* config;         /**< Make demo configuration available from state pointer */
+     unsigned int                        payload_length; /**< Payload length of current transmission */
++    uint32_t                            rf_freq_hz;     /**< host-commanded per-burst center frequency */
++    int8_t                              tx_power_dbm;   /**< host-commanded per-burst TX power */
++    uint32_t                            burst_index;    /**< host-provided burst index (capture pairing) */
+     lr11xx_lr_fhss_params_t             lr11xx_lr_fhss_params; /**< LR-FHSS comm parameter storage */
+     uint8_t                             payload[255];          /**< Payload storage */
+
+--- a/src/demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping.c
++++ b/src/demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping.c
+@@ void lr11xx_lr_fhss_ping_init( ... )
+     state->payload_length = MIN_PAYLOAD_LENGTH;
++
++    /* Host-replay defaults; overwritten per burst by replay_cmd_read(). */
++    state->rf_freq_hz   = RF_FREQUENCY;
++    state->tx_power_dbm = POWER_IN_DBM;
++    state->burst_index  = 0;
+ }
+@@ static lr11xx_status_t lr_fhss_send_packet( ... )
+-    status = lr11xx_radio_set_rf_freq( state->config->radio, RF_FREQUENCY );
++    status = lr11xx_radio_set_rf_freq( state->config->radio, state->rf_freq_hz );
+     if( status != LR11XX_STATUS_OK )
+     {
+         return status;
+     }
+
+     // This performs lr11xx_radio_set_pa_cfg and lr11xx_radio_set_tx_params
+-    lr11xx_comp_set_tx_cfg( state->config->radio, POWER_IN_DBM, RF_FREQUENCY );
++    lr11xx_comp_set_tx_cfg( state->config->radio, state->tx_power_dbm, state->rf_freq_hz );
+
+--- a/src/demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping_sync.c
++++ b/src/demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping_sync.c
+@@ includes
+ #include "demos/lr11xx_lr_fhss_ping/lr11xx_lr_fhss_ping.h"
+
+ #include <sxlib/Radio/event_handler/Rtos_model_event_handler.h>
+ #include <sxlib/Timing/sync_timer/Generic_sync_timer.h>
++#include <sxlib/Debug/Log/Generic_Log.h>          /* SXLIB_LOG / SXLIB_LOG_EOL */
++#include <sxlib/System/config/Rtos_config.h>      /* SXLIB_MS_TO_TICK */
+
+ #include "lr11xx_system.h"
++#include "replay_cmd.h"
+@@ void lr11xx_lr_fhss_ping_start( lr11xx_lr_fhss_ping_state_t* state )
+-{
+-    lr11xx_lr_fhss_ping_launch( state );
+-
+-    while( 1 )
+-    {
+-        while( 1 )
+-        {
+-            sxlib_Radio_event_handler_wait_for_event( state->config->radio, SXLIB_RADIO_EVENT_HANDLER_TIMEOUT_FOREVER );
+-
+-            lr11xx_system_irq_mask_t irq_status;
+-            lr11xx_system_get_and_clear_irq_status( state->config->radio, &irq_status );
+-
+-            if( irq_status & LR11XX_SYSTEM_IRQ_TX_DONE )
+-            {
+-                lr11xx_lr_fhss_ping_handle_tx_done( state );
+-                break;
+-            }
+-        }
+-
+-        sxlib_Timing_sync_timer_sleep( state->config->inter_pkt_delay );
+-        lr11xx_lr_fhss_ping_continue( state );
+-    };
+-}
++{
++    /* Host-commanded per-burst replay: one burst per UART command line.
++     * Protocol:  host -> "B <idx> <freq_hz> <pwr_dbm> <delay_ms>"
++     *            MCU  -> "BURST_DONE <idx> <freq_hz> <pwr_dbm>" after TX_DONE
++     * The free-running auto-ping loop is intentionally removed so that
++     * no_compensation / sgp4_only / pgrl_corrected schedules can each command a
++     * distinct per-burst carrier offset. */
++    SXLIB_LOG( SXLIB_LOG_APP, ( "REPLAY_READY" SXLIB_LOG_EOL ) );
++
++    while( 1 )
++    {
++        replay_burst_cmd_t cmd;
++
++        SXLIB_LOG( SXLIB_LOG_APP, ( "RDY" SXLIB_LOG_EOL ) );
++        if( !replay_cmd_read( &cmd ) )
++        {
++            continue; /* malformed line: re-prompt */
++        }
++
++        state->burst_index  = cmd.burst_index;
++        state->rf_freq_hz   = cmd.rf_freq_hz;
++        state->tx_power_dbm = cmd.tx_power_dbm;
++
++        if( cmd.delay_ms != 0 )
++        {
++            sxlib_Timing_sync_timer_sleep( SXLIB_MS_TO_TICK( cmd.delay_ms ) );
++        }
++
++        lr11xx_lr_fhss_ping_launch( state ); /* one burst at commanded freq/power */
++
++        while( 1 )
++        {
++            sxlib_Radio_event_handler_wait_for_event( state->config->radio, SXLIB_RADIO_EVENT_HANDLER_TIMEOUT_FOREVER );
++
++            lr11xx_system_irq_mask_t irq_status;
++            lr11xx_system_get_and_clear_irq_status( state->config->radio, &irq_status );
++
++            if( irq_status & LR11XX_SYSTEM_IRQ_TX_DONE )
++            {
++                lr11xx_lr_fhss_ping_handle_tx_done( state );
++                break;
++            }
++        }
++
++        SXLIB_LOG( SXLIB_LOG_APP,
++                   ( "BURST_DONE %lu %lu %d" SXLIB_LOG_EOL,
++                     ( unsigned long ) state->burst_index,
++                     ( unsigned long ) state->rf_freq_hz,
++                     ( int ) state->tx_power_dbm ) );
++    };
++}
+
+Notes
+-----
+* payload_length still steps via _continue() only in the stock loop; the replay
+  loop above keeps payload_length fixed at its init value (set per-burst freq is
+  what matters for CFO/grid confinement). Increment it inside the loop if you
+  want payload-length variety.
+* RF_FREQUENCY / POWER_IN_DBM remain as the init defaults — the host overrides
+  them every burst.
+* Keep TX power low: the host sends the value, but clamp in firmware too if your
+  board/regulatory limit requires it.

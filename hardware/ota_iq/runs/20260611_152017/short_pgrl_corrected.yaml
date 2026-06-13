@@ -1,0 +1,16 @@
+mode: pgrl_corrected
+compensation_mode: pgrl
+nominal_center_freq_hz: 868.0e6
+sample_rate_hz: 1.0e6
+rx_gain_db: 20
+lo_offset_hz: 200.0e3
+replay_window_s: 20
+burst_interval_s: 2.0
+burst_duration_ms: 200
+doppler_profile_csv: null
+compensation_csv: null
+grid_spacing_hz: 25391
+notes: 'Mode C. Residual CFO reflects PGRL open-loop error. Head-to-head with Mode
+  B under identical doppler_profile_csv isolates the PGRL-vs-SGP4 difference.
+
+  '

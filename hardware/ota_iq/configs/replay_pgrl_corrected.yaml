@@ -1,0 +1,46 @@
+# Replay config — Mode C: PGRL-CORRECTED OPEN-LOOP FEEDFORWARD
+# ----------------------------------------------------------------------------
+# The LR1121 terminal pre-compensates each burst with the PGRL-corrected
+# Doppler prediction c_pgrl(t). The residual carrier offset measured at the
+# USRP equals the emulated channel Doppler minus the PGRL feedforward, i.e. the
+# PGRL open-loop pointing error on the frequency grid. Expected to be smaller
+# and tighter than Mode B (sgp4_only).
+#
+# SCOPE: short-range room OTA / near-field IQ capture only. NOT conducted.
+# NOT PER / decoding / receiver validation. See docs/ota_iq_validation_scope.md.
+
+mode: pgrl_corrected
+compensation_mode: pgrl        # c(t) = PGRL-corrected Doppler feedforward
+
+# --- USRP B210 RX front-end (RX ONLY) ---------------------------------------
+nominal_center_freq_hz: 0  # MUST be overridden after confirming local frequency plan. 868 MHz is not a Taiwan default.
+frequency_plan: "TAIWAN_AS923_REVIEW_REQUIRED"
+ota_transmission_allowed: false
+frequency_safety_note: "Do not transmit OTA until NCC/local regulation and gateway channel plan are confirmed. Historical 868 MHz conducted results are lab diagnostics only, not Taiwan deployment frequencies."
+sample_rate_hz: 1.0e6
+rx_gain_db: 20
+lo_offset_hz: 200.0e3             # USRP RX offset-tunes to F0+lo_offset so the on-grid
+                                  # burst does NOT sit on the LO/DC spike at F0; analysis
+                                  # re-references peaks to F0. 0 disables offset tuning.
+
+# --- Replay window / burst schedule -----------------------------------------
+replay_window_s: 240
+burst_interval_s: 2.0
+burst_duration_ms: 200
+
+# --- Emulated channel Doppler d(t) (truth) ----------------------------------
+# MUST be the same truth profile used for Mode A and Mode B for a fair compare.
+doppler_profile_csv: null         # e.g. hardware/ota_iq/inputs/pass_doppler_truth.csv
+
+# --- Feedforward compensation c(t) = PGRL-corrected prediction --------------
+# CSV columns: t_s,comp_hz. Actual PGRL-corrected open-loop prediction from the
+# prediction pipeline. Residual = doppler_profile - compensation. Do NOT fabricate.
+compensation_csv: null            # e.g. hardware/ota_iq/inputs/feedforward_pgrl.csv
+
+# --- LR-FHSS frequency grid (for adjacent-bin leakage only) -----------------
+grid_spacing_hz: 25391            # verified from firmware LR_FHSS_V1_GRID_25391_HZ (SWDM001 ping demo)
+
+# --- Provenance --------------------------------------------------------------
+notes: >
+  Mode C. Residual CFO reflects PGRL open-loop error. Head-to-head with Mode B
+  under identical doppler_profile_csv isolates the PGRL-vs-SGP4 difference.

@@ -1,0 +1,36 @@
+{
+  "global_oscillator_bias_hz": -2750.34,
+  "grid_reference": "nominal_center_F0",
+  "schedule_source": "demo_synthetic",
+  "modes": {
+    "no_compensation": {
+      "n_tones": 10,
+      "median_abs_residual_to_grid_hz": 12582.91,
+      "p95_abs_residual_to_grid_hz": 17587.7,
+      "max_abs_residual_to_grid_hz": 17990.25,
+      "median_abs_realization_error_hz": 16.96,
+      "p95_abs_realization_error_hz": 35.91,
+      "max_abs_realization_error_hz": 37.63
+    },
+    "sgp4_only": {
+      "n_tones": 10,
+      "median_abs_residual_to_grid_hz": 634.8,
+      "p95_abs_residual_to_grid_hz": 872.14,
+      "max_abs_residual_to_grid_hz": 899.18,
+      "median_abs_realization_error_hz": 28.14,
+      "p95_abs_realization_error_hz": 42.51,
+      "max_abs_realization_error_hz": 43.33
+    },
+    "pgrl_corrected": {
+      "n_tones": 10,
+      "median_abs_residual_to_grid_hz": 98.23,
+      "p95_abs_residual_to_grid_hz": 142.06,
+      "max_abs_residual_to_grid_hz": 142.92,
+      "median_abs_realization_error_hz": 21.86,
+      "p95_abs_realization_error_hz": 44.94,
+      "max_abs_realization_error_hz": 45.83
+    }
+  },
+  "commit": "6c9908c",
+  "analyzed_utc": "2026-06-11T07:46:57Z"
+}

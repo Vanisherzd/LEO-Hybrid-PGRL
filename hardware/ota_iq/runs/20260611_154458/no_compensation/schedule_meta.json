@@ -1,0 +1,17 @@
+{
+  "kind": "ota_iq_replay_schedule",
+  "config": "hardware/ota_iq/runs/20260611_154458/short_no_compensation.yaml",
+  "mode": "no_compensation",
+  "compensation_mode": "none",
+  "nominal_center_freq_hz": 868000000.0,
+  "sample_rate_hz": 1000000.0,
+  "rx_gain_db": 20.0,
+  "replay_window_s": 20.0,
+  "burst_interval_s": 2.0,
+  "burst_duration_ms": 200.0,
+  "n_bursts": 10,
+  "demo_synthetic": true,
+  "validation_scope": "short_range_ota_iq_proxy",
+  "commit": "6c9908c",
+  "generated_utc": "2026-06-11T07:44:58Z"
+}

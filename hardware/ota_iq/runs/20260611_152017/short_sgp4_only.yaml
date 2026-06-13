@@ -1,0 +1,16 @@
+mode: sgp4_only
+compensation_mode: sgp4
+nominal_center_freq_hz: 868.0e6
+sample_rate_hz: 1.0e6
+rx_gain_db: 20
+lo_offset_hz: 200.0e3
+replay_window_s: 20
+burst_interval_s: 2.0
+burst_duration_ms: 200
+doppler_profile_csv: null
+compensation_csv: null
+grid_spacing_hz: 25391
+notes: 'Mode B. Residual CFO reflects SGP4 open-loop error. Compared head-to-head
+  with Mode C (pgrl_corrected) under an identical doppler_profile_csv.
+
+  '

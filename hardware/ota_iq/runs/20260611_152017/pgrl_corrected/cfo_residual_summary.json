@@ -1,0 +1,22 @@
+{
+  "kind": "cfo_residual_summary",
+  "mode": "pgrl_corrected",
+  "compensation_mode": "pgrl",
+  "grid_reference": "lr_fhss_grid",
+  "grid_spacing_hz": 25391.0,
+  "lo_offset_hz": 200000.0,
+  "n_bursts_detected": 20,
+  "median_abs_residual_cfo_hz": 9855.945,
+  "p95_abs_residual_cfo_hz": 10223.184,
+  "max_abs_residual_cfo_hz": 10228.45,
+  "mean_abs_residual_cfo_hz": 9877.252,
+  "sample_rate_hz": 1000000.0,
+  "nfft": 1024,
+  "hop": 256,
+  "snr_gate_db": 6.0,
+  "iq_source": "capture_iq.fc32",
+  "measurement_type": "short_range_ota_iq",
+  "validation_scope": "short_range_ota_iq_proxy",
+  "commit": "6c9908c",
+  "analyzed_utc": "2026-06-11T07:25:03Z"
+}
