@@ -1,0 +1,48 @@
+AUTONOMOUS PRE-HIL PASS — COMPLETE
+timestamp_utc: 2026-06-14
+branch: experiment-bk2-tle-residual
+head: 2a8b6f4
+
+GENERATED/MODIFIED FILES (13, all new, all under docs/review/, none staged, none committed):
+  docs/review/hil_artifact_schema.md
+  docs/review/overclaim_audit_before_paper_rewrite.md
+  docs/review/paper_figure_table_plan.md
+  docs/review/missing_experiment_gap_analysis.md
+  docs/review/bk_negative_result_compact.csv
+  docs/review/bk_negative_result_compact.md
+  docs/review/gate_stress_compact.csv
+  docs/review/gate_stress_compact.md
+  docs/review/claim_to_artifact_index.md
+  docs/review/gate_threshold_interpretation.md
+  docs/review/validation_window_sensitivity.md
+  docs/review/paper_rewrite_checklist.md
+  docs/review/autonomous_pre_hil_summary.md
+
+SHA256 SUMMARY:
+  f49c9e5bd61010010f5d6974f10465694a0b760e9fec992d3ea66be4b6040c89  docs/review/hil_artifact_schema.md
+  edb8c11aac592d95213c951585031713f1dca1cc98caaa3985cc8ce1ae98ae24  docs/review/overclaim_audit_before_paper_rewrite.md
+  4893b9e16b4ee24eafacd9ae7338132a1388eb053cd1aaf9d554bbb3dc257b41  docs/review/paper_figure_table_plan.md
+  19f472ae313c29183cc5bb932cda4007278ca126ca1b87415c94b7a26d47184d  docs/review/missing_experiment_gap_analysis.md
+  1aa2d7b1f99cc92790e77c71b64d055f731b964138239dd1a1757a5d1c051714  docs/review/bk_negative_result_compact.csv
+  7646c88cc833665f6383ef5512256ebd5a85275735a8ce9056f22c7c7f4947b2  docs/review/bk_negative_result_compact.md
+  ce25fa9ad70b0a3f7c002f7423bb45d1168cc68607140b75794523a1bf95ee61  docs/review/gate_stress_compact.csv
+  27074799938da64ca70b46d800307e7a9b733730e7b6df22c9517360c889d7fd  docs/review/gate_stress_compact.md
+  355e68fe8934680e4ba993bb991e2c1e9a8c8b0a9f76483ba9429c4ce5fe9a1a  docs/review/claim_to_artifact_index.md
+  d4ae64da6c8a885ca8a87598b951dc33d4af098b8861f45a47a5b6fefb7aad4e  docs/review/gate_threshold_interpretation.md
+  a4fef6bc8e68a2dd4a59170e201c705e72ae15dd065a5ea4137f6bd4c386db0d  docs/review/validation_window_sensitivity.md
+  ea0c004b227ffd391aa02894d1ff2f732015e49e0bb9ad1a2bccaec482362635  docs/review/paper_rewrite_checklist.md
+  1b9946b99e245af02bf2db9fc8d85d82d7322dc19001f44e5ab8088dae6afb5b  docs/review/autonomous_pre_hil_summary.md
+
+CONFIRMATIONS:
+  paper/icc_main.tex NOT edited — SHA256 unchanged: 1819aeac7ce12fc7d9a179b54272d2e7447eaa1089980ca46252c2bb00525d84
+  no dataraw/ file staged — git diff --cached empty; no dataraw path in staging
+  no hardware/RF command run — no TX/replay/capture/UHD/USRP/GNU Radio/UART/serial/ST-Link/OpenOCD/flash/reset/RF command issued
+  no firmware modified; no model trained; no GPU used
+  nothing staged; nothing committed
+
+SAFE CHECKS:
+  py_compile (3 tools) = COMPILE_OK
+  stale path tools/evidence_gate_stress_eperiment.py = 0 matches
+  typos (peformance/pape/pper/guarante/eperiment) in docs/review = 0 matches
+  overclaim grep README+docs+paper = 0 high-risk, 2 medium watch-items
+  cross-reference check = all referenced docs/review files exist

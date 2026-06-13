@@ -1,0 +1,15 @@
+# SOFTWARE-ONLY DERIVED SUMMARY. Re-summarised from existing reports; no new run, no training, no hardware.
+# Source: docs/review/black_kite_1_target_specific_residual_experiment.md (BK1 target-specific)
+#         docs/review/black_kite_tle_history_residual_experiment.md (BK1->BK2 cross-satellite)
+# reference_is_measured_truth=false. All MAE in Hz at 868 MHz. zero = zero-residual stale-TLE baseline.
+# verdict: blocked => learned residual did NOT beat baseline. NOT a measured-Doppler or live-satellite result.
+experiment,staleness_h,zero_baseline_mae_hz,selected_learned_model,learned_test_mae_hz,delta_pct_vs_zero,verdict
+bk1_target_specific,8,0.2430,mlp_gpu,0.3501,-44.1,blocked
+bk1_target_specific,24,0.8161,mlp_gpu,0.9109,-11.6,blocked
+bk1_target_specific,48,1.9433,mlp_gpu,2.8608,-47.2,blocked
+bk1_target_specific,72,4.8947,ridge,5.9092,-20.7,blocked
+bk1_target_specific,96,10.1153,ridge,11.7663,-16.3,blocked
+bk1_target_specific,168,26.9243,ridge,45.2629,-68.1,blocked
+bk1_to_bk2_crosssat,8,0.1877,mlp,0.3261,-73.7,blocked
+bk1_to_bk2_crosssat,24,0.4969,mlp,1.8639,-275.1,blocked
+bk1_to_bk2_crosssat,48,2.4092,ridge,2.8458,-18.1,blocked

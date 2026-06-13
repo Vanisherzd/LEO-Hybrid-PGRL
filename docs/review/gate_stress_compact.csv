@@ -1,0 +1,9 @@
+# SOFTWARE-ONLY / SYNTHETIC SIMULATION DERIVED SUMMARY. Re-summarised from existing report; no new run.
+# Source: docs/review/evidence_gate_stress_experiment.md (tools/evidence_gate_stress_experiment.py)
+# CONTROLLED SYNTHETIC SIMULATION. NOT real BLACK KITE evidence. reference_is_measured_truth=false.
+# MAE in Hz. guard = 2*p99|err|. outage = P(|err|>500 Hz). gate: G=1[MAE_ml_val < gamma*MAE_sgp4_val].
+# gated MAE at gamma=0.95, val n=largest.
+regime,A_hz,sigma_hz,baseline_mae,ml_mae,winner,gated_mae_g095,gate_g095,guard_base_to_ml_hz,outage_base_to_ml
+fresh_low_residual,0,12,9.558,9.608,baseline,9.558,closed,62->61,0.000->0.000
+moderate_staleness,22,75,63.174,60.176,ml,63.174,closed,412->387,0.000->0.000
+extreme_systematic,2000,90,1859.296,99.748,ml,99.748,open,14120->950,0.814->0.008
