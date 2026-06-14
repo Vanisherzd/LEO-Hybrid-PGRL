@@ -9,6 +9,18 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{etoolbox}
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.2em,itemsep=1pt,topsep=2pt,parsep=0pt}
+
+% Compact vertical spacing for a dense workshop paper (readability preserved)
+\setlength{\textfloatsep}{6pt plus 2pt minus 2pt}
+\setlength{\dbltextfloatsep}{7pt plus 2pt minus 2pt}
+\setlength{\floatsep}{6pt plus 2pt minus 2pt}
+\setlength{\intextsep}{6pt plus 2pt minus 2pt}
+\setlength{\abovedisplayskip}{3pt plus 1pt minus 1pt}
+\setlength{\belowdisplayskip}{3pt plus 1pt minus 1pt}
+\setlength{\abovedisplayshortskip}{2pt}
+\setlength{\belowdisplayshortskip}{2pt}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,fit,backgrounds,calc}
 
@@ -20,7 +32,7 @@
 \begin{document}
 
 % ── Title ────────────────────────────────────────────────────────────────────
-\title{Uncertainty-Aware Physics-Guided Residual Learning for Risk-Aware LR-FHSS Uplink Control in LEO Direct-to-Satellite IoT}
+\title{Physics-First Evidence-Gated Uplink Control for LR-FHSS Direct-to-Satellite IoT}
 
 \author{
   \IEEEauthorblockN{Author~1}
@@ -46,32 +58,103 @@
 
 % ── Abstract ─────────────────────────────────────────────────────────────────
 \begin{abstract}
-Direct-to-Satellite (D2S) IoT terminals must choose guard, timing, and Doppler margins before every LR-FHSS uplink, yet the orbital prediction those margins depend on carries pass-dependent error that fixed worst-case margins can absorb only by wasting energy. This paper maps calibrated orbital-prediction uncertainty into LR-FHSS terminal-side control: the prediction layer exposes not only a corrected orbital state but a calibrated position-domain uncertainty that prices the terminal's guard budget. Physics-Guided Residual Learning (PGRL) augments an SGP4-anchored predictor with a heteroscedastic uncertainty head, fine-tuned independently so that the existing 5.35~m position predictor is preserved while the learned uncertainty reaches near-calibrated coverage without post-hoc rescaling (best temperature $T=1.0$, Cov68/Cov95 $=0.713/0.947$). Used as a risk signal in a guard-adaptation policy, the calibrated uncertainty reduces the outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead and maximizes the risk-adjusted reward at moderate uncertainty weighting. A conducted LR1121-to-USRP B210 capture provides IQ-level evidence that the prediction-driven transmit configuration emits observable LR-FHSS-like structure, with a 9.82~dB TX-ON/OFF margin. Receiver-side decoding and PER measurement remain future gateway-level validation.
+Direct-to-Satellite (D2S) IoT terminals must pre-compensate large LEO Doppler
+shifts before every LR-FHSS uplink from an on-board orbital prediction that is,
+in practice, a \emph{stale} Two-Line Element (TLE) set propagated open-loop by
+SGP4. A natural idea is to learn a data-driven residual correction on top of this
+physics baseline. We test that idea on real Space-Track TLE history for two
+BLACK~KITE LEO satellites (NORAD~66741, 68474) using strict chronological,
+leakage-free splits, and find that a learned Doppler residual model does
+\emph{not} improve over the open-loop SGP4 / stale-TLE baseline at any tested
+staleness (8--168~h), either target-specific or cross-satellite: the inter-TLE
+Doppler residual is essentially zero-mean and unpredictable. Rather than discard
+learning, we make it conditional. We introduce an \emph{Evidence Gate} that
+enables a learned corrector only when a chronological held-out validation window
+shows it beats the physics baseline by a margin~$\gamma$, and otherwise falls
+back to open-loop compensation. On the real BLACK~KITE data the gate correctly
+\emph{closes} (learning disabled). In a controlled synthetic stress study we
+characterise the regime in which the gate \emph{opens}: when a dominant
+systematic drift exists, the gated corrector reduces simulated frequency error,
+guard-band, and outage proxies, while a noise-dominated regime keeps the gate
+shut. All ``reference'' Doppler is model-derived (SGP4 from real TLE), not
+measured; no live-satellite, link-layer, or hardware-radiated result is claimed.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Direct-to-Satellite IoT, LR-FHSS, Physics-Guided Residual Learning, calibrated uncertainty, risk-aware control, guard-band adaptation, LEO satellite
+Direct-to-Satellite IoT, LR-FHSS, transmitter-side control, stale TLE, SGP4,
+Doppler residual, evidence gate, safe-by-default learning, LEO satellite
 \end{IEEEkeywords}
 
 % ── Introduction ─────────────────────────────────────────────────────────────
 \section{Introduction}
 \label{sec:intro}
 
-Direct-to-Satellite (D2S) IoT using Low-Earth Orbit (LEO) satellites enables connectivity for power-constrained end-devices in remote areas, but the high relative velocity (several~km/s in LEO) induces Doppler shifts of tens of kHz---order $20$~kHz at 868~MHz and roughly $50$~kHz at S-band, depending on carrier frequency and pass geometry---together with rapid Doppler-rate changes that stress the physical layer~\cite{hurn2023lrfhss}. Long-Range Frequency-Hopping Spread Spectrum (LR-FHSS), characterized in Semtech's AN1200.64 note~\cite{semtech2023lrfhss}, achieves robust uplink by distributing transmit energy across a grid of narrow frequency bins, providing frequency diversity against Doppler uncertainty. However, terminal-side guard/control margins must accommodate worst-case timing and frequency uncertainty, imposing idle-time overhead that erodes the energy budget of battery-powered IoT nodes.
+Direct-to-Satellite (D2S) IoT using Low-Earth Orbit (LEO) satellites enables
+connectivity for power-constrained end-devices in remote areas, but the high
+relative velocity (several~km/s in LEO) induces Doppler shifts of tens of
+kHz---order $20$~kHz at 868~MHz and roughly $50$~kHz at S-band, depending on
+carrier frequency and pass geometry---together with rapid Doppler-rate changes
+that stress the physical layer~\cite{hurn2023lrfhss}. Long-Range
+Frequency-Hopping Spread Spectrum (LR-FHSS), characterized in Semtech's
+AN1200.64 note~\cite{semtech2023lrfhss}, achieves robust uplink by distributing
+transmit energy across a grid of narrow frequency bins, providing frequency
+diversity against Doppler uncertainty. Because the sub-channels are narrow,
+residual frequency error after pre-compensation is costly: it widens the guard
+the terminal must reserve, increases the chance of missing a hop bin, and spends
+airtime and energy that a battery-powered, unattended node cannot recover.
 
-Our central observation is that a LEO D2S terminal does not only need a predicted orbit; it needs a \emph{calibrated risk signal} that determines how much guard, timing, and frequency margin each transmission is worth. Fixed worst-case margins must cover the rare bad pass on every transmission, so most of the reserved guard time is idle overhead drawn directly from the battery budget of an unattended device. Deterministic point predictions from TLE-based propagators such as SGP4/SDP4~\cite{vallado2007fundamentals}---or from learned correctors built on top of them---do not resolve this, because a point estimate carries no information about how much margin a given pass actually requires. Nor does the raw residual magnitude suffice: the residual is only observable \emph{after} the pass, whereas the terminal must size its margins before transmitting. Calibrated predictive uncertainty is the one risk quantity that is available at planning time and can be priced directly into guard, timing, and frequency decisions---provided its scale can be trusted, since under-scaled uncertainty undersizes the guard and raises outage risk, while over-scaled uncertainty wastes idle time and energy. This paper does not claim a new uncertainty-learning objective; instead, it studies how calibrated position-domain uncertainty can serve as the \emph{control interface} between orbital prediction and LR-FHSS terminal decisions. Physics-Guided Residual Learning (PGRL) uses SGP4 as a physically consistent anchor, augments it with a heteroscedastic uncertainty head fine-tuned independently of the deterministic predictor, and exposes the calibrated radial uncertainty to a risk-aware guard, timing, and Doppler-control policy.
+The terminal must size these margins \emph{before} transmitting, using only the
+orbital information it holds on board---in practice a \emph{stale} TLE propagated
+open-loop by SGP4/SDP4~\cite{vallado2007fundamentals}. This is the deployable
+physics baseline. A tempting hypothesis is that a learned model can predict the
+stale-TLE$\rightarrow$truth Doppler residual and shrink the error. The central
+question of this paper is therefore not how to recover a waveform once it
+exists, but a transmitter-side decision: \emph{when is it justified to learn a
+correction on top of the physics prediction, and when is the safe physics
+default the right choice?}
+
+We expose a gap in the naive ``always learn'' answer. On real TLE history for two
+BLACK~KITE satellites, a learned residual corrector does not beat the open-loop
+SGP4 / stale-TLE baseline at any tested staleness; the residual between
+successive TLE solutions is near zero-mean and unpredictable, so an always-on
+learner would, if anything, \emph{increase} the frequency error it is meant to
+reduce. Our stance is to treat learning as an option that must be \emph{earned}
+on held-out evidence, with the physics model as the safe default. We formalise
+this as an \emph{Evidence Gate}: a learned corrector is deployed only when a
+chronological held-out validation window shows it beats the physics baseline by a
+margin, and the controller otherwise uses open-loop compensation. On the real
+data the gate closes; in a controlled synthetic stress study we show the gate
+opens exactly when a dominant systematic drift makes the residual learnable, and
+then reduces simulated frequency-error, guard, and outage proxies.
 
 This paper's primary contributions are:
 \begin{itemize}
-  \item \emph{Cross-layer formulation.} We cast calibrated position-domain prediction uncertainty as the interface between SGP4-anchored orbital prediction and LR-FHSS terminal-side guard, timing, and Doppler decisions, so that the guard budget is priced by per-pass risk rather than by a fixed worst case.
-  \item \emph{Calibration-preserving predictor augmentation.} A heteroscedastic uncertainty head adds per-pass risk information to an existing deterministic PGRL predictor without altering it: the 5.35~m position RMSE is preserved while the learned uncertainty reaches near-calibrated coverage without post-hoc rescaling ($T=1.0$, Cov68/Cov95 $=0.713/0.947$).
-  \item \emph{Risk--overhead tradeoff characterization.} An uncertainty-scale sensitivity study and an $\alpha$-sweep over the guard policy show how calibration quality and guard weighting jointly set the operating point between outage risk (proxy falling from 5.0\% to 1.7\%) and guard overhead (13.8\%).
-  \item \emph{Conducted IQ-level evidence.} An LR1121-to-USRP B210 conducted capture confirms that the prediction-driven TX configuration emits observable LR-FHSS-like IQ structure (9.82~dB TX-ON/OFF margin), supporting the transmit-configuration path; receiver-in-the-loop validation remains future work.
+  \item \emph{A physics-first, evidence-gated uplink controller.} A
+  transmitter-side LR-FHSS control framework whose default is open-loop SGP4 /
+  stale-TLE Doppler compensation and whose learned residual branch is enabled
+  only by a held-out evidence test, integrated at the Doppler-precompensation
+  point.
+  \item \emph{A rigorous negative result on real data.} Using real Space-Track
+  TLE history for two BLACK~KITE satellites and strict chronological splits, we
+  show learned Doppler residual correction does not beat the open-loop baseline
+  at 8--168~h staleness, both target-specific and cross-satellite.
+  \item \emph{A controlled characterisation of when to learn.} A synthetic stress
+  study spanning noise-dominated to systematic regimes, with $\gamma$ and
+  validation-window sweeps, showing the gate closes on unlearnable residuals and
+  opens on dominant systematic drift.
+  \item \emph{An LR-FHSS guard / outage / energy proxy formulation.} A
+  frequency-error-based set of control proxies (guard-band width, frequency-miss
+  outage, and energy/overhead) used to evaluate the controller without claiming
+  link-layer performance.
+  \item \emph{Claim--evidence discipline and limitation-aware validation.} An
+  explicit binding of every claim to a software-only artifact and to allowed
+  wording, keeping model-derived results strictly separate from any measured or
+  RF claim (of which there are none).
 \end{itemize}
 
 \begin{figure}[t]
     \centering
-    \resizebox{0.97\columnwidth}{!}{%
+    \resizebox{0.90\columnwidth}{!}{%
     \begin{tikzpicture}[
         font=\footnotesize,
         >=Latex,
@@ -93,58 +176,53 @@ This paper's primary contributions are:
         keyarrow/.style={->, line width=2.2pt, green!45!black}
     ]
 
-    % ===== Row 1: Prediction & Risk Signal =====
-    \node[block, fill=blue!10, minimum width=14mm] (tle)  at (0.4,0)     {TLE /\\SGP4};
-    \node[block, minimum width=17mm]               (pgrl) at (2.9,0)     {PGRL\\predictor};
-    \node[block, fill=blue!8, minimum width=19mm]  (mu)   at (6.2,0.55)  {$\mu$ state};
-    \node[block, fill=green!14, thick, draw=green!45!black, minimum width=19mm]
-                                                   (sigma) at (6.2,-0.65) {$\sigma_r$ calibrated\\uncertainty};
+    % ===== Row 1: Prediction =====
+    \node[block, fill=blue!10, minimum width=14mm] (tle)  at (0.4,0)     {Stale\\TLE};
+    \node[block, minimum width=17mm]               (sgp4) at (2.9,0)     {SGP4\\open-loop};
+    \node[block, fill=blue!8, minimum width=20mm]  (fphys)at (6.2,0.55)  {$f_{\mathrm{phys}}(t)$ baseline};
+    \node[block, minimum width=20mm]               (fml)  at (6.2,-0.65) {$f_{\mathrm{ml}}=f_{\mathrm{phys}}+\hat r$};
 
-    % ===== Row 2: Terminal-side LR-FHSS Control =====
-    \node[block, fill=orange!12, minimum width=20mm] (txwin) at (1.2,-3.0) {TX window\\$U(t)$};
-    \node[block, fill=green!14, very thick, draw=green!45!black, minimum width=26mm]
-                                                     (guard) at (4.4,-3.0) {$g = g_{\mathrm{base}} + \alpha\,\sigma_r$};
-    \node[block, fill=orange!12, minimum width=20mm] (cfo)   at (7.4,-3.0) {Doppler / CFO\\pre-comp};
+    % ===== Row 2: Evidence Gate =====
+    \node[block, fill=green!14, very thick, draw=green!45!black, minimum width=46mm]
+        (gate) at (4.1,-2.5) {Evidence Gate\\$G=\mathbf{1}[\,\mathrm{MAE}_{\mathrm{ml}}(V)<\gamma\,\mathrm{MAE}_{\mathrm{phys}}(V)\,]$};
 
-    % ===== Row 3: Conducted IQ Evidence =====
-    \node[block, fill=gray!12, minimum width=20mm] (lr)   at (1.2,-5.5) {LR1121\\TX config};
-    \node[block, fill=gray!12, minimum width=20mm] (usrp) at (4.4,-5.5) {USRP B210\\IQ capture};
-    \node[block, fill=gray!12, minimum width=22mm] (evd)  at (7.4,-5.5) {9.82 dB margin\\hop-like structure};
+    % ===== Row 3: Terminal control =====
+    \node[block, fill=orange!12, minimum width=22mm] (deploy) at (1.6,-4.5) {$\hat f=G f_{\mathrm{ml}}+(1{-}G)f_{\mathrm{phys}}$};
+    \node[block, fill=orange!12, minimum width=22mm] (proxy)  at (6.6,-4.5) {guard / outage /\\energy proxy};
 
     % ===== Background group boxes =====
     \begin{scope}[on background layer]
-        \node[group=blue!5,   fit=(tle)(pgrl)(mu)(sigma),
-              label={[font=\footnotesize\bfseries, anchor=south west]north west:Prediction \& Risk Signal}] (G1) {};
-        \node[group=orange!6, fit=(txwin)(guard)(cfo),
-              label={[font=\footnotesize\bfseries, anchor=south west]north west:Terminal-side LR-FHSS Control}] (G2) {};
-        \node[group=gray!8,   fit=(lr)(usrp)(evd),
-              label={[font=\footnotesize\bfseries, anchor=south west]north west:Conducted IQ Evidence}] (G3) {};
+        \node[group=blue!5,   fit=(tle)(sgp4)(fphys)(fml),
+              label={[font=\footnotesize\bfseries, anchor=south west]north west:Prediction (model-derived)}] (G1) {};
+        \node[group=green!7,  fit=(gate),
+              label={[font=\footnotesize\bfseries, anchor=south west]north west:Evidence Gate (held-out validation)}] (G2) {};
+        \node[group=orange!6, fit=(deploy)(proxy),
+              label={[font=\footnotesize\bfseries, anchor=south west]north west:Terminal-side LR-FHSS Control}] (G3) {};
     \end{scope}
 
-    % ===== Row-1 internal arrows =====
-    \draw[arrow] (tle) -- (pgrl);
-    \draw[arrow] (pgrl.east) -- (mu.west);
-    \draw[arrow] (pgrl.east) -- (sigma.west);
-
-    % ===== Key contribution path =====
-    \draw[keyarrow] (sigma.south) -- node[right, font=\footnotesize\bfseries, green!45!black, xshift=1mm]
-        {$\sigma_r$ risk signal} (guard.north);
-
-    % ===== Secondary control path =====
-    \draw[arrow] (mu.east) .. controls +(11mm,0mm) and +(0mm,13mm) .. (cfo.north);
-
-    % ===== Control to conducted evidence =====
-    \draw[arrow] (G2.south) -- node[right, font=\scriptsize] {LR-FHSS TX configuration} (G3.north);
-    \draw[arrow] (lr) -- (usrp);
-    \draw[arrow] (usrp) -- (evd);
+    % ===== arrows =====
+    \draw[arrow] (tle) -- (sgp4);
+    \draw[arrow] (sgp4.east) -- (fphys.west);
+    \draw[arrow] (sgp4.east) -- (fml.west);
+    \draw[arrow] (fphys.south) -- (gate.north);
+    \draw[arrow] (fml.south)   -- (gate.north);
+    \draw[keyarrow] (gate.south) -- node[right, font=\footnotesize\bfseries, green!45!black, xshift=1mm]
+        {$G$} (deploy.north);
+    \draw[arrow] (deploy.east) -- (proxy.west);
 
     % ===== Scope note =====
     \node[font=\scriptsize\itshape, text=gray!70]
         at ($(G3.south)+(0,-4mm)$)
-        {Conducted IQ-level scope; receiver decoding is future work.};
+        {Software-only / model-derived; no measured Doppler, no live-satellite, no RF claim.};
 
     \end{tikzpicture}}
-    \caption{Cross-layer terminal-control architecture. The highlighted path maps calibrated position-domain uncertainty $\sigma_r$ into the LR-FHSS guard budget $g=g_{\mathrm{base}}+\alpha\sigma_r$, which is the main control interface studied in this paper. The conducted LR1121/USRP path provides IQ-level transmit-path evidence.}
+    \caption{Physics-first evidence-gated uplink control. The open-loop SGP4 /
+    stale-TLE Doppler $f_{\mathrm{phys}}$ is the default; a learned residual
+    corrector $f_{\mathrm{ml}}=f_{\mathrm{phys}}+\hat r$ is deployed only when the
+    Evidence Gate $G$ passes on a chronological held-out validation window. The
+    deployed prediction feeds LR-FHSS guard / outage / energy control proxies.
+    All Doppler is model-derived (SGP4 from real TLE);
+    \texttt{reference\_is\_measured\_truth=false}.}
     \label{fig:architecture}
 \end{figure}
 
@@ -153,236 +231,462 @@ This paper's primary contributions are:
 \label{sec:related}
 
 \subsection{LR-FHSS for Direct-to-Satellite IoT}
-LR-FHSS extends LoRaWAN for direct-to-satellite IoT by distributing transmit energy across a grid of narrow hopping bins, providing frequency diversity against the strong Doppler of LEO passes~\cite{semtech2023lrfhss,boquet2021lrfhss}. Link-level analyses quantify its behavior under LEO Doppler and large device populations~\cite{ullah2022lrfhss,hurn2023lrfhss}, and energy studies characterize the cost that headers, fragments, and idle margins impose on battery-powered devices~\cite{sanchez2024energy}. A substantial body of work then improves what happens \emph{after} a transmission exists: dedicated transceiver designs and implementations~\cite{jung2023lrfhss,jung2025lrfhss}, header replication with network coding~\cite{knop2024header}, asynchronous contention resolution~\cite{santana2024acrda}, message replication for reliability~\cite{rathi2024replication}, and probabilistic allocation of payload code rate and header copies~\cite{farhat2025probabilistic}; real-world packet traces further show that fragment recovery and demodulation are a dedicated software-receiver problem~\cite{bukhari2023lrfhss}. These works study synchronization, detection, and delivery of an existing waveform. The complementary terminal-side question---how orbital-prediction quality should shape guard and timing margins \emph{before} transmission---is comparatively unexplored and is the focus of this paper.
+LR-FHSS extends LoRaWAN for direct-to-satellite IoT by distributing transmit
+energy across a grid of narrow hopping bins, providing frequency diversity
+against the strong Doppler of LEO passes~\cite{semtech2023lrfhss,boquet2021lrfhss}.
+Link-level analyses quantify its behavior under LEO Doppler and large device
+populations~\cite{ullah2022lrfhss,hurn2023lrfhss}, and energy studies characterize
+the cost that headers, fragments, and idle margins impose on battery-powered
+devices~\cite{sanchez2024energy}. A substantial body of work then improves what
+happens \emph{after} a transmission exists: dedicated transceiver designs and
+implementations~\cite{jung2023lrfhss,jung2025lrfhss}, header replication with
+network coding~\cite{knop2024header}, asynchronous contention
+resolution~\cite{santana2024acrda}, message replication for
+reliability~\cite{rathi2024replication}, and probabilistic allocation of payload
+code rate and header copies~\cite{farhat2025probabilistic}; real-world packet
+traces further show that fragment recovery and demodulation are a dedicated
+software-receiver problem~\cite{bukhari2023lrfhss}. These works study an existing
+waveform's synchronization, detection, and delivery; the complementary
+terminal-side question---how prediction quality should shape Doppler
+pre-compensation \emph{before} transmission---is comparatively unexplored and is
+our focus.
 
 \subsection{ML for LEO Orbit Prediction}
-Analytical TLE propagators such as SGP4/SDP4~\cite{hoots1980models,vallado2007fundamentals,vallado2006revisiting} are deterministic and lightweight but accumulate timing and Doppler error with prediction horizon and TLE age. Machine-learning orbit work increasingly treats such a propagator as a physics anchor and learns corrections on top of it: Gaussian-process error correction~\cite{peng2019gp}, fusion of learned and classical predictions~\cite{peng2021fusion}, differentiable SGP4 refinement~\cite{acciarini2025dsgp4}, physics-informed networks for satellite state estimation~\cite{varey2024pinn}, and learned LEO orbit prediction with exogenous variables~\cite{caldas2024leo}; see~\cite{caldas2024mlorbit} for a survey. Across this line of work the dominant objective is trajectory accuracy, and even where a predictive variance is available it is evaluated as a prediction artifact rather than as a quantity a communication terminal could act on. This work instead asks whether the learned uncertainty is \emph{calibrated} enough to price terminal-side margins.
+Analytical TLE propagators such as
+SGP4/SDP4~\cite{hoots1980models,vallado2007fundamentals,vallado2006revisiting}
+are deterministic and lightweight but accumulate timing and Doppler error with
+prediction horizon and TLE age. Machine-learning orbit work increasingly treats
+such a propagator as a physics anchor and learns corrections on top of it:
+Gaussian-process error correction~\cite{peng2019gp}, fusion of learned and
+classical predictions~\cite{peng2021fusion}, differentiable SGP4
+refinement~\cite{acciarini2025dsgp4}, physics-informed networks for satellite
+state estimation~\cite{varey2024pinn}, and learned LEO orbit prediction with
+exogenous variables~\cite{caldas2024leo}; see~\cite{caldas2024mlorbit} for a
+survey. The dominant objective there is trajectory accuracy, with correctors
+reported where they help. We instead ask the prior question for a terminal:
+whether learning a Doppler residual over a stale-TLE baseline is justified by
+held-out evidence \emph{at all}---and give a real-data case where it is not.
 
 \subsection{LEO D2S Doppler and Uplink Control}
-LEO non-terrestrial networking studies characterize the strong, time-varying Doppler of LEO passes and motivate pre-compensation and timing control at the terminal~\cite{3gpp2019tr38821,hurn2023lrfhss}, and uplink transmission-policy work for LoRa-based D2S IoT optimizes when and how a terminal transmits using pass geometry and link scores~\cite{alvarez2022uplink}. These policies typically assume a deterministic prediction or a fixed worst-case margin; the margin itself is not an adaptive quantity. We instead let a \emph{calibrated} per-pass uncertainty drive the margin, applying the broader principle of sizing safety margins to predicted risk rather than to a fixed bound.
+LEO non-terrestrial networking studies characterize the strong, time-varying
+Doppler of LEO passes and motivate pre-compensation and timing control at the
+terminal~\cite{3gpp2019tr38821,hurn2023lrfhss}, and uplink transmission-policy
+work for LoRa-based D2S IoT optimizes when and how a terminal transmits using
+pass geometry and link scores~\cite{alvarez2022uplink}. These policies typically
+assume a deterministic prediction or a fixed conservative margin; the decision of
+whether to trust a \emph{learned} correction is not itself treated as a gated,
+evidence-driven choice. We make that choice explicit and safe-by-default.
 
 \subsection{Gap and Positioning}
-Table~\ref{tab:related} summarizes the positioning. Receiver-side LR-FHSS work and terminal-side prediction-aware control are complementary: the former recovers packets once transmitted, the latter decides how transmissions are configured. The missing piece this paper addresses is the interface between them---a calibrated, position-domain uncertainty that orbital prediction can expose and that LR-FHSS terminal control can consume.
-
-\begin{table}[htbp]
-\footnotesize
-\setlength{\tabcolsep}{3pt}
-\caption{Positioning Relative to Prior Art}
-\label{tab:related}
-\begin{tabular}{p{1.35cm}p{2.0cm}p{1.9cm}p{2.1cm}}
-\toprule
-Category & Representative focus & Control variable exposed & Relation to this work \\
-\midrule
-LR-FHSS / D2S analysis & Link budget, receiver behavior, packet traces & Receiver-side reliability after transmission & Complementary; this paper acts before transmission at terminal \\
-D2S uplink policy & Transmission timing / access policy & Link score or pass window & This paper adds calibrated orbital uncertainty to the decision \\
-ML orbit prediction & State prediction / residual correction & Trajectory estimate & This paper uses uncertainty, not only point state, for communication control \\
-\midrule
-This paper & Calibrated uncertainty-driven terminal control & Guard / timing / Doppler decisions & Bridges prediction and LR-FHSS uplink control \\
-\bottomrule
-\end{tabular}
-\end{table}
+Receiver-side LR-FHSS work and terminal-side prediction-aware control are
+complementary: the former recovers packets once transmitted, the latter decides
+how transmissions are configured. Receiver/transceiver studies expose reliability
+after transmission; D2S uplink policies expose a link score or pass window; and ML
+orbit work exposes a trajectory estimate or residual corrector. The piece this
+paper addresses is the transmitter-side decision under stale orbital
+information---when to deploy a learned Doppler residual correction and when to keep
+the physics default---bound to an explicit held-out evidence test.
 
 % ── Background and System Model ───────────────────────────────────────────────
 \section{Background and System Model}
 \label{sec:system}
 
 \subsection{LEO D2S Channel Characteristics}
-During a typical LEO pass at $\sim$600~km altitude, the one-way Doppler reaches tens of kHz (order $20$~kHz at 868~MHz, $\sim$50~kHz at S-band) with the largest Doppler rate near closest approach; exact values scale with carrier frequency and pass geometry. The Doppler shift is modeled as
+In a LEO pass the one-way Doppler reaches tens of kHz (order $20$~kHz at 868~MHz,
+$\sim$50~kHz at S-band), with the largest rate near closest approach and scaling
+with carrier frequency and pass geometry. The Doppler shift is modeled as
 \begin{equation}
 f_D(t) = -\frac{v_r(t)}{c}\,f_c
 \label{eq:doppler}
 \end{equation}
-where $v_r(t)$ is the radial velocity (positive when satellite recedes) and $c$ is the speed of light. The residual CFO after pre-compensation is
+where $v_r(t)$ is the radial velocity (positive when satellite recedes) and $c$
+is the speed of light. The residual CFO after pre-compensation is
 \begin{equation}
 f_{\mathrm{res}}(t) = f_D(t) - \hat{f}_D(t) + f_{\mathrm{osc}},
 \label{eq:residual_cfo}
 \end{equation}
-where $\hat{f}_D$ is the predicted Doppler and $f_{\mathrm{osc}}$ is the terminal oscillator offset. In our LR-FHSS-inspired proxy, the available bandwidth is discretized into $N_f$ hopping bins, and reliable hop reception is modeled as $|f_{\mathrm{res}}|$ after pre-compensation remaining small relative to the bin width; the bin width is an evaluation parameter, and this criterion is a proxy rather than a standard-compliant receiver model.
+where $\hat{f}_D$ is the predicted Doppler and $f_{\mathrm{osc}}$ is the terminal
+oscillator offset. We model reliable hop reception as $|f_{\mathrm{res}}|$ staying
+small relative to a fixed frequency tolerance $F_{\mathrm{tol}}$; this is a control
+proxy, not a standard-compliant receiver model.
 
-\subsection{SGP4/SDP4 Orbital Propagation}
-SGP4/SDP4~\cite{hoots1980models} propagates Two-Line Element (TLE) sets to produce Cartesian position and velocity at any epoch. The algorithm is deterministic and computationally lightweight but accumulates RMS timing errors of 1--4~s and Doppler errors of $>5$~kHz over prediction horizons of 30--120~min, depending on TLE age. These errors are non-Gaussian and time-correlated, which limits the effectiveness of naive uncertainty estimation on top of SGP4 output.
-
-\subsection{PGRL Architecture}
-PGRL augments SGP4 with a SIREN (sinusoidal representation network) residual predictor. The input is the query time-since-epoch together with the SGP4-derived normalized orbital state/elements; the network emits a stacked $12$-vector $[\boldsymbol{\mu}\,(6),\ \log\boldsymbol{\sigma}^2\,(6)]$. The mean head $\boldsymbol{\mu}$ gives the corrected position/velocity state (normalized by distance/velocity units $\mathrm{DU}{=}10^4$~m, $\mathrm{VU}{=}10$~m/s), and the parallel log-variance head $\log\sigma_i^2$ gives a per-axis uncertainty. This is a heteroscedastic-uncertainty head, not a Bayesian posterior: there is no weight sampling, ensemble, or variational inference. The \emph{deterministic} predictor is trained earlier with a state MSE plus a physics-inspired regularizer penalizing departures from Keplerian energy $E=-\mu/(2a)$ and angular-momentum $|\mathbf{h}|=\sqrt{\mu a(1-e^2)}$ conservation.
-
-\emph{Uncertainty-head fine-tuning (Stage 3E).} Starting from the trained deterministic checkpoint, the mean head is \emph{frozen} and the objective $\mathcal{L}=\mathcal{L}_{\text{MSE}}+\mathcal{L}_{\text{phys}}+0.05\,\mathcal{L}_{\text{NLL}}$ is minimized. The MSE and physics terms are retained for continuity with the deterministic stage but, with the mean frozen, update no trainable parameter, so only the log-variance layer is updated, through the Gaussian NLL term
+\subsection{Stale-TLE Open-Loop Baseline and the Learned Residual}
+\label{sec:baseline}
+The terminal holds a TLE that is, in general, older than the present epoch.
+Propagating this \emph{stale} TLE with SGP4~\cite{hoots1980models} gives the
+deployable open-loop Doppler prediction $f_{\mathrm{phys}}(t)$. To study whether
+this can be improved, we define a model-derived \emph{reference} Doppler
+$D_{\mathrm{ref}}(t)$ as the SGP4 propagation of a \emph{later} TLE for the same
+satellite at the same UTC. We emphasise that
+\texttt{reference\_is\_measured\_truth = false}: $D_{\mathrm{ref}}$ is a newer
+TLE solution, not an RF measurement of satellite Doppler. The quantity a learner
+would have to predict is the inter-TLE residual
 \begin{equation}
-\mathcal{L}_{\text{NLL}} = \frac{1}{N}\sum_{n=1}^{N}\sum_{i=1}^{3}\left[
-  \log\sigma_{n,i}^2 + \frac{(y_{n,i} - \mu_{n,i})^2}{\sigma_{n,i}^2}
-\right],
-\label{eq:nll}
+r(t) = D_{\mathrm{ref}}(t) - f_{\mathrm{phys}}(t),
+\label{eq:residual}
 \end{equation}
-where $\mu_{n,i},\sigma_{n,i}$ are the (frozen) mean and learned per-axis standard deviation. The log-variance layer is initialized to $\log((10/\mathrm{DU})^2)$ (an initial per-axis $\sigma\approx 10$~m in reported metres, $\mathrm{DU}$ the distance unit) and converges to a mean axis $\sigma\approx 3.01$~m. Uncertainty fine-tuning therefore preserves the deterministic predictor: the learned uncertainty is a calibrated \emph{position-domain} ($\sigma$ in metres) estimate, while timing (ms) and Doppler (Hz) uncertainties are derived through the proxy mapping of Sec.~\ref{sec:uplink}.
+which encodes mean-element updates, drag-term changes, and numerical fit
+differences between successive TLE solutions. A learned corrector forms
+$f_{\mathrm{ml}}(t)=f_{\mathrm{phys}}(t)+\hat r(x_t)$ from a feature vector $x_t$
+(TLE age, epoch gap, stale Doppler, orbital phase, geometry, and stale orbital
+elements). All Doppler is computed at 868~MHz for a representative ground station
+(24$^\circ$N, 121$^\circ$E).
 
-\emph{Coverage metric.} Calibration is assessed by Mahalanobis chi-square coverage: for each sample $z^2=\sum_i (e_i/\sigma_i)^2$ with per-axis error $e_i$. Under a calibrated $3$-DoF Gaussian, the 68\% and 95\% credible regions correspond to thresholds $z^2\le 3.506$ and $z^2\le 7.815$; the empirical coverage is the fraction of samples below each threshold (Sec.~\ref{sec:eval}).
+% ── Method: Evidence Gate ─────────────────────────────────────────────────────
+\section{Physics-First Evidence-Gated Control}
+\label{sec:method}
 
-% ── PGRL Orbital Predictor ────────────────────────────────────────────────────
-\section{PGRL Orbital Predictor}
-\label{sec:pgrl}
-
-The PGRL predictor receives a TLE epoch and exposes a structured output comprising the pass-start timing error (relative to SGP4-estimated AOS), the residual Doppler and Doppler-rate error after SGP4 compensation, one-sigma timing and Doppler uncertainty, a link-opportunity score (Doppler, timing, and energy cost), and a recommended guard time (minimum guard interval at $3.5\sigma$). The trained uncertainty head emits a per-axis \emph{position-domain} standard deviation (in metres); the timing- and Doppler-domain $\sigma$ fields are schema conveniences derived under the simulation mapping of Sec.~\ref{sec:uplink} and are not directly trained quantities. The uncertainty head maintains a near-calibrated scale without post-hoc rescaling (Sec.~\ref{sec:eval}); online refinement is out of scope.
-
-% ── Uplink Control ────────────────────────────────────────────────────────────
-\section{LR-FHSS Uplink Control}
-\label{sec:uplink}
-
-\subsection{Risk-Aware Guard-Band Policy}
-\label{sec:guard}
-The calibrated position-domain uncertainty is used to size the guard margin to the actual prediction risk. Let $\sigma_r$ be the calibrated radial standard deviation (in metres) from the uncertainty head. The risk-aware guard is
+\subsection{The Evidence Gate}
+\label{sec:gate}
+Let $V$ be a chronological \emph{validation} window, strictly later than the
+training span and strictly earlier than the held-out test span, so that no future
+TLE leaks into model selection. On $V$ we measure the mean absolute frequency
+error of the physics baseline and of the learned corrector against the
+model-derived reference,
+\begin{align}
+\mathrm{MAE}_{\mathrm{phys}}(V) &= \tfrac{1}{|V|}\textstyle\sum_{t\in V}\big|D_{\mathrm{ref}}(t)-f_{\mathrm{phys}}(t)\big|,\\
+\mathrm{MAE}_{\mathrm{ml}}(V)   &= \tfrac{1}{|V|}\textstyle\sum_{t\in V}\big|D_{\mathrm{ref}}(t)-f_{\mathrm{ml}}(t)\big|.
+\end{align}
+The Evidence Gate enables learning only on a proven margin,
 \begin{equation}
-g_{\text{uncertain}} = g_{\text{base}} + \alpha\,\sigma_r,
-\label{eq:riskguard}
+G = \mathbf{1}\!\left[\,\mathrm{MAE}_{\mathrm{ml}}(V) < \gamma\,\mathrm{MAE}_{\mathrm{phys}}(V)\,\right],
+\qquad \gamma\in(0,1],
+\label{eq:gate}
 \end{equation}
-where $\alpha\ge 0$ scales the uncertainty contribution. The base guard $g_{\text{base}}$ is the $95$th-percentile position residual (a deterministic worst-case margin), and $\sigma_r=\lVert(\sigma_x,\sigma_y,\sigma_z)\rVert$ is the calibrated radial position uncertainty from the log-variance head. With $\alpha=0$ the policy reduces to the fixed deterministic baseline; increasing $\alpha$ widens the guard in proportion to the predicted per-sample uncertainty. Each $\alpha$ is scored by an \emph{outage proxy} $\rho=\Pr[e_r>g_{\text{uncertain}}]$ (residual error exceeding the guard), a \emph{success proxy} $1-\rho$, a normalized guard overhead $\bar g=\mathbb{E}[g_{\text{uncertain}}]/\mathbb{E}[g_{\text{base}}]$, and a risk-adjusted reward
+and the deployed corrector defaults to physics otherwise,
 \begin{equation}
-R = (1-\rho) - \lambda\,(\bar g - 1), \qquad \lambda = 0.1.
-\label{eq:reward}
+\hat f(t) = G\,f_{\mathrm{ml}}(t) + (1-G)\,f_{\mathrm{phys}}(t).
+\label{eq:deploy}
 \end{equation}
-We sweep $\alpha\in\{0.00,0.25,0.50,0.75,1.00\}$. These are control proxies, not measured packet-error rates.
 
-\subsection{Design Insight: Calibration as a Guard-Budget Control Knob}
-\label{sec:insight}
-The role of calibration here is operational rather than cosmetic. In Eq.~\eqref{eq:riskguard}, the predicted radial uncertainty is directly priced into the guard budget, so the terminal does not care about calibration as a statistical metric alone---it cares because the calibration scale sets how much battery and idle time every transmission spends. Under-calibration buys apparent energy efficiency by silently taking on outage risk; over-calibration buys robustness by wasting guard budget that a battery-powered device cannot recover. The practical operating point is therefore a calibrated risk--overhead compromise, not the smallest point error: the controller requires an uncertainty \emph{scale} reliable enough that one unit of predicted $\sigma_r$ corresponds to one unit of realized risk. The learning stage must thus deliver not a better trajectory but a trustworthy risk signal. The sensitivity study in Table~\ref{tab:sens} quantifies how miscalibration distorts this mapping, and the $\alpha$ sweep in Table~\ref{tab:alpha} quantifies the resulting risk--overhead tradeoff; together they form the main result of this paper, that calibrated position-domain uncertainty is a practical terminal-side control signal.
+\emph{Scope of the gate property (honest).} If $G=1$ then by construction
+$\mathrm{MAE}_{\mathrm{ml}}(V) < \gamma\,\mathrm{MAE}_{\mathrm{phys}}(V) \le
+\mathrm{MAE}_{\mathrm{phys}}(V)$, and if $G=0$ the deployed error equals the
+baseline; hence $\mathrm{MAE}_{\hat f}(V)\le \mathrm{MAE}_{\mathrm{phys}}(V)$
+\emph{on the validation window}. This is a validation-window property only, not a
+held-out or distribution-shift bound: a gate-opened learner can still underperform
+on unseen data under distribution shift. The threshold $\gamma$ trades safety
+(small $\gamma$, rarely opens) against opportunism ($\gamma\!\to\!1$, opens on any
+apparent gain, including noise); we therefore report the gate decision across
+$\gamma$ and validation-window size and make no net-improvement claim.
 
-\subsection{Doppler Pre-Compensation (Simulation/Proxy)}
-As a separate control-framework component (a \emph{simulation/proxy} assumption, not trained-model evidence), the \texttt{compensated\_tx\_frequency} function adjusts the nominal carrier $f_c$ using a predicted Doppler shift $\hat{f}_d$ and rate $\hat{f}_d'$:
+\subsection{Statistical Role of the Gate}
+\label{sec:stat}
+The gate is a binary hypothesis test on the learned corrector, and it is useful
+to name its two error modes. A \emph{false open} (Type-I) occurs when the residual
+is noise-dominated but a favourable validation fluctuation drives
+$\mathrm{MAE}_{\mathrm{ml}}(V)$ just below $\gamma\,\mathrm{MAE}_{\mathrm{phys}}(V)$,
+so $G=1$ and the deployed pre-compensation inherits avoidable prediction noise
+from a corrector that has nothing real to correct. A \emph{missed open} (Type-II)
+occurs when a genuine systematic drift exists but the validation estimate does not
+clear the margin, so $G=0$ and the terminal forgoes a chance to shrink its
+frequency margin under the proxy of Sec.~\ref{sec:proxies}. The threshold
+$\gamma$ is the conservative control knob between the two: a smaller $\gamma$
+demands a wider proven margin, suppressing false opens at the cost of more missed
+opens, while $\gamma\!\to\!1$ is opportunistic and will open on small, possibly
+spurious validation gains. We use $\gamma=0.95$ as a conservative default, which
+on the real BLACK~KITE data keeps the gate closed and on the synthetic regimes
+opens only when the systematic margin is large (Sec.~\ref{sec:eval}). This framing
+is descriptive of the decision rule's behaviour; it is not a performance promise
+across deployment conditions.
+
+\subsection{LR-FHSS Guard / Outage / Energy Proxies}
+\label{sec:proxies}
+Residual frequency error is the natural cross-layer quantity linking orbital
+prediction to LR-FHSS terminal control: each hop occupies a narrow sub-channel,
+so the deployed prediction error $e(t)=D_{\mathrm{ref}}(t)-\hat f(t)$ directly
+sets how much frequency margin a transmission must reserve and how likely a hop is
+to fall outside its intended bin. From $e(t)$ we derive three control proxies used
+consistently across all experiments. The \emph{guard-band proxy}
+$g = 2\,p_{99}(|e|)$ is a conservative frequency-margin proxy: twice the
+99th-percentile absolute error covers the bulk of the error distribution while
+remaining a percentile statistic rather than an absolute extremum. The
+\emph{outage proxy} $\rho = \Pr[\,|e| > F_{\mathrm{tol}}\,]$, with a fixed
+bin-tolerance $F_{\mathrm{tol}}=500$~Hz, represents the frequency-miss probability
+under a simplified bin-tolerance model. The \emph{energy/overhead proxy} is
+monotone in the reserved margin and in the repeated-transmission pressure that
+missed hops induce; a convenient dimensionless form is
 \begin{equation}
-f_{\text{TX}} = f_c - \hat{f}_d - \frac{\hat{f}_d'}{2}\,T_{\text{burst}},
+E_{\mathrm{proxy}} \;\propto\; \Big(1 + \alpha_g\,\tfrac{g}{B}\Big)\,(1 + \rho),
+\label{eq:eproxy}
 \end{equation}
-with $T_{\text{burst}}$ the burst duration. Under the simulation assumptions of Sec.~\ref{sec:eval}, tighter residual CFO keeps hop energy within an LR-FHSS bin; we report only proxy RF-quality indicators (EVM proxy, grid orthogonality) and do not measure PER.
+where $B$ is the hopping bandwidth and $\alpha_g\!\ge\!0$ weights reserved guard
+relative to retransmission pressure: the first factor charges for idle guard, the
+second for the airtime that frequency misses tend to provoke. Equation~\eqref{eq:eproxy}
+is an illustrative overhead \emph{proxy}, not a measured energy model and not a
+packet-delivery model. All three are control-layer proxies for terminal margin
+sizing; they are explicitly \emph{not} packet-error, bit-error, or link-budget
+measurements.
 
-\subsection{TX Timing Selection}
-The \texttt{select\_tx\_time} function scores candidate transmission windows using a weighted utility:
-\begin{equation}
-U(t) = w_q\, q(t) - w_f\, |\dot f_D(t)| - w_e\, E_{\mathrm{idle}}(t)
-\end{equation}
-where $q(t)$ is the link-score term and $w_q, w_f, w_e$ are tunable utility weights. The optimizer selects the window with maximum $U(t)$ within a 6-hour planning horizon, balancing link quality, Doppler rate, and energy expenditure. Algorithm~\ref{alg:control} summarizes the end-to-end terminal-side procedure; it is intentionally lightweight so that the terminal-side decision can be implemented without receiver feedback.
+\subsection{Datasets and Splits}
+\label{sec:data}
+Real evaluation uses Space-Track TLE history for two BLACK~KITE LEO satellites:
+BLACK~KITE-1 (NORAD~66741, 415 records, 2025-12-18 to 2026-06-12, median
+inter-TLE gap $6.3$~h) and BLACK~KITE-2 (NORAD~68474, 184 records, 2026-04-13 to
+2026-06-13, median gap $6.4$~h). For each reference (newer) TLE, an older TLE
+inside a target staleness band is paired with it, propagated open-loop, and
+compared to the reference at 24 UTC samples over one orbital period; pairs with a
+manoeuvre/bad-fit outlier are rejected. Splits are chronological by reference
+epoch (60/20/20 train/validation/test), so the stale TLE in any test pair is
+always available before the test reference epoch. The synthetic stress study
+(Sec.~\ref{sec:eval-stress}) is a controlled simulation and uses no Space-Track
+data.
 
-\begin{algorithm}[H]
-\caption{Uncertainty-Aware LR-FHSS Uplink Control}
-\label{alg:control}
-\begin{algorithmic}[1]
-\Require TLE, query window $\mathcal{T}$, trained PGRL model, base guard $g_{\text{base}}$, uncertainty scale $\alpha$
-\Ensure LR-FHSS TX configuration
-\State Propagate the SGP4 state over $\mathcal{T}$
-\State $(\boldsymbol{\mu},\boldsymbol{\sigma}) \gets \mathrm{PGRL}(\text{SGP4 state})$ \Comment{residual + uncertainty}
-\State $\sigma_r \gets \lVert(\sigma_x,\sigma_y,\sigma_z)\rVert$ \Comment{radial uncertainty}
-\State $g \gets g_{\text{base}} + \alpha\,\sigma_r$ \Comment{risk-priced guard, Eq.~\eqref{eq:riskguard}}
-\State Estimate Doppler $\hat f_d$, residual CFO $f_{\mathrm{res}}$; set $f_{\text{TX}}$
-\For{each candidate window $t \in \mathcal{T}$}
-  \State Score $U(t) = w_q\, q(t) - w_f\, |\dot f_D(t)| - w_e\, E_{\mathrm{idle}}(t)$
-\EndFor
-\State $t^\star \gets \arg\max_{t} U(t)$
-\State Configure LR1121: center frequency, hop grid, guard $g$, CFO pre-compensation; transmit at $t^\star$
-\end{algorithmic}
-\end{algorithm}
+\emph{Deployment recipe.} At control time the terminal propagates the stale TLE to
+$f_{\mathrm{phys}}$, forms $f_{\mathrm{ml}}=f_{\mathrm{phys}}+\hat r(x_t)$,
+evaluates $\mathrm{MAE}_{\mathrm{phys}}(V),\mathrm{MAE}_{\mathrm{ml}}(V)$ on $V$,
+sets $G$ (Eq.~\eqref{eq:gate}) and deploys $\hat f$ (Eq.~\eqref{eq:deploy}), then
+sizes the guard from $g=2\,p_{99}(|e|)$. It needs no receiver feedback and is
+recomputed when a fresh TLE arrives.
 
 % ── Evaluation ────────────────────────────────────────────────────────────────
 \section{Evaluation}
 \label{sec:eval}
 
 \subsection{Experimental Setup}
-The Stage~3E/3F/4 results are produced by the offline evaluation scripts under \url{scripts/} (uncertainty-head fine-tuning, temperature calibration, and risk-aware control ablation) applied to the deterministic checkpoint, with seed~$=42$; trained checkpoints reside on the training machine. Reported metres use $e_m = e_{\text{norm}}\cdot\mathrm{DU}$. The risk-aware ablation (Eq.~\ref{eq:riskguard}) defines the outage proxy as the fraction of samples with $e_r>g_{\text{uncertain}}$, the success proxy as its complement, and the reward as $\text{success}-\lambda(\,\overline{g}-1)$ with energy weight $\lambda=0.1$ and $\overline{g}$ the guard normalized to the $\alpha{=}0$ baseline. As separate simulation proxies (Monte Carlo, seed~42) we additionally report an LR-FHSS 64-bin grid-orthogonality proxy and a QPSK EVM proxy at SNR$=40$~dB; these are RF-quality indicators, not LR-FHSS PER.
+Doppler is computed with python-SGP4 at 868~MHz for the representative ground
+station of Sec.~\ref{sec:baseline}. The 868~MHz carrier is used as a
+representative value for Doppler scaling and reproducibility; the controller is
+frequency-parametric (Eq.~\eqref{eq:doppler}), so the same formulation applies at
+other carriers by rescaling $f_c$, and no deployment-specific regulatory
+assumption is made here. Learned candidates are ridge, random forest,
+gradient boosting, and a small MLP; the learned model is selected on the
+chronological validation segment and the gate is evaluated once on the held-out
+test segment. A window is counted as supported only if the validation-selected
+learned model beats the zero-residual stale-TLE baseline on held-out test MAE by
+a clear margin and also improves RMSE. All results in this section are
+software-only and model-derived; no hardware, RF, UART, replay, or measured
+Doppler is involved.
 
-\subsection{Calibrated Uncertainty and Risk-Aware Control}
+\subsection{Real BLACK~KITE Negative Result}
+\label{sec:eval-real}
+Table~\ref{tab:bk} reports the held-out test MAE of the validation-selected
+learned model against the zero-residual stale-TLE baseline. The learned residual
+is worse than the baseline at \emph{every} tested staleness, both target-specific
+(BK1, 8--168~h) and cross-satellite (BK1$\rightarrow$BK2), so the gate of
+Eq.~\eqref{eq:gate} \emph{closes} in all cases. The held-out residual is
+near zero-mean (e.g.\ BK1 test residual mean $|{\cdot}|\!\lesssim\!0.1$~Hz across
+windows) with a spread that grows with staleness but no learnable structure: the
+inter-TLE refresh ($\sim$6~h median) leaves little to correct at short staleness,
+and BK1 manoeuvre/orbit-determination outliers make cross-satellite transfer
+actively harmful. This is the paper's central real-data finding: on these
+satellites, learning does not help, and the safe physics default is correct.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.76\linewidth]{figures/fig2_temperature_calibration.pdf}
-    \caption{Stage~3F post-hoc temperature calibration. Empirical Cov68/Cov95 and calibration error vs.\ scalar temperature $T$; RMSE is invariant at 5.35~m. Best calibration at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), i.e.\ no post-hoc rescaling needed.}
-    \label{fig:tempcal}
-\end{figure}
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.76\linewidth]{figures/fig3_risk_aware_ablation.pdf}
-    \caption{Stage~4 risk-aware guard ablation over $\alpha$ (Eq.~\ref{eq:riskguard}). Outage/success/reward are control proxies; RMSE is fixed at 5.35~m and collision proxy is $0.000$ for all $\alpha$. Risk-adjusted reward peaks at $\alpha=0.25$.}
-    \label{fig:risk}
-\end{figure}
-
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.76\linewidth]{figures/fig4_guard_residual_distribution.pdf}
-    \caption{Outage proxy vs.\ guard margin from the Stage~4 $\alpha$ sweep (operating points; per-sample residuals are not exported). Deterministic guard (9.56~m, $\alpha{=}0$) gives 5.0\% outage; the uncertainty-aware guard (10.88~m, $\alpha{=}0.25$) gives 1.7\%.}
-    \label{fig:guardres}
-\end{figure}
-
-\emph{Stage 3E (uncertainty-head fine-tuning).} Uncertainty fine-tuning preserves the deterministic predictor (position RMSE 5.35~m, 61.3\% of predictions within 5~m). The log-variance head learns a metre-scale uncertainty, with the mean per-axis $\sigma$ moving from an initialized $\approx 10$~m to $\approx 3.01$~m, yielding non-trivial Mahalanobis coverage.
-
-\emph{Stage 3F (temperature calibration).} Fig.~\ref{fig:tempcal} sweeps a scalar temperature $T$ applied as $\log\sigma^2_T=\log\sigma^2+2\log T$, which is equivalent to scaling the predicted standard deviation by $T$ ($\sigma_T=T\sigma$). RMSE is invariant to $T$. The best calibration error occurs at $T=1.0$ (Cov68/Cov95 $=0.713/0.947$, CalErr $=0.0331$), confirming that the learned uncertainty scale is already near-optimal \emph{without} post-hoc rescaling.
-
-\emph{Sensitivity to the uncertainty scale.} Table~\ref{tab:sens} reports the coverage and calibration error as the uncertainty scale $T$ (equivalently the $\sigma$ multiplier) is varied around the operating point. Under-scaling ($T<1$) sharply under-covers (e.g.\ $T=0.6$ gives Cov68 $=0.275$), while over-scaling ($T>1$) over-covers; both raise the calibration error monotonically away from $T=1.0$. The control behavior follows directly through Eq.~\ref{eq:riskguard}, since $\sigma_r$ scales with $T$: too small a scale under-sizes the guard (higher outage), too large a scale inflates the guard overhead. The near-unity optimum indicates the learned head needs no manual scale tuning.
-
-\begin{table}[t]
-\centering
-\small
-\caption{Sensitivity to the uncertainty scale $T$ ($\sigma_T=T\sigma$); RMSE $=5.35$~m for all $T$. Values from the Stage~3F sweep.}
-\label{tab:sens}
-\begin{tabular}{cccc}
-\toprule
-scale $T$ & Cov68 & Cov95 & CalErr \\
-\midrule
-0.6 & 0.275 & 0.601 & 0.7569 \\
-0.8 & 0.503 & 0.845 & 0.2852 \\
-\textbf{1.0} & \textbf{0.713} & \textbf{0.947} & \textbf{0.0331} \\
-1.2 & 0.850 & 0.988 & 0.2053 \\
-1.4 & 0.928 & 0.996 & 0.2909 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\emph{Stage 4 (risk-aware guard ablation).} Fig.~\ref{fig:risk} sweeps $\alpha$ in Eq.~\ref{eq:riskguard}, and Fig.~\ref{fig:guardres} shows the resulting outage-vs-guard operating points. RMSE is fixed at 5.35~m across all $\alpha$, confirming the point predictor is untouched. Relative to the deterministic baseline ($\alpha{=}0$: outage 5.0\%, reward 0.9500), the uncertainty-aware policy at $\alpha{=}0.25$ reduces the outage proxy to 1.7\% (a $3\times$ reduction) and raises the success proxy to 0.9828 and the reward to 0.9690, at a guard overhead of $+13.8\%$. Larger $\alpha$ drives outage lower still (Table~\ref{tab:alpha}) but the risk-adjusted reward peaks at $\alpha{=}0.25$, since the guard-overhead penalty eventually outweighs the diminishing outage gain. The collision proxy is $0.000$ for all $\alpha$, so outage---not collision---is the binding robustness metric in this proxy setup; we therefore do not claim collision reduction.
+The near-zero-mean, low-structure residual is \emph{consistent with} the way
+successive TLE solutions are produced. The inter-TLE Doppler residual may arise
+from orbit-determination updates between fits, drag-model mismatch over the
+propagation gap, tracking/fit noise, and occasional maneuver or bad-fit events;
+these effects are largely idiosyncratic to each fit and are not exposed as
+predictable terminal-side features in our input set (TLE age, epoch gap, stale
+Doppler, orbital phase, and stale elements). We therefore read the negative
+result as evidence that, for these satellites and features, the residual carries
+little learnable signal---not as a claim about the optimality of any propagator.
+Read constructively, this is a rigorous real-data case showing why always-on
+residual learning is unsafe for a terminal that cannot verify the correction
+before transmitting, and therefore why an evidence gate---rather than an
+unconditional learned corrector---is the appropriate design. We call this a
+\emph{weakly structured inter-TLE residual} for these satellites and features; we
+do not assume it is white for all satellites, since other objects, longer
+staleness, or richer features could expose learnable structure---precisely the
+case the gate is built to admit when evidence supports it.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Stage~4 risk-aware guard ablation (control proxies). RMSE $=5.35$~m and collision proxy $=0.000$ for all $\alpha$.}
-\label{tab:alpha}
-\begin{tabular}{cccccc}
+\caption{Real BLACK~KITE held-out test MAE [Hz @ 868~MHz]: validation-selected
+learned model vs.\ zero-residual stale-TLE baseline. $\Delta\%$ is the learned
+model's change relative to the baseline (negative = worse). Gate closes in every
+row. \texttt{reference\_is\_measured\_truth=false}.}
+\label{tab:bk}
+\begin{tabular}{llccr c}
 \toprule
-$\alpha$ & guard (m) & $\bar g$ & outage & success & reward $R$ \\
+Setting & Stale & Baseline & Learned & $\Delta\%$ & Gate \\
 \midrule
-0.00 & 9.56  & 1.000 & 0.050 & 0.9500 & 0.9500 \\
-\textbf{0.25} & \textbf{10.88} & \textbf{1.138} & \textbf{0.017} & \textbf{0.9828} & \textbf{0.9690} \\
-0.50 & 12.20 & 1.276 & 0.004 & 0.9961 & 0.9685 \\
-0.75 & 13.51 & 1.414 & 0.001 & 0.9989 & 0.9575 \\
-1.00 & 14.83 & 1.552 & 0.000 & 1.0000 & 0.9448 \\
+BK1 target & 8\,h   & 0.2430 & 0.3501 & $-44.1$ & closed \\
+BK1 target & 24\,h  & 0.8161 & 0.9109 & $-11.6$ & closed \\
+BK1 target & 48\,h  & 1.9433 & 2.8608 & $-47.2$ & closed \\
+BK1 target & 72\,h  & 4.8947 & 5.9092 & $-20.7$ & closed \\
+BK1 target & 96\,h  & 10.1153& 11.7663& $-16.3$ & closed \\
+BK1 target & 168\,h & 26.9243& 45.2629& $-68.1$ & closed \\
+\midrule
+BK1$\to$BK2 & 8\,h  & 0.1877 & 0.3261 & $-73.7$ & closed \\
+BK1$\to$BK2 & 24\,h & 0.4969 & 1.8639 & $-275.1$& closed \\
+BK1$\to$BK2 & 48\,h & 2.4092 & 2.8458 & $-18.1$ & closed \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\emph{Reading Tables~\ref{tab:sens} and \ref{tab:alpha} together.} The two tables support the paper's central insight from opposite directions. Table~\ref{tab:sens} shows that the value of the uncertainty head lies in its scale: a $\pm 40\%$ miscalibration moves Cov68 between 0.275 and 0.928, and through Eq.~\eqref{eq:riskguard} would correspondingly under- or over-size every guard the terminal sets. Table~\ref{tab:alpha} shows that, once the scale is trustworthy, the guard weighting $\alpha$ selects the operating point on the risk--overhead curve---from the deterministic baseline to near-zero outage at 55\% overhead, with the risk-adjusted optimum at a modest 13.8\%. Calibration determines whether the risk signal can be trusted; $\alpha$ determines how much of the energy budget is spent acting on it. The separate RF-quality simulation proxies give a QPSK EVM proxy of $\approx 67\%$ and a grid orthogonality of $0.706$ at 300~Hz residual CFO, indicating that deployment-grade operation would also need receiver-side residual-CFO tracking.
+\subsection{Controlled Synthetic Stress: When the Gate Opens}
+\label{sec:eval-stress}
+To characterise the gate mechanism we run a controlled synthetic simulation
+(no Space-Track data, no measurement): the residual is generated as
+$r = A\,s(x) + \mathcal{N}(0,\sigma^2)$ with a fixed nonlinear systematic
+function $s(\cdot)$, and $(A,\sigma)$ chosen per regime to bracket gate
+behaviour. Table~\ref{tab:stress} summarises three regimes. In the
+noise-dominated \texttt{fresh\_low\_residual} regime---which matches the real
+BLACK~KITE residual structure---the learned model cannot beat the baseline and
+the gate closes. In the \texttt{extreme\_systematic} regime a dominant learnable
+drift exists; the learned model cuts test MAE from $1859$ to $100$~Hz, the
+guard-band proxy from $14{,}120$ to $950$~Hz, and the outage proxy from $0.814$
+to $0.008$, and the gate opens. The \texttt{moderate\_staleness} regime is
+marginal: the learned model is only $\sim$5\% better on test, so at the
+recommended $\gamma=0.95$ the gate stays closed, trading a small missed
+opportunity for not enabling a learner that has not decisively proven itself.
 
-\subsection{Validation Scope}
-This work evaluates terminal-side prediction and control; the outage, success, reward, EVM, and grid-orthogonality figures are simulation/proxy indicators. The conducted LR1121/USRP capture establishes IQ-level signal presence and hop-like spectral structure, and position-domain uncertainty is mapped to timing/frequency control margins through the proxy model of Sec.~\ref{sec:uplink}, leaving a modeling gap between the two domains. Online adaptation, packet decoding, and PER measurement are future gateway-level work.
+Interpreted through the proxy model, reducing the guard-band proxy from
+$\approx 14.1$~kHz to $\approx 950$~Hz in the systematic regime corresponds to a
+much smaller frequency margin the terminal would have to reserve, which under the
+proxy can translate into lower conservative margin and overhead in terminal-side
+control. We stress that this is an energy/overhead \emph{proxy} derived from the
+deployed frequency error, not a measured power saving, a gateway receiver
+search-window measurement, or a link-layer result; and that this benefit appears
+only in the controlled synthetic regime, which the real BLACK~KITE data does not
+exhibit.
 
-% ── Conducted IQ-Level RF Evidence ───────────────────────────────────────────
-\section{Conducted IQ-Level RF Evidence}
-\label{sec:hardware}
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\caption{Controlled synthetic stress (NOT real BLACK~KITE evidence). Held-out
+test MAE [Hz], guard-band proxy $g=2\,p_{99}|e|$ [Hz], and outage proxy
+$\Pr[|e|>500\,\mathrm{Hz}]$; gate at $\gamma=0.95$. Regimes: fresh
+(noise-dominated), moderate (marginal), extreme (systematic).}
+\label{tab:stress}
+\begin{tabular}{lccccc}
+\toprule
+Regime & Base & ML & Gate & guard $b{\to}$ML & outage $b{\to}$ML \\
+\midrule
+fresh    & 9.56 & 9.61 & closed & 62$\to$61 & 0.000$\to$0.000 \\
+moderate & 63.17 & 60.18 & closed & 412$\to$387 & 0.000$\to$0.000 \\
+extreme  & 1859.30 & 99.75 & open & 14120$\to$950 & 0.814$\to$0.008 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-This section provides proof-of-concept transmit-path evidence for Fig.~\ref{fig:architecture}: it verifies that the configured LR1121 path, driven by the PGRL control output, emits observable LR-FHSS-like IQ structure. The evidence establishes TX configuration and signal observability; receiver-in-the-loop evaluation of the emitted waveform is future work.
+\subsection{Threshold and Validation-Window Sensitivity}
+\label{sec:eval-sens}
+Table~\ref{tab:gamma} sweeps the gate decision over $\gamma$ and over the
+validation-window size. The two decisive regimes are insensitive to both: the
+noise-dominated regime stays closed for every $\gamma\in[0.90,1.00]$ and every
+validation size from $100$ to $3000$, and the strongly-systematic regime stays
+open throughout. The threshold only matters at the boundary: the marginal regime
+flips closed$\to$open between $\gamma=0.95$ and $\gamma=0.99$. Very small
+validation windows ($n\!\approx\!100$) can mis-decide \emph{near} the threshold,
+which is a property of any held-out estimate, not of the gate rule; the decision
+is stable once the window is not tiny. The real BK1/BK2 validation segments are
+well above this danger zone and sit deep in the noise-dominated regime, so the
+real-data gate decision (closed) is unambiguous. We adopt $\gamma=0.95$ as a
+conservative default.
 
-\subsection{Semtech LR1121 TX Path}
-A Semtech LR1121/LR11xx dev-kit running SWDM001 firmware~\cite{swdm001} transmits LR-FHSS bursts at 868~MHz, 10~dBm. A configuration script converts the PGRL-driven control output into the TX configuration (center frequency, TX power, hopping-grid parameters, guard time, Doppler pre-compensation flags), and the device UART log confirms bursts were emitted.
+\begin{table}[t]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\caption{Synthetic gate decision vs.\ threshold $\gamma$ (validation $n=3000$) and
+vs.\ validation size (at the regime extremes). ``OPEN'' enables the learned
+corrector.}
+\label{tab:gamma}
+\begin{tabular}{lcccc}
+\toprule
+Regime / window & $\gamma{=}.90$ & $\gamma{=}.95$ & $\gamma{=}.99$ & $\gamma{=}1.0$ \\
+\midrule
+fresh, $n{=}3000$    & closed & closed & closed & closed \\
+moderate, $n{=}3000$ & closed & closed & OPEN & OPEN \\
+extreme, $n{=}3000$  & OPEN & OPEN & OPEN & OPEN \\
+\midrule
+fresh, any $n$   & closed & closed & closed & closed \\
+extreme, any $n$ & OPEN & OPEN & OPEN & OPEN \\
+\bottomrule
+\end{tabular}
+\par\vspace{2pt}\raggedright\footnotesize\textit{``any $n$'': stable across
+validation size $n\in\{100,300,1000,3000\}$.}
+\end{table}
 
-\subsection{Conducted USRP IQ Capture}
-A USRP B210 (1~MHz sample rate, 45~dB gain, $\sim$10~s) connected by coax to the LR1121 captures raw IQ under a TX-ON/TX-OFF differential protocol. Fig.~\ref{fig:sdr} shows the max-hold spectra: the TX-ON capture exceeds the TX-OFF reference by 9.82~dB with discrete hop tones, passing the shared signal-detection test (LR-FHSS-candidate score 0.76; DC/LO guard band excluded) and confirming IQ-level RF signal presence consistent with an LR-FHSS-configured transmission.
+\subsection{Implications for Terminal Control}
+\label{sec:implications}
+Reading Tables~\ref{tab:bk}--\ref{tab:gamma} together yields a consistent control
+rule. In noise-dominated regimes---which the real BLACK~KITE data exhibits---the
+gate closes and the correct terminal action is to keep the open-loop SGP4 /
+stale-TLE baseline; an always-on learner would add noise to the
+pre-compensation (the false-open mode of Sec.~\ref{sec:stat}). In the systematic
+synthetic regime the gate opens and the learned branch shrinks the guard-band
+proxy from $\approx 14.1$~kHz to $\approx 950$~Hz and the outage proxy from
+$0.814$ to $0.008$, so a terminal that has logged such evidence can reserve a
+much smaller frequency margin. The moderate regime is exactly where the threshold
+matters: a $\sim$5\% validation gain is not enough to open at $\gamma=0.95$,
+deferring to physics rather than acting on a marginal signal. The
+validation-window sweep shows the decision is statistically reliable once the
+window is not tiny, so the gate's reliability is itself a function of how much
+chronological evidence the terminal has accumulated. The control behaviour is
+therefore data-dependent by construction: the same controller keeps physics where
+learning is unjustified and admits learning only where the evidence is strong.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=0.76\linewidth]{figures/fig5_sdr_capture_validation.pdf}
-    \caption{Conducted LR1121$\rightarrow$USRP B210 IQ capture at 868~MHz: TX-ON vs TX-OFF max-hold spectrum from the raw IQ ($\Delta=9.82$~dB; DC/LO guard shaded), reported at the conducted IQ-signal layer.}
-    \label{fig:sdr}
-\end{figure}
+\subsection{Design Implications}
+\label{sec:design}
+Three practical rules follow. First, for terminals with fresh or frequently
+refreshed TLEs---as in both BLACK~KITE feeds ($\sim$6~h refresh)---the open-loop
+SGP4 prediction is already hard to beat, and a learned residual should not be
+deployed unconditionally. Second, for stale or systematically biased deployments
+the residual \emph{may} carry learnable structure, but it should be enabled only
+after chronological validation demonstrates that structure, never by default.
+Third, the controller should be deployed with evidence logging and explicit gate
+decisions, so that the learned branch is auditable and reversible rather than
+always-on. These are practical design rules grounded in the present software-only
+study, not a universal performance claim.
 
-\subsection{Offline IQ-Structure Analysis}
-As additional \emph{structural} evidence, an offline IQ-structure analysis script (\url{scripts/analyze_lrfhss_iq_structure.py}) detects sparse, multi-frequency candidate bursts on the same capture: 101 candidate bursts across 19 occupied frequency bins at $\approx$12\% time occupancy, with a bounded heuristic structure score of $\approx$0.845, consistent with LR-FHSS-like frequency hopping. This is a structural heuristic, not a decoder; decoding remains a gateway-class or software-receiver problem~\cite{bukhari2023lrfhss}.
+% ── Limitations and Future Work ──────────────────────────────────────────────
+\section{Limitations and Future Work}
+\label{sec:limits}
+
+This study is software-only and model-derived; we state its scope explicitly.
+\begin{itemize}
+\item \emph{Model-derived reference only.} All ``reference'' Doppler is SGP4 from
+  real TLE (\texttt{reference\_is\_measured\_truth=false}); there is no measured
+  Doppler truth.
+\item \emph{No live or link-layer results.} No live-satellite contact or tracking,
+  no standards-compliant LR-FHSS decoding, and no packet-error rate (PER),
+  bit-error rate (BER), cyclic redundancy check (CRC), packet-delivery ratio
+  (PDR), or gateway acknowledgement.
+\item \emph{Negative result is not universal.} The real-data finding holds for two
+  BLACK~KITE satellites and our feature set; it is not a claim for all satellites
+  or all staleness/feature regimes.
+\item \emph{Synthetic benefit is not real evidence.} The positive learning result
+  appears only in a controlled simulation (Sec.~\ref{sec:eval-stress}) and must
+  not be read as real-satellite evidence.
+\item \emph{Gate scope.} The Evidence Gate provides a validation-window property
+  (Sec.~\ref{sec:gate}), not a held-out or distribution-shift safety property.
+\item \emph{Proxies only.} Guard, outage, and energy are control proxies, not
+  link-budget or packet-delivery measurements.
+\end{itemize}
+
+\emph{Hardware-in-the-loop attempt.} A supervised Mac conducted hardware-in-the-loop
+attempt was carried out and \emph{halted as inconclusive}: the physical bench
+lacked an SMA/u.FL conducted RF path and a fixed attenuator between the LR1121
+transmit output and the USRP~B210 receive input (the boards were only co-located,
+with a LoRa antenna unsuitable as conducted evidence), so a TX-ON capture was not
+distinguishable from the TX-OFF baseline. We therefore claim \emph{no} conducted
+RF signal presence and no hardware validation from this attempt. A valid future
+run requires a proper cabled path---LR1121 RF output $\rightarrow$ coax
+$\rightarrow$ fixed attenuator $\rightarrow$ B210 RX---after which an IQ-level
+TX-ON/OFF signal-presence diagnostic (and, separately, a gateway-class decoded
+receiver for any link-layer metric) becomes possible. Closing this conducted-IQ
+and receiver-in-the-loop gap is the primary future work.
 
 % ── Conclusion ────────────────────────────────────────────────────────────────
 \section{Conclusion}
 \label{sec:conclusion}
 
-We presented a cross-layer framework that turns calibrated, SGP4-anchored PGRL prediction uncertainty into terminal-side LR-FHSS guard, timing, and Doppler control. The uncertainty head preserves an existing 5.35~m predictor and is near-calibrated without rescaling ($T{=}1.0$, Cov68/Cov95 $=0.713/0.947$); as a risk signal it lowers the outage proxy from 5.0\% to 1.7\% at 13.8\% guard overhead, and a conducted LR1121-to-USRP B210 capture confirms the configured transmit path emits observable LR-FHSS-like structure (9.82~dB margin). Practically, a D2S terminal can trade a modest guard overhead for lower predicted outage risk without receiver feedback---provided the uncertainty scale it acts on is calibrated. Future work will close the receiver-in-the-loop gap with gateway-class LR-FHSS decoding and measured PER.
+We presented a physics-first, evidence-gated controller for transmitter-side
+LR-FHSS Doppler pre-compensation under stale orbital information: open-loop SGP4 /
+stale-TLE prediction is the safe default, and a learned residual is deployed only
+when a chronological held-out window shows it beats the baseline by a margin. On
+real BLACK~KITE TLE history the learned correction never beats the baseline, so
+the gate closes; in a controlled synthetic study the gate opens and shrinks
+simulated frequency-error, guard, and outage proxies only when a dominant
+systematic drift exists. The outcome is a safe-by-default controller whose learned
+component is enabled only on validation evidence. All results are software-only and
+model-derived; closing the conducted-IQ and receiver-in-the-loop gap with a
+properly cabled, attenuated bench is future work.
 
 % ── References ───────────────────────────────────────────────────────────────
 \bibliographystyle{IEEEtran}
