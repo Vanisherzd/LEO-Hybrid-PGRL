@@ -11,6 +11,35 @@ to RAM, does not stream or transmit).*
 
 ---
 
+## 0. LIVE SUPERVISED-SESSION UPDATE (2026-06-13 20:19 UTC)
+
+Human-supervised session. Phase-1 discovery re-run **read-only** (still no TX, no
+capture, no stream). New result vs the original read-only pass: `uhd_usrp_probe`
+is now installed and was run as a read-only probe (loads FPGA image, reads
+EEPROM/clock/daughterboard, then exits — **no streaming, no transmit**).
+
+- **B210 probe (read-only):** Mboard `B210`, name `Zhixun-wireless_B210`,
+  serial `8000304`, **FW 8.0**, **FPGA 16.0**, clock sources internal/external/gpsdo.
+  RX FE `FE-RX1`/`FE-RX2` 50–6000 MHz (covers 868 MHz), RX gain 0–76 dB.
+  TX FE `FE-TX1`/`FE-TX2` 50–6000 MHz, TX gain 0–89.8 dB. No errors.
+- **Topology for this run:** the **B210 is RX-only** (capture). The **LR1121
+  NUCLEO board is the conducted transmitter** into coax+attenuator→B210 RX. The
+  USRP never transmits.
+- **Capture tool:** native C++ `hardware/usrp_scripts/rx_capture_to_file_cpp`
+  (built, 42 KB) — receive-only (`set_rx_*`), writes `.fc32`. Homebrew UHD lacks
+  the Python binding / `rx_samples_to_file`, so this tool is the capture path.
+- **ST-Link reset tooling still absent** (`st-info`/`st-flash` not installed) →
+  LR1121 TX must be triggered **manually/physically** (NUCLEO reset button or
+  continuous-TX firmware), never via host `--reset-method stlink`.
+- Prior captures + a committed `signal_detected` artifact (2026-06-04, 868 MHz,
+  TX/RX port) exist as reference; raw `.fc32` are local under
+  `hardware/captures/`.
+
+Physical setup approval `APPROVE_CONDUCTED_HIL_PHYSICAL_SETUP` was given before
+this update. No TX/capture has been run yet (gated on `APPROVE_CONDUCTED_HIL_RUN`).
+
+---
+
 ## 1. Git state and latest commit
 
 - Branch: `experiment-bk2-tle-residual`, in sync with

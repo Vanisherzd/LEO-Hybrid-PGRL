@@ -15,6 +15,37 @@ VCP). See `docs/review/mac_hardware_readiness_inventory.md`.*
 
 ---
 
+## 0. CONFIRMED COMMAND SEQUENCE (interface-verified this session)
+
+Verified against the actual script interfaces. **B210 = RX-only; LR1121 NUCLEO =
+conducted transmitter (human-triggered).** Output dir: `outputs/conducted_hil/<UTCSTAMP>/`.
+Raw `.fc32` stays **local** (not staged). Run only after `APPROVE_CONDUCTED_HIL_RUN`.
+
+```bash
+TS=$(date -u +%Y%m%d_%H%M%S); OUT=outputs/conducted_hil/$TS; mkdir -p "$OUT"
+CAP=hardware/usrp_scripts/rx_capture_to_file_cpp        # RX-only, writes .fc32
+SER=8000304; FREQ=868e6; RATE=1e6; GAIN=45; ANT="TX/RX"; DUR=10   # ANT = the port the coax is plugged into
+
+# (1) TX-OFF baseline — human keeps LR1121 NOT transmitting:
+$CAP --args serial=$SER --freq $FREQ --rate $RATE --gain $GAIN --antenna "$ANT" --duration $DUR --out "$OUT/cap_868_off.fc32"
+
+# (2) TX-ON — human triggers LR1121 ping (NUCLEO reset button) / continuous-TX firmware, then:
+$CAP --args serial=$SER --freq $FREQ --rate $RATE --gain $GAIN --antenna "$ANT" --duration $DUR --out "$OUT/cap_868_on.fc32"
+# (repeat (1)+(2) for N>=3 trials for repeatability)
+
+# (3) Offline analysis (no hardware):
+uv run python hardware/usrp_scripts/analyze_capture.py "$OUT/cap_868_on.fc32"  --sample-rate $RATE --output-json "$OUT/on_analysis.json"  --plot "$OUT/on_waterfall.png"  --signal-threshold-db 8 --maxhold-plot "$OUT/on_maxhold.png"
+uv run python hardware/usrp_scripts/analyze_capture.py "$OUT/cap_868_off.fc32" --sample-rate $RATE --output-json "$OUT/off_analysis.json" --plot "$OUT/off_waterfall.png" --signal-threshold-db 8 --maxhold-plot "$OUT/off_maxhold.png"
+uv run python hardware/usrp_scripts/compare_tx_on_off.py --tx-on "$OUT/cap_868_on.fc32" --tx-off "$OUT/cap_868_off.fc32" --sample-rate $RATE --out-json "$OUT/on_off_comparison.json" --out-plot "$OUT/on_off_comparison.png" --signal-threshold-db 8
+```
+
+**Constraints honoured:** B210 never transmits; no `--reset-method stlink` (tooling
+absent); no UART monitor opened by host; raw IQ local-only; no `dataraw/` write.
+`analyze_capture.py` emits `validation_status ∈ {signal_detected,
+weak_signal_candidate, no_signal}` + CFO/EVM **proxy** + SNR (IQ-level only, not PER).
+
+---
+
 ## 1. Pre-run PHYSICAL checklist (human, before powering TX)
 
 - [ ] **Cabled / conducted path only.** TX (LR1121 SMA) → **fixed attenuator** →
